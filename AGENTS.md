@@ -10,6 +10,31 @@ binder-app is the tactile virtual binder of MTGApp: a highly interactive, animat
 4. Verify before reporting done: `npm run build` and `npx oxlint` must pass.
 5. Do not commit, push, or open PRs unless the user explicitly asks. Do not add AI attribution to commits.
 
+## Idioma y comunicación
+- Responde SIEMPRE en español rioplatense, incluso si el código, los logs o los comentarios están en inglés.
+- No narres tu proceso de razonamiento ni lo que estás pensando hacer. Ve directo al resultado: qué hiciste, qué encontraste y qué sigue.
+- Mantén las respuestas breves, sin preámbulos.
+
+## Ambientes y flujo de ramas
+Este repositorio usa tres ambientes con promoción por ramas, en este orden estricto:
+
+```
+feature/* · fixes/* · upgrade/*  →  develop  →  staging  →  main
+```
+
+| Ambiente | Rama        | Rol                                   |
+| -------- | ----------- | ------------------------------------- |
+| dev      | `dev`   | Integración y desarrollo              |
+| staging  | `staging`   | Pre-producción / QA                   |
+| main     | `main`      | Producción                            |
+
+Reglas obligatorias:
+- Rama base de un PR proveniente de `feature/*`, `fixes/*` o `upgrade/*` es **`dev`**.
+- Promoción entre ambientes: `dev` → `staging` → `main`. No saltar etapas.
+- Nunca hacer push directo a `staging` ni a `main`: todo entra por Pull Request.
+- Nunca hacer `force-push` sobre ramas compartidas.
+- Antes de crear un PR, confirmar la rama base correcta según este flujo.
+
 ## Engram memory
 
 - This repo's Engram memory lives under project `binder-app` (bridged copy of the legacy `mtgapp` observations on 2026-10-10).
