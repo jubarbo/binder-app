@@ -10,6 +10,11 @@ binder-app is the tactile virtual binder of MTGApp: a highly interactive, animat
 4. Verify before reporting done: `npm run build` and `npx oxlint` must pass.
 5. Do not commit, push, or open PRs unless the user explicitly asks. Do not add AI attribution to commits.
 
+## Engram memory
+
+- This repo's Engram memory lives under project `binder-app` (bridged copy of the legacy `mtgapp` observations on 2026-10-10).
+- If historical context is missing, search the legacy bucket: `mem_search(project: "mtgapp", ...)` or `all_projects: true`.
+
 ## Data model (non-negotiable)
 
 | Concept | Key | Rule |
