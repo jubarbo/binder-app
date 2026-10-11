@@ -181,3 +181,254 @@ svg {
 .page p {
   color: var(--color-text-muted);
 }
+
+/* Binder page (T2) */
+.binder-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+.binder-header h1 {
+  margin-bottom: 0;
+}
+
+.binder-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.binder-nav-button {
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  cursor: pointer;
+}
+
+.binder-nav-button:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+
+.binder-nav-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.binder-page-indicator {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The physical binder page: a dark, slightly recessed board that holds pockets. */
+.binder-page-frame {
+  padding: var(--space-4);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  background: #1b1d26;
+  box-shadow:
+    var(--shadow-lg),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.binder-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.binder-slot {
+  position: relative;
+}
+
+.binder-empty-pocket {
+  display: block;
+  width: 100%;
+  aspect-ratio: var(--card-aspect-ratio);
+  border: 1.5px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 4.5%;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Empty binder state */
+.binder-empty {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: flex-start;
+  padding: var(--space-5);
+  border: 1px dashed var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+}
+
+.binder-dev-action {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.binder-dev-action button {
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--color-accent);
+  border-radius: 8px;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.binder-dev-action button:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.binder-dev-action button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.binder-dev-note {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+/* Card slot: self-contained loading / error / ready states. */
+.card-slot {
+  position: relative;
+  display: block;
+  width: 100%;
+  margin: 0;
+  aspect-ratio: var(--card-aspect-ratio);
+  border-radius: 4.5%;
+  overflow: hidden;
+}
+
+.card-slot--ready {
+  background: #0f1015;
+}
+
+/* Stacked-cards look for quantity > 1: offset card edges behind the top card. */
+.card-slot--stacked {
+  box-shadow:
+    2px 2px 0 0 rgba(255, 255, 255, 0.1),
+    4px 4px 0 0 rgba(255, 255, 255, 0.05);
+}
+
+.card-image-frame {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-image--full {
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.card-image--full[data-loaded='true'] {
+  opacity: 1;
+}
+
+.card-quantity-badge {
+  position: absolute;
+  right: 4%;
+  bottom: 4%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Loading skeleton */
+.card-slot--loading {
+  background: #1f2028;
+}
+
+.card-skeleton {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.06);
+  background-image: linear-gradient(
+    100deg,
+    transparent 25%,
+    rgba(255, 255, 255, 0.16) 50%,
+    transparent 75%
+  );
+  background-size: 200% 100%;
+  animation: binder-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes binder-shimmer {
+  from {
+    background-position: 150% 0;
+  }
+
+  to {
+    background-position: -150% 0;
+  }
+}
+
+/* Broken-card state */
+.card-slot--error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border: 1px solid var(--color-danger);
+  background: var(--color-surface);
+  text-align: center;
+}
+
+.card-slot-error-mark {
+  color: var(--color-danger);
+  font-weight: 700;
+}
+
+.card-slot-error-id {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-skeleton {
+    animation: none;
+  }
+
+  .card-image--full {
+    transition: none;
+  }
+}
