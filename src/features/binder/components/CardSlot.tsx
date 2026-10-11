@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { BinderEntry } from '../../../shared/types/mtg'
 import { usePrinting } from '../../catalog/catalogQueries'
+import Card3D from './Card3D'
 
 interface CardSlotProps {
   /** The physical printing the user owns in this pocket. */
@@ -44,37 +45,22 @@ export default function CardSlot({ entry }: CardSlotProps) {
   const hasNormal = printing.imageNormal.length > 0
   const alt = cardAltText(entry, printing.setName, printing.collectorNumber)
 
+  const quantityBadge = entry.quantity > 1 ? (
+    <span className="card-quantity-badge" aria-label={`Quantity ${entry.quantity}`}>
+      {entry.quantity}
+    </span>
+  ) : null
+
   return (
-    <figure className={`card-slot card-slot--ready${entry.quantity > 1 ? ' card-slot--stacked' : ''}`}>
-      <span className="card-image-frame">
-        {hasSmall && (
-          <img
-            className="card-image card-image--placeholder"
-            src={printing.imageSmall}
-            alt=""
-            aria-hidden="true"
-            draggable={false}
-          />
-        )}
-        {hasNormal ? (
-          <img
-            className="card-image card-image--full"
-            src={printing.imageNormal}
-            alt={alt}
-            loading="lazy"
-            draggable={false}
-            data-loaded={normalLoaded || !hasSmall}
-            onLoad={() => setNormalLoaded(true)}
-          />
-        ) : (
-          !hasSmall && <span className="card-slot-error-mark">No image</span>
-        )}
-      </span>
-      {entry.quantity > 1 && (
-        <span className="card-quantity-badge" aria-label={`Quantity ${entry.quantity}`}>
-          {entry.quantity}
-        </span>
-      )}
-    </figure>
+    <Card3D
+      entry={entry}
+      printing={printing}
+      alt={alt}
+      hasSmall={hasSmall}
+      hasNormal={hasNormal}
+      normalLoaded={normalLoaded}
+      setNormalLoaded={setNormalLoaded}
+      quantityBadge={quantityBadge}
+    />
   )
 }
