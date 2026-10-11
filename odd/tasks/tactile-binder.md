@@ -54,7 +54,7 @@ future matching works without a redesign.
       tokens can lack `oracle_id` (falls back to printing id).
 - [x] **T2 Binder layout**: `BinderPage` grid + `CardSlot` + real card rendering fed by
       catalog queries (search/named + printing fetch).
-- [ ] **T3 Tactile Card3D**: (in progress) hover tilt, glare, zoom, shadow, contextual info panel
+- [ ] **T3 Tactile Card3D**: hover tilt, glare, zoom, shadow, contextual info panel
       (quantity / condition / set).
 - [ ] **T4 Add-card flow**: search → pick printing → flight animation into a slot; dnd-kit
       drop support; optimistic binder update.
