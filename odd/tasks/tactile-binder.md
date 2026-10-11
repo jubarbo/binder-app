@@ -52,7 +52,7 @@ future matching works without a redesign.
       `binder-app:binder:v1`); Scryfall discovery: DFC cards omit top-level `image_uris`
       (uses `card_faces[0].image_uris`), missing prices are `null` (normalized to `undefined`),
       tokens can lack `oracle_id` (falls back to printing id).
-- [ ] **T2 Binder layout**: `BinderPage` grid + `CardSlot` + real card rendering fed by
+- [x] **T2 Binder layout**: `BinderPage` grid + `CardSlot` + real card rendering fed by
       catalog queries (search/named + printing fetch).
 - [ ] **T3 Tactile Card3D**: hover tilt, glare, zoom, shadow, contextual info panel
       (quantity / condition / set).
