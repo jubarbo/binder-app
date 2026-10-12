@@ -22,7 +22,7 @@ future matching works without a redesign.
 
 - Card catalog from the live Scryfall API, behind `CatalogPort`.
 - Binder of user-owned physical printings, persisted locally (zustand + persist → localStorage)
-  behind `BinderPort` (swap to the future backend API later, components untouched).
+  under the shared key `binder-app:binder:v1`.
 - Tactile interactions: 3D tilt, zoom, shadow, contextual hover info, page turns, add-card flight.
 - Wants list (local for now) and card detail view.
 - `motion` for choreography. Drag-and-drop was dropped (dnd-kit not used — see `code-review-fixes` N2).
@@ -42,15 +42,16 @@ future matching works without a redesign.
 ## Tasks
 
 - [x] **T1 Foundation**: domain types (`OracleCard`, `Printing`, `BinderEntry`, `WantEntry`),
-      `CatalogPort` + live Scryfall adapter, `BinderPort` (local persistence), providers
+      `CatalogPort` + live Scryfall adapter, local persistence (zustand `persist`), providers
       (QueryClient, Router), app shell with routes. Acceptance: `npm run build` passes; app boots.
       — Verdict: `granted` (RDD on, assessed passive, no reviewer needed). Evidence: commit
       `ae78053`; `npm run build` (tsc -b && vite build) and `npx oxlint` clean; dev server boots.
       Route: delegated direct (gentle-ai-worker, writer trigger). Worker deviations: root App moved
       to `src/app/App.tsx` (scaffold `src/App.tsx` deleted, `main.tsx` repointed); `eslint`-free
       project — oxlint `react/only-export-components` fixed by extracting `queryClient.ts`;
-      `BinderPort` adapter kept as future seam (store persists via zustand persist, shared key
-      `binder-app:binder:v1`); Scryfall discovery: DFC cards omit top-level `image_uris`
+      `BinderPort` + local adapter were removed in `code-review-fixes` D1b (never consumed;
+      persistence is the zustand `persist` store under the shared key `binder-app:binder:v1`);
+      Scryfall discovery: DFC cards omit top-level `image_uris`
       (uses `card_faces[0].image_uris`), missing prices are `null` (normalized to `undefined`),
       tokens can lack `oracle_id` (falls back to printing id).
 - [x] **T2 Binder layout**: `BinderPage` grid + `CardSlot` + real card rendering fed by

@@ -67,9 +67,3 @@ export interface WantEntry {
   quantity: number
   priority: WantPriority
 }
-
-/** Canonical ordering of condition grades, worst to best. */
-export const CONDITIONS: readonly Condition[] = ['NM', 'LP', 'MP', 'HP', 'DMG']
-
-/** Canonical priority ordering, lowest to highest. */
-export const WANT_PRIORITIES: readonly WantPriority[] = ['low', 'normal', 'high']

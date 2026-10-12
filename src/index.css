@@ -335,13 +335,7 @@ svg {
   background: var(--color-surface);
 }
 
-.binder-dev-action {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.binder-dev-action button {
+.binder-empty button {
   padding: var(--space-2) var(--space-4);
   border: 1px solid var(--color-accent);
   border-radius: 8px;
@@ -351,18 +345,8 @@ svg {
   cursor: pointer;
 }
 
-.binder-dev-action button:hover:not(:disabled) {
+.binder-empty button:hover:not(:disabled) {
   filter: brightness(1.05);
-}
-
-.binder-dev-action button:disabled {
-  opacity: 0.6;
-  cursor: progress;
-}
-
-.binder-dev-note {
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
 }
 
 /* Card slot: self-contained loading / error / ready states. */

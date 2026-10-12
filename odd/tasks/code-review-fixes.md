@@ -82,10 +82,24 @@ unused seams must be wired or removed deliberately, not left as ambiguous half-s
       (`language: 'en'`, Scryfall queries) untouched. Writer evidence: RED->GREEN; `npm run build` OK,
       `npx oxlint` clean, `npx vitest run` 5 files / 12 tests; grep shows no English UI copy left.
       Working tree, pending commit.
-- [ ] **D2 Remove T2 sample loader**: `SAMPLE_CARDS`, `resolveSamplePrintingId`, `loadSampleCards`,
+- [x] **D2 Remove T2 sample loader**: `SAMPLE_CARDS`, `resolveSamplePrintingId`, `loadSampleCards`,
       and the "Load sample cards" empty-state action.
-- [ ] **D1b Remove remaining dead code**: `binderPort.ts` + `localBinderAdapter.ts` (never consumed;
+      — Done: sample loader, dev button/note, `SampleCard` and now-unused imports removed from
+      `BinderPage.tsx`; dead `.binder-dev-action`/`.binder-dev-note` CSS dropped (accent styling
+      preserved as `.binder-empty button`); stale "3x3" page comment fixed to "5x3".
+- [x] **D1b Remove remaining dead code**: `binderPort.ts` + `localBinderAdapter.ts` (never consumed;
       duplicate persistence) and unused `CONDITIONS`/`WANT_PRIORITIES`.
+      — Done (option (a), user-chosen): review was partly wrong — `binderPort.ts` was NOT unconsumed
+      (`binderStore.ts` imported `BINDER_STORAGE_KEY`/`BINDER_STORAGE_VERSION` from it, and AGENTS.md
+      named it as the persistence boundary). Removed the ambiguous half-state instead: deleted
+      `binderPort.ts` + `localBinderAdapter.ts`, inlined the two constants into `binderStore.ts`,
+      dropped unused `CONDITIONS`/`WANT_PRIORITIES` (`Condition`/`WantPriority` types kept), and
+      updated `AGENTS.md` + `tactile-binder.md` so neither still presents `BinderPort` as the seam.
+      The `CatalogPort` seam stays (it is wired via `scryfallClient`).
+- [ ] **B4 Empty-state add-card is a no-op** (discovered during D2): the empty branch in
+      `BinderPage.tsx` returns early and never renders `{showAdd && <AddCard/>}` (only the non-empty
+      branch does), so "Agregar carta" with an empty binder opens nothing — a first-run dead end.
+      Pre-existing. Fix: render `AddCard` from the empty branch too (its own commit).
 - [x] **G1 Reconcile feature doc with reality**: decided — dnd-kit dropped (N2), `CardDetail` kept
       and wired (N1); add-card flight animation remains open.
 - [x] **C3 Stale comment**: `SLOTS_PER_PAGE = 15` comment says "3x3 page" but the grid is 5 columns.
@@ -139,9 +153,12 @@ and `src/index.css`, `vite.config.ts`, `package.json` inside `binder-app/` only.
 - N4 (path alias `@/`) committed `3578b41`.
 - N1 (wire `CardDetail` as route `/card/:entryId`) committed on `feature/code-review-fixes`;
   build / oxlint / vitest green (5 files, 12 tests).
-- N3 (i18n -> Spanish) complete in the working tree, **pending user-approved commit**; build /
-  oxlint / vitest green (5 files, 12 tests).
+- N3 (i18n -> Spanish) committed `4cac989`.
+- D2 (T2 sample loader) + D1b (dead binder port, option (a)) complete in the working tree,
+  **pending user-approved commit**; build / oxlint / vitest green (5 files, 12 tests); grep proves
+  zero references to the deleted modules/symbols.
+- B4 found during D2: empty-state "Agregar carta" is a no-op (pre-existing). Not yet fixed.
 - RDD (base `b6f6e14`): candidate medium, review_due=true (`slice_budget_reached`). Review
   **blocked**: the `consent/v3` envelope cannot be presented (no native question UI in this runtime).
   Gate pending resolution by the user.
-- Next: commit N3, then D2 (sample loader), D1b (dead code), A1 (overlay a11y), P1 (perf polish).
+- Next: commit D2+D1b, then B4 (empty-state modal), A1 (overlay a11y), P1 (perf polish).

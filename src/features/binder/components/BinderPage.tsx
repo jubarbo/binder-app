@@ -1,8 +1,4 @@
-import { useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { scryfallClient } from '@/shared/api/scryfallClient'
-import type { BinderEntry } from '@/shared/types/mtg'
-import { catalogKeys } from '@/features/catalog/catalogQueries'
 import { useBinderStore } from '@/features/binder/state/binderStore'
 import CardSlot from '@/features/binder/components/CardSlot'
 import AddCard from '@/features/binder/components/AddCard'
@@ -10,89 +6,13 @@ import AddCard from '@/features/binder/components/AddCard'
 /** Pockets per binder page: a 5x3 trading-card page. */
 const SLOTS_PER_PAGE = 15
 
-interface SampleCard {
-  name: string
-  /** Fixed quantity so the seeded binder stays deterministic. */
-  quantity: number
-}
-
-/**
- * Temporary sample set for T2 so the layout can be exercised before the real
- * add-card search flow (T4) exists. Quantities are fixed; no randomness.
- */
-const SAMPLE_CARDS: readonly SampleCard[] = [
-  { name: 'Lightning Bolt', quantity: 3 },
-  { name: 'Sol Ring', quantity: 2 },
-  { name: 'Black Lotus', quantity: 1 },
-  { name: 'Counterspell', quantity: 3 },
-  { name: 'Dark Ritual', quantity: 2 },
-  { name: 'Birds of Paradise', quantity: 1 },
-  { name: 'Giant Growth', quantity: 2 },
-  { name: 'Wrath of God', quantity: 1 },
-  { name: 'Elvish Mystic', quantity: 3 },
-]
-
-/**
- * Resolve a printing id for a card name. A named (fuzzy) lookup is used rather
- * than a free-text search: Scryfall's search sorts matches by name, so a plain
- * name like "Sol Ring" returns an unrelated card first. The named lookup yields
- * the oracle-level card exactly, whose first printing id is then fetched.
- */
-async function resolveSamplePrintingId(client: QueryClient, name: string): Promise<string | null> {
-  const card = await client.fetchQuery({
-    queryKey: catalogKeys.named(name),
-    queryFn: ({ signal }) => scryfallClient.fetchNamed(name, signal),
-  })
-  if (!card.oracleId) return null
-
-  const printings = await client.fetchQuery({
-    queryKey: catalogKeys.printings(card.oracleId),
-    queryFn: ({ signal }) => scryfallClient.fetchPrintings(card.oracleId, signal),
-  })
-  return printings[0]?.id ?? null
-}
-
-/**
- * Temporary dev loader (T4 replaces it with real search). Resolves each sample
- * name to a printing id, skips empty or unresolvable results, dedupes against
- * the live store, and adds deterministic entries.
- */
-async function loadSampleCards(client: QueryClient): Promise<void> {
-  for (const sample of SAMPLE_CARDS) {
-    let printingId: string | null = null
-    try {
-      printingId = await resolveSamplePrintingId(client, sample.name)
-    } catch {
-      // No matches / transport failure: skip this name silently.
-      printingId = null
-    }
-    if (!printingId) continue
-
-    // Read the live store each pass so concurrent loads cannot double-add.
-    const state = useBinderStore.getState()
-    if (state.entries.some((entry) => entry.printingId === printingId)) continue
-
-    const newEntry: BinderEntry = {
-      id: crypto.randomUUID(),
-      printingId,
-      quantity: sample.quantity,
-      condition: 'NM',
-      language: 'en',
-      forTrade: true,
-    }
-    state.addEntry(newEntry)
-  }
-}
-
 /**
  * Binder page (T2): renders the persisted entries as a pocket-page grid with
- * prev/next navigation. Empty slots keep the 3x3 page shape.
+ * prev/next navigation. Empty slots keep the 5x3 page shape.
  */
 export default function BinderPage() {
   const entries = useBinderStore((state) => state.entries)
-  const client = useQueryClient()
   const [pageIndex, setPageIndex] = useState(0)
-  const [isLoadingSamples, setIsLoadingSamples] = useState(false)
   const [showAdd, setShowAdd] = useState(false)
 
   const pageCount = Math.max(1, Math.ceil(entries.length / SLOTS_PER_PAGE))
@@ -101,30 +21,13 @@ export default function BinderPage() {
   const pageEntries = entries.slice(pageStart, pageStart + SLOTS_PER_PAGE)
   const emptySlotCount = SLOTS_PER_PAGE - pageEntries.length
 
-  const handleLoadSamples = async () => {
-    setIsLoadingSamples(true)
-    try {
-      await loadSampleCards(client)
-    } finally {
-      setIsLoadingSamples(false)
-    }
-  }
-
   if (entries.length === 0) {
     return (
       <section className="page binder-page">
         <h1>Binder</h1>
         <div className="binder-empty">
           <p>Tu binder está vacío. Agrega cartas para empezar a llenar las páginas.</p>
-          <div className="binder-dev-action">
-            <button type="button" onClick={() => setShowAdd(true)}>Agregar carta</button>
-            <button type="button" onClick={handleLoadSamples} disabled={isLoadingSamples}>
-              {isLoadingSamples ? 'Cargando cartas de ejemplo...' : 'Cargar cartas de ejemplo'}
-            </button>
-            <p className="binder-dev-note">
-              Acción temporal de desarrollo; la búsqueda real de cartas llega en una tarea posterior.
-            </p>
-          </div>
+          <button type="button" onClick={() => setShowAdd(true)}>Agregar carta</button>
         </div>
       </section>
     )

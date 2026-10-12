@@ -6,7 +6,7 @@ binder-app es el archivador virtual táctil de MTGApp: una interfaz interactiva 
 
 1. Lea el documento de características activas en `odd/tasks/` antes de editarlo; contiene el alcance, las tareas y el estado actual.
 
-2. Respete los límites de los puertos: el catálogo se gestiona a través de `src/shared/api/catalogPort.ts`, y la persistencia del archivador de usuario a través de `src/shared/api/binderPort.ts`.
+2. El catálogo se gestiona a través de `src/shared/api/catalogPort.ts`. La persistencia del archivador de usuario es el store `persist` de zustand, bajo la clave versionada `binder-app:binder:v1`.
 
 3. Siga la división oráculo/impresión al pie de la letra (consulte el modelo de datos). Es el contrato para la coincidencia futura.
 4. Antes de informar, verifique que `npm run build` y `npx oxlint` se hayan completado correctamente.
