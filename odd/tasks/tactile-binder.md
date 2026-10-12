@@ -56,7 +56,7 @@ future matching works without a redesign.
       catalog queries (search/named + printing fetch).
 - [x] **T3 Tactile Card3D**: hover tilt, glare, zoom, shadow, contextual info panel
       (quantity / condition / set).
-- [ ] **T4 Add-card flow**: (in progress) search → pick printing → flight animation into a slot; dnd-kit
+- [x] **T4 Add-card flow**: search → pick printing → flight animation into a slot; dnd-kit
       drop support; optimistic binder update.
 - [ ] **T5 Wants list + card detail**: want-entry UI + card detail view + routing polish.
 - [ ] **T6 Reduced motion, perf pass, final verification**.
