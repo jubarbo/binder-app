@@ -25,10 +25,11 @@ unused seams must be wired or removed deliberately, not left as ambiguous half-s
 - Fix the `WantPriority` value and remove `any` casts in the wants form.
 - Debounce the add-card search.
 - Replace the duplicated flat user nav with a real dropdown user menu.
-- Remove or wire dead code; drop the unused dependency if confirmed unused.
-- Remove the T2 dev sample loader scaffolding.
-- Make UI copy language consistent.
-- Add the `@` alias to the Vite build config.
+- Wire `CardDetail` into the binder (it is currently dead code).
+- Remove `@dnd-kit` (unused dependency) from the codebase and from AGENTS.md.
+- Replace all relative imports with the `@/` alias.
+- Normalize ALL user-facing UI copy to Spanish.
+- Remove the T2 dev sample loader scaffolding and the remaining dead modules.
 - Fix the stale `SLOTS_PER_PAGE` comment.
 - Add Escape/focus handling to overlays.
 - Handle search error/empty states; sort/limit printing lists; optional route code-splitting.
@@ -36,7 +37,8 @@ unused seams must be wired or removed deliberately, not left as ambiguous half-s
 ## Constraints
 
 - React 19 + Vite + TS 6; no backend, no auth.
-- Artifacts (code, comments, UI copy defaults) in English unless the user explicitly requests Spanish.
+- Code, comments, identifiers, and commit messages in English; user-facing UI copy in neutral Spanish
+  (explicit user request).
 - No new dependencies without justification; keep behavior-first tests.
 - The user must approve each commit before it is created.
 
@@ -54,15 +56,19 @@ unused seams must be wired or removed deliberately, not left as ambiguous half-s
       Wants, Cerrar sesión.
       — Done: single accessible dropdown with a hamburger trigger (`aria-haspopup`/`aria-expanded`,
       `role="menu"`/`menuitem`, Escape/outside-click/item-activation close); token-based CSS.
-- [ ] **D1 Remove dead code**: `CardDetail.tsx` (unused), `binderPort.ts` + `localBinderAdapter.ts`
-      (never consumed; duplicate persistence), `@dnd-kit/*` deps (zero imports), unused
-      `CONDITIONS`/`WANT_PRIORITIES`.
+- [ ] **N2 Drop dnd-kit**: remove the `@dnd-kit/*` dependencies (zero imports) and the
+      drag-and-drop row from `AGENTS.md`; note in `tactile-binder.md` that dnd-kit is not used.
+- [ ] **N4 Path alias `@/`**: add the alias to `vite.config.ts` and `tsconfig.app.json` (`paths`) and
+      replace every relative import under `src/` with `@/...`.
+- [ ] **N1 Wire CardDetail**: open the card detail modal from a binder card, passing the resolved
+      printing; remove `CardDetail.tsx` from the dead-code list.
+- [ ] **N3 i18n -> Spanish**: normalize ALL user-facing UI copy to neutral Spanish.
 - [ ] **D2 Remove T2 sample loader**: `SAMPLE_CARDS`, `resolveSamplePrintingId`, `loadSampleCards`,
       and the "Load sample cards" empty-state action.
-- [ ] **G1 Reconcile feature doc with reality**: decide implement-vs-correct for dnd-kit drop, add-card
-      flight animation, and wired `CardDetail` (T4/T5/T6 claims). Requires user decision.
-- [ ] **C1 Consistent UI language**: unify ES/EN copy across pages and modals.
-- [ ] **C2 `@` alias in build**: add the alias to `vite.config.ts` to match `vitest.config.ts`.
+- [ ] **D1b Remove remaining dead code**: `binderPort.ts` + `localBinderAdapter.ts` (never consumed;
+      duplicate persistence) and unused `CONDITIONS`/`WANT_PRIORITIES`.
+- [x] **G1 Reconcile feature doc with reality**: decided — dnd-kit dropped (N2), `CardDetail` kept
+      and wired (N1); add-card flight animation remains open.
 - [ ] **C3 Stale comment**: `SLOTS_PER_PAGE = 15` comment says "3x3 page" but the grid is 5 columns.
 - [ ] **A1 Overlay accessibility**: Escape-to-close, focus handling, `aria-modal` for `AddCard` and the
       `Card3D` zoom overlay.
@@ -97,7 +103,12 @@ and `src/index.css`, `vite.config.ts`, `package.json` inside `binder-app/` only.
 ## Route declaration
 
 - B1/B2/B3: delegated direct (writer trigger: 2+ non-trivial files).
+- N2: inline (mechanical: dependency removal + doc edit).
+- N1/N3/N4: delegated direct.
 
 ## Status
 
-- Branch created from `dev` at `b6f6e14`. Section 1 (B1–B3) implemented; build/oxlint/vitest pass.
+- Branch `feature/code-review-fixes` from `dev` at `b6f6e14`.
+- Section 1 (B1–B3) committed `8456547`; AGENTS.md translation committed `ce02476`.
+- RDD assess (base `b6f6e14`): medium, `review_due=false` (`under_budget`).
+- Next: N2 (drop dnd-kit), N4 (alias), N1 (CardDetail), N3 (Spanish i18n).

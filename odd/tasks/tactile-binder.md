@@ -25,7 +25,7 @@ future matching works without a redesign.
   behind `BinderPort` (swap to the future backend API later, components untouched).
 - Tactile interactions: 3D tilt, zoom, shadow, contextual hover info, page turns, add-card flight.
 - Wants list (local for now) and card detail view.
-- dnd-kit for drag-and-drop card placement; `motion` for choreography.
+- `motion` for choreography. Drag-and-drop was dropped (dnd-kit not used — see `code-review-fixes` N2).
 - Respect `prefers-reduced-motion`.
 
 ## Constraints
@@ -34,7 +34,8 @@ future matching works without a redesign.
 - Scryfall rate limits (~10 req/s) and CORS-enabled API; catalog is cached by TanStack Query.
 - Performance: GPU transforms only; virtualization / `content-visibility` for large grids; lazy
   card images; `will-change` used with discipline.
-- Generated artifacts in English.
+- Generated artifacts (code, comments) in English; user-facing UI copy in Spanish (see
+  `code-review-fixes` N3).
 - No test runner configured yet (vitest to be added at T3); verification is `tsc -b && vite build`
   + oxlint until then — exception documented per task.
 
@@ -56,8 +57,9 @@ future matching works without a redesign.
       catalog queries (search/named + printing fetch).
 - [x] **T3 Tactile Card3D**: hover tilt, glare, zoom, shadow, contextual info panel
       (quantity / condition / set).
-- [x] **T4 Add-card flow**: search → pick printing → flight animation into a slot; dnd-kit
-      drop support; optimistic binder update.
+- [x] **T4 Add-card flow**: search → pick printing → optimistic binder update. (Correction: the
+      dnd-kit drop support was never implemented and dnd-kit was dropped; the add-card flight
+      animation is still open — see `code-review-fixes` N2/G1.)
 - [x] **T5 Wants list + card detail**: want-entry UI + card detail view + routing polish.
 - [x] **T6 Reduced motion, perf pass, final verification**.
 

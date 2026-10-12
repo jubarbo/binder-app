@@ -7,7 +7,7 @@ import { useBinderStore } from '../state/binderStore'
 import CardSlot from './CardSlot'
 import AddCard from './AddCard'
 
-/** Pockets per binder page: a 3x3 trading-card page. */
+/** Pockets per binder page: a 5x3 trading-card page. */
 const SLOTS_PER_PAGE = 15
 
 interface SampleCard {

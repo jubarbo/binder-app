@@ -72,8 +72,6 @@ La coincidencia predeterminada es `oracleId`; la impresión es un refinamiento, 
 
 | Formularios | react-hook-form + zod |
 
-| Arrastrar y soltar | **@dnd-kit** (no react-dnd — sin mantenimiento desde 2022) |
-
 | Movimiento | Paquete `motion` (nuevo nombre de Framer Motion), `reducedMotion="user"` globalmente |
 
 | Diseño | Basado en características: `src/features/<name>/` (componentes, hooks, estado). Código compartido en `src/shared/`. Estructura de la aplicación en `src/app/` |
