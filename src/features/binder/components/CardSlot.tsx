@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import type { BinderEntry } from '../../../shared/types/mtg'
-import { usePrinting } from '../../catalog/catalogQueries'
-import Card3D from './Card3D'
+import { useNavigate } from 'react-router-dom'
+import type { BinderEntry } from '@/shared/types/mtg'
+import { usePrinting } from '@/features/catalog/catalogQueries'
+import Card3D from '@/features/binder/components/Card3D'
 
 interface CardSlotProps {
   /** The physical printing the user owns in this pocket. */
@@ -10,7 +11,7 @@ interface CardSlotProps {
 
 function cardAltText(entry: BinderEntry, setName: string, collectorNumber: string): string {
   if (setName && collectorNumber) return `${setName} #${collectorNumber}`
-  return `Card printing ${entry.printingId}`
+  return `Impresión ${entry.printingId}`
 }
 
 /**
@@ -20,13 +21,14 @@ function cardAltText(entry: BinderEntry, setName: string, collectorNumber: strin
  */
 export default function CardSlot({ entry }: CardSlotProps) {
   const { data: printing, isPending, isError } = usePrinting(entry.printingId)
+  const navigate = useNavigate()
   // Tracks whether the high-resolution image has painted yet, so the small
   // image can stand in while it loads.
   const [normalLoaded, setNormalLoaded] = useState(false)
 
   if (isPending) {
     return (
-      <div className="card-slot card-slot--loading" aria-busy="true" aria-label="Loading card">
+      <div className="card-slot card-slot--loading" aria-busy="true" aria-label="Cargando carta">
         <span className="card-skeleton" />
       </div>
     )
@@ -34,7 +36,7 @@ export default function CardSlot({ entry }: CardSlotProps) {
 
   if (isError || !printing) {
     return (
-      <div className="card-slot card-slot--error" role="img" aria-label="Card failed to load">
+      <div className="card-slot card-slot--error" role="img" aria-label="No se pudo cargar la carta">
         <span className="card-slot-error-mark">?</span>
         <span className="card-slot-error-id">{entry.printingId}</span>
       </div>
@@ -46,7 +48,7 @@ export default function CardSlot({ entry }: CardSlotProps) {
   const alt = cardAltText(entry, printing.setName, printing.collectorNumber)
 
   const quantityBadge = entry.quantity > 1 ? (
-    <span className="card-quantity-badge" aria-label={`Quantity ${entry.quantity}`}>
+    <span className="card-quantity-badge" aria-label={`Cantidad ${entry.quantity}`}>
       {entry.quantity}
     </span>
   ) : null
@@ -61,6 +63,7 @@ export default function CardSlot({ entry }: CardSlotProps) {
       normalLoaded={normalLoaded}
       setNormalLoaded={setNormalLoaded}
       quantityBadge={quantityBadge}
+      onOpenDetail={() => navigate(`/card/${entry.id}`)}
     />
   )
 }

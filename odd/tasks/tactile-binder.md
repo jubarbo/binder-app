@@ -22,10 +22,10 @@ future matching works without a redesign.
 
 - Card catalog from the live Scryfall API, behind `CatalogPort`.
 - Binder of user-owned physical printings, persisted locally (zustand + persist → localStorage)
-  behind `BinderPort` (swap to the future backend API later, components untouched).
+  under the shared key `binder-app:binder:v1`.
 - Tactile interactions: 3D tilt, zoom, shadow, contextual hover info, page turns, add-card flight.
 - Wants list (local for now) and card detail view.
-- dnd-kit for drag-and-drop card placement; `motion` for choreography.
+- `motion` for choreography. Drag-and-drop was dropped (dnd-kit not used — see `code-review-fixes` N2).
 - Respect `prefers-reduced-motion`.
 
 ## Constraints
@@ -34,30 +34,33 @@ future matching works without a redesign.
 - Scryfall rate limits (~10 req/s) and CORS-enabled API; catalog is cached by TanStack Query.
 - Performance: GPU transforms only; virtualization / `content-visibility` for large grids; lazy
   card images; `will-change` used with discipline.
-- Generated artifacts in English.
+- Generated artifacts (code, comments) in English; user-facing UI copy in Spanish (see
+  `code-review-fixes` N3).
 - No test runner configured yet (vitest to be added at T3); verification is `tsc -b && vite build`
   + oxlint until then — exception documented per task.
 
 ## Tasks
 
 - [x] **T1 Foundation**: domain types (`OracleCard`, `Printing`, `BinderEntry`, `WantEntry`),
-      `CatalogPort` + live Scryfall adapter, `BinderPort` (local persistence), providers
+      `CatalogPort` + live Scryfall adapter, local persistence (zustand `persist`), providers
       (QueryClient, Router), app shell with routes. Acceptance: `npm run build` passes; app boots.
       — Verdict: `granted` (RDD on, assessed passive, no reviewer needed). Evidence: commit
       `ae78053`; `npm run build` (tsc -b && vite build) and `npx oxlint` clean; dev server boots.
       Route: delegated direct (gentle-ai-worker, writer trigger). Worker deviations: root App moved
       to `src/app/App.tsx` (scaffold `src/App.tsx` deleted, `main.tsx` repointed); `eslint`-free
       project — oxlint `react/only-export-components` fixed by extracting `queryClient.ts`;
-      `BinderPort` adapter kept as future seam (store persists via zustand persist, shared key
-      `binder-app:binder:v1`); Scryfall discovery: DFC cards omit top-level `image_uris`
+      `BinderPort` + local adapter were removed in `code-review-fixes` D1b (never consumed;
+      persistence is the zustand `persist` store under the shared key `binder-app:binder:v1`);
+      Scryfall discovery: DFC cards omit top-level `image_uris`
       (uses `card_faces[0].image_uris`), missing prices are `null` (normalized to `undefined`),
       tokens can lack `oracle_id` (falls back to printing id).
 - [x] **T2 Binder layout**: `BinderPage` grid + `CardSlot` + real card rendering fed by
       catalog queries (search/named + printing fetch).
 - [x] **T3 Tactile Card3D**: hover tilt, glare, zoom, shadow, contextual info panel
       (quantity / condition / set).
-- [x] **T4 Add-card flow**: search → pick printing → flight animation into a slot; dnd-kit
-      drop support; optimistic binder update.
+- [x] **T4 Add-card flow**: search → pick printing → optimistic binder update. (Correction: the
+      dnd-kit drop support was never implemented and dnd-kit was dropped; the add-card flight
+      animation is still open — see `code-review-fixes` N2/G1.)
 - [x] **T5 Wants list + card detail**: want-entry UI + card detail view + routing polish.
 - [x] **T6 Reduced motion, perf pass, final verification**.
 

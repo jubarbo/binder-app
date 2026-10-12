@@ -163,6 +163,71 @@ svg {
   border-bottom-color: var(--color-accent);
 }
 
+/* User account dropdown menu */
+.app-user-menu {
+  position: relative;
+}
+
+.app-user-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.app-user-menu-trigger svg {
+  display: block;
+}
+
+.app-user-menu-trigger:hover,
+.app-user-menu-trigger[aria-expanded='true'] {
+  border-color: var(--color-accent);
+}
+
+.app-user-menu-list {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  padding: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+  z-index: 20;
+}
+
+.app-user-menu-item {
+  display: block;
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.app-user-menu-item:hover {
+  background: var(--color-accent-soft);
+  color: var(--color-text);
+}
+
+.app-user-menu-item.active {
+  color: var(--color-accent);
+}
+
 .app-main {
   flex: 1;
   width: 100%;
@@ -179,6 +244,12 @@ svg {
 }
 
 .page p {
+  color: var(--color-text-muted);
+}
+
+/* Lazy route fallback */
+.route-fallback {
+  padding: var(--space-5);
   color: var(--color-text-muted);
 }
 
@@ -270,13 +341,7 @@ svg {
   background: var(--color-surface);
 }
 
-.binder-dev-action {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.binder-dev-action button {
+.binder-empty button {
   padding: var(--space-2) var(--space-4);
   border: 1px solid var(--color-accent);
   border-radius: 8px;
@@ -286,18 +351,8 @@ svg {
   cursor: pointer;
 }
 
-.binder-dev-action button:hover:not(:disabled) {
+.binder-empty button:hover:not(:disabled) {
   filter: brightness(1.05);
-}
-
-.binder-dev-action button:disabled {
-  opacity: 0.6;
-  cursor: progress;
-}
-
-.binder-dev-note {
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
 }
 
 /* Card slot: self-contained loading / error / ready states. */
@@ -439,11 +494,6 @@ svg {
   cursor: pointer;
 }
 
-.card-slot--zoomed {
-  z-index: 10;
-  transform: scale(1.5) !important;
-}
-
 .card-glare {
   position: absolute;
   inset: 0;
@@ -451,27 +501,25 @@ svg {
   mix-blend-mode: screen;
 }
 
-.card-zoom-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.85);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  cursor: zoom-out;
-}
-
-.card-zoom-overlay img {
-  max-width: 90vw;
-  max-height: 90vh;
-  border-radius: 12px;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .card-slot {
     transition: none;
   }
+}
+
+/* Card detail page */
+.card-detail-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 420px;
+}
+
+.card-detail-image {
+  display: block;
+  width: 100%;
+  border-radius: 12px;
+  margin-bottom: var(--space-4);
 }
 
 /* Add card flow */

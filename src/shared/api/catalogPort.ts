@@ -1,4 +1,4 @@
-import type { OracleCard, Printing } from '../types/mtg'
+import type { OracleCard, Printing } from '@/shared/types/mtg'
 
 /**
  * Error thrown by catalog adapters. Carries a human-readable message plus the

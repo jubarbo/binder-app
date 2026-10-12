@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useBinderStore } from '../../binder/state/binderStore'
+import { useBinderStore } from '@/features/binder/state/binderStore'
 
 const schema = z.object({
   oracleId: z.string().min(1, 'Requerido'),
@@ -9,6 +9,8 @@ const schema = z.object({
   preferredPrintingId: z.string().optional(),
 })
 
+type FormInput = z.input<typeof schema>
+type FormOutput = z.output<typeof schema>
 
 interface Props {
   onSubmit?: () => void
@@ -21,31 +23,31 @@ export default function WantEntryForm({ onSubmit }: Props) {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm({
+  } = useForm<FormInput, unknown, FormOutput>({
     resolver: zodResolver(schema),
     defaultValues: { quantity: 1 },
   })
 
-  const submit = (data: any) => {
+  const submit = (data: FormOutput) => {
     addWant({
       id: crypto.randomUUID(),
       oracleId: data.oracleId,
-      quantity: Number(data.quantity),
+      quantity: data.quantity,
       preferredPrintingId: data.preferredPrintingId || undefined,
-      priority: 'medium',
-    } as any)
+      priority: 'normal',
+    })
     reset()
     onSubmit?.()
   }
 
   return (
-    <form onSubmit={handleSubmit(submit as any)} className="want-form">
+    <form onSubmit={handleSubmit(submit)} className="want-form">
       <input
         {...register('oracleId')}
-        placeholder="Oracle ID"
+        placeholder="ID de oráculo"
         className="add-card-input"
       />
-      {errors.oracleId && <span>{(errors.oracleId as any).message}</span>}
+      {errors.oracleId?.message && <span>{errors.oracleId.message}</span>}
       <input
         {...register('quantity')}
         type="number"
@@ -54,13 +56,13 @@ export default function WantEntryForm({ onSubmit }: Props) {
         placeholder="Cantidad"
         className="add-card-input"
       />
-      {errors.quantity && <span>{(errors.quantity as any).message}</span>}
+      {errors.quantity?.message && <span>{errors.quantity.message}</span>}
       <input
         {...register('preferredPrintingId')}
-        placeholder="Printing ID (opcional)"
+        placeholder="ID de impresión (opcional)"
         className="add-card-input"
       />
-      <button type="submit">Agregar want</button>
+      <button type="submit">Agregar deseo</button>
     </form>
   )
 }

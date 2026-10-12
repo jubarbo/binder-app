@@ -1,5 +1,5 @@
-import type { OracleCard, Printing } from '../types/mtg'
-import { CatalogError, type CatalogPort } from './catalogPort'
+import type { OracleCard, Printing } from '@/shared/types/mtg'
+import { CatalogError, type CatalogPort } from '@/shared/api/catalogPort'
 
 const SCRYFALL_BASE_URL = 'https://api.scryfall.com'
 
