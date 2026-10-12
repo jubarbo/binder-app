@@ -27,6 +27,21 @@
   --shadow-lg:
     0 12px 28px -6px rgba(27, 26, 33, 0.22), 0 4px 10px -4px rgba(27, 26, 33, 0.16);
 
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  /* Focus ring (follows the accent in both themes) */
+  --color-focus: var(--color-accent);
+
+  /* Motion */
+  --transition-fast: 150ms ease;
+  --transition-base: 240ms ease;
+
+  /* Feedback */
+  --color-success: #15803d;
+
   /* Card geometry: MTG frame proportions (w / h). */
   --card-aspect-ratio: 63 / 88;
 
@@ -66,6 +81,7 @@
     --color-accent-soft: rgba(167, 139, 250, 0.16);
     --color-on-accent: #14121a;
     --color-danger: #f87171;
+    --color-success: #4ade80;
 
     --shadow-sm:
       0 1px 2px rgba(0, 0, 0, 0.4);
@@ -103,9 +119,17 @@ a {
   color: var(--color-accent);
 }
 
-button {
+button,
+input,
+select,
+textarea {
   font: inherit;
   color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }
 
 img,
