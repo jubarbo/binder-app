@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { motion, useReducedMotion } from 'motion/react'
 import { useBinderStore } from '@/features/binder/state/binderStore'
 import CardSlot from '@/features/binder/components/CardSlot'
 import AddCard from '@/features/binder/components/AddCard'
@@ -14,6 +15,7 @@ export default function BinderPage() {
   const entries = useBinderStore((state) => state.entries)
   const [pageIndex, setPageIndex] = useState(0)
   const [showAdd, setShowAdd] = useState(false)
+  const prefersReducedMotion = useReducedMotion()
 
   const pageCount = Math.max(1, Math.ceil(entries.length / SLOTS_PER_PAGE))
   const currentPage = Math.min(pageIndex, pageCount - 1)
@@ -21,6 +23,30 @@ export default function BinderPage() {
   const pageEntries = entries.slice(pageStart, pageStart + SLOTS_PER_PAGE)
   const emptySlotCount = SLOTS_PER_PAGE - pageEntries.length
   const addCardModal = showAdd ? <AddCard onClose={() => setShowAdd(false)} /> : null
+
+  // Page-change animation: the pocket board slides in, filled slots stagger in.
+  // Disabled entirely under prefers-reduced-motion (Card3D already does this).
+  const gridMotion =
+    prefersReducedMotion
+      ? {}
+      : {
+          initial: { opacity: 0, x: 28 },
+          animate: { opacity: 1, x: 0 },
+          transition: { duration: 0.22, ease: 'easeOut' as const },
+        }
+
+  const slotMotion = (slotIndex: number) =>
+    prefersReducedMotion
+      ? {}
+      : {
+          initial: { opacity: 0, y: 10 },
+          animate: { opacity: 1, y: 0 },
+          transition: {
+            delay: Math.min(slotIndex * 0.04, 0.5),
+            duration: 0.18,
+            ease: 'easeOut' as const,
+          },
+        }
 
   if (entries.length === 0) {
     return (
@@ -66,18 +92,27 @@ export default function BinderPage() {
         )}
       </header>
       <div className="binder-page-frame">
-        <ul className="binder-grid" aria-label={`Página del binder ${currentPage + 1} de ${pageCount}`}>
-          {pageEntries.map((entry) => (
-            <li key={entry.id} className="binder-slot">
+        <motion.ul
+          key={currentPage}
+          {...gridMotion}
+          className="binder-grid"
+          aria-label={`Página del binder ${currentPage + 1} de ${pageCount}`}
+        >
+          {pageEntries.map((entry, index) => (
+            <motion.li
+              key={entry.id}
+              {...slotMotion(index)}
+              className="binder-slot"
+            >
               <CardSlot entry={entry} />
-            </li>
+            </motion.li>
           ))}
           {Array.from({ length: emptySlotCount }, (_, index) => (
             <li key={`empty-${index}`} className="binder-slot binder-slot--empty" aria-hidden="true">
               <span className="binder-empty-pocket" />
             </li>
           ))}
-        </ul>
+        </motion.ul>
       </div>
       {addCardModal}
     </section>

@@ -416,12 +416,14 @@ svg {
 /* The physical binder page: a dark, slightly recessed board that holds pockets. */
 .binder-page-frame {
   padding: var(--space-4);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
-  background: #1b1d26;
+  background:
+    radial-gradient(120% 100% at 50% 0%, #262a36 0%, #1b1d26 58%, #14151c 100%);
   box-shadow:
     var(--shadow-lg),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -10px 18px rgba(0, 0, 0, 0.28);
 }
 
 .binder-grid {
@@ -441,9 +443,10 @@ svg {
   display: block;
   width: 100%;
   aspect-ratio: var(--card-aspect-ratio);
-  border: 1.5px dashed rgba(255, 255, 255, 0.18);
+  border: 1.5px dashed rgba(255, 255, 255, 0.22);
   border-radius: 4.5%;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.35);
 }
 
 /* Empty binder state */
@@ -471,6 +474,12 @@ svg {
 
 .card-slot--ready {
   background: #0f1015;
+  transition: filter var(--transition-fast);
+}
+
+/* Hover polish: filter only, so it never clashes with the Card3D tilt transform. */
+.card-slot--ready:hover {
+  filter: brightness(1.06) drop-shadow(0 10px 14px rgba(0, 0, 0, 0.35));
 }
 
 /* Stacked-cards look for quantity > 1: offset card edges behind the top card. */
@@ -518,6 +527,7 @@ svg {
   border-radius: 999px;
   background: var(--color-accent);
   color: var(--color-on-accent);
+  border: 1px solid var(--color-on-accent);
   font-size: 0.75rem;
   font-weight: 700;
   box-shadow: var(--shadow-sm);
