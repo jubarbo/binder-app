@@ -28,7 +28,7 @@ export default function BinderPage() {
         <h1>Binder</h1>
         <div className="binder-empty">
           <p>Tu binder está vacío. Agrega cartas para empezar a llenar las páginas.</p>
-          <button type="button" onClick={() => setShowAdd(true)}>Agregar carta</button>
+          <button type="button" className="btn btn--primary" onClick={() => setShowAdd(true)}>Agregar carta</button>
         </div>
         {addCardModal}
       </section>

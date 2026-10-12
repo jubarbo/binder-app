@@ -9,7 +9,7 @@ export default function WantsPage() {
   return (
     <section className="page">
       <h1>Deseos</h1>
-      <button onClick={() => setShowForm(!showForm)}>
+      <button className="btn btn--primary" onClick={() => setShowForm(!showForm)}>
         {showForm ? 'Ocultar' : 'Agregar deseo'}
       </button>
       {showForm && <WantEntryForm onSubmit={() => setShowForm(false)} />}
