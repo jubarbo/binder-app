@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { useSearchCards, usePrintings } from '@/features/catalog/catalogQueries'
 import type { OracleCard, Printing } from '@/shared/types/mtg'
@@ -16,7 +16,19 @@ export default function AddCard({ onClose }: AddCardProps) {
   const [selectedPrinting, setSelectedPrinting] = useState<Printing | null>(null)
   const [isAdding, setIsAdding] = useState(false)
   const prefersReducedMotion = useReducedMotion()
-  
+  const titleId = useId()
+  const searchInputRef = useRef<HTMLInputElement>(null)
+
+  // Move focus into the dialog on mount and restore it to the trigger on unmount.
+  // A full Tab focus-trap is intentionally out of scope; tracked as a follow-up.
+  useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null
+    searchInputRef.current?.focus()
+    return () => {
+      previouslyFocused?.focus?.()
+    }
+  }, [])
+
   const { data: searchResults } = useSearchCards(debouncedQuery)
   const { data: printings } = usePrintings(selectedCard?.oracleId || '')
   const addEntry = useBinderStore((s) => s.addEntry)
@@ -57,11 +69,18 @@ export default function AddCard({ onClose }: AddCardProps) {
         exit={{ scale: 0.95 }}
         className="add-card-modal"
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') onClose?.()
+        }}
       >
-        <h2>Agregar carta</h2>
+        <h2 id={titleId}>Agregar carta</h2>
         {!selectedCard ? (
           <>
             <input
+              ref={searchInputRef}
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}

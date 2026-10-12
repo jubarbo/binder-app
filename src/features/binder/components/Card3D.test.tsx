@@ -54,6 +54,63 @@ describe('Card3D', () => {
     expect(onOpenDetail).toHaveBeenCalledTimes(1)
   })
 
+  it('calls onOpenDetail once when Enter is pressed on the button', () => {
+    const onOpenDetail = vi.fn()
+    render(
+      <Card3D
+        entry={entry}
+        printing={printing}
+        alt="Test Card"
+        hasSmall={false}
+        hasNormal={true}
+        normalLoaded={true}
+        setNormalLoaded={vi.fn()}
+        onOpenDetail={onOpenDetail}
+      />
+    )
+    fireEvent.keyDown(screen.getByRole('button'), { key: 'Enter' })
+    expect(onOpenDetail).toHaveBeenCalledTimes(1)
+  })
+
+  it('calls onOpenDetail once when Space is pressed on the button', () => {
+    const onOpenDetail = vi.fn()
+    render(
+      <Card3D
+        entry={entry}
+        printing={printing}
+        alt="Test Card"
+        hasSmall={false}
+        hasNormal={true}
+        normalLoaded={true}
+        setNormalLoaded={vi.fn()}
+        onOpenDetail={onOpenDetail}
+      />
+    )
+    fireEvent.keyDown(screen.getByRole('button'), { key: ' ' })
+    expect(onOpenDetail).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not activate on non-activation keys', () => {
+    const onOpenDetail = vi.fn()
+    render(
+      <Card3D
+        entry={entry}
+        printing={printing}
+        alt="Test Card"
+        hasSmall={false}
+        hasNormal={true}
+        normalLoaded={true}
+        setNormalLoaded={vi.fn()}
+        onOpenDetail={onOpenDetail}
+      />
+    )
+    const button = screen.getByRole('button')
+    fireEvent.keyDown(button, { key: 'a' })
+    fireEvent.keyDown(button, { key: 'Tab' })
+    fireEvent.keyDown(button, { key: 'ArrowDown' })
+    expect(onOpenDetail).not.toHaveBeenCalled()
+  })
+
   it('no longer toggles an inline zoom overlay on click', () => {
     render(
       <Card3D

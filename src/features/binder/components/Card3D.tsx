@@ -54,6 +54,13 @@ export default function Card3D({
     y.set(0)
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      onOpenDetail?.()
+    }
+  }
+
   const imageProps = {
     alt,
     loading: 'lazy' as const,
@@ -77,6 +84,7 @@ export default function Card3D({
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onClick={onOpenDetail}
+      onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
       aria-label={`Carta ${alt}, ver detalle`}

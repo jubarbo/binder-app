@@ -106,9 +106,15 @@ unused seams must be wired or removed deliberately, not left as ambiguous half-s
       and wired (N1); add-card flight animation remains open.
 - [x] **C3 Stale comment**: `SLOTS_PER_PAGE = 15` comment says "3x3 page" but the grid is 5 columns.
       — Done: commit `7e7239c`.
-- [ ] **A1 Overlay accessibility**: Escape-to-close, focus handling, `aria-modal` for `AddCard` and the
+- [x] **A1 Overlay accessibility**: Escape-to-close, focus handling, `aria-modal` for `AddCard` and the
       `CardDetail` modal; keyboard activation (Enter/Space) for the `Card3D` card button (the old
       `Card3D` zoom overlay was removed in N1).
+      — Done (re-scoped): the `CardDetail` modal part was stale (N1 made it a route, no modal).
+      `AddCard` panel is now `role="dialog"` + `aria-modal` + `aria-labelledby` (`useId`), Escape
+      closes, focus moves into the search input on mount and is restored to the trigger on unmount;
+      `Card3D` root gained an `onKeyDown` for Enter/Space. New `AddCard.test.tsx` (4 tests) and 3
+      tests in `Card3D.test.tsx` (observed RED → GREEN). Tab focus-trap left as a follow-up (out of
+      scope; jsdom cannot test it).
 - [ ] **P1 Data/perf polish**: search error/empty UI, sort/limit printing lists, optional route
       code-splitting for the >500 kB bundle.
 
@@ -158,10 +164,12 @@ and `src/index.css`, `vite.config.ts`, `package.json` inside `binder-app/` only.
 - N3 (i18n -> Spanish) committed `4cac989`.
 - D2 (T2 sample loader) + D1b (dead binder port, option (a)) committed `0164c31`; build / oxlint /
   vitest green (5 files, 12 tests); grep proves zero references to the deleted modules/symbols.
-- B4 (empty-state "Agregar carta" was a no-op, pre-existing) fixed in the working tree,
-  **pending user-approved commit**; +1 test (RED → GREEN); build / oxlint / vitest green
-  (5 files, 13 tests).
+- B4 (empty-state "Agregar carta" was a no-op, pre-existing) committed `0e96fec`; +1 test
+  (RED → GREEN).
+- A1 (AddCard dialog a11y + Card3D keyboard, re-scoped) complete in the working tree,
+  **pending user-approved commit**; +7 tests (RED → GREEN); build / oxlint / vitest green
+  (6 files, 20 tests).
 - RDD (base `b6f6e14`): candidate medium, review_due=true (`slice_budget_reached`). Review
   **blocked**: the `consent/v3` envelope cannot be presented (no native question UI in this runtime).
   Gate pending resolution by the user.
-- Next: commit B4, then A1 (overlay a11y), P1 (perf polish).
+- Next: commit A1, then P1 (perf polish).
