@@ -5,6 +5,7 @@ import type { BinderEntry } from '../../../shared/types/mtg'
 import { catalogKeys } from '../../catalog/catalogQueries'
 import { useBinderStore } from '../state/binderStore'
 import CardSlot from './CardSlot'
+import AddCard from './AddCard'
 
 /** Pockets per binder page: a 3x3 trading-card page. */
 const SLOTS_PER_PAGE = 9
@@ -92,6 +93,7 @@ export default function BinderPage() {
   const client = useQueryClient()
   const [pageIndex, setPageIndex] = useState(0)
   const [isLoadingSamples, setIsLoadingSamples] = useState(false)
+  const [showAdd, setShowAdd] = useState(false)
 
   const pageCount = Math.max(1, Math.ceil(entries.length / SLOTS_PER_PAGE))
   const currentPage = Math.min(pageIndex, pageCount - 1)
@@ -115,6 +117,7 @@ export default function BinderPage() {
         <div className="binder-empty">
           <p>Your binder is empty. Add cards to start filling the pages.</p>
           <div className="binder-dev-action">
+            <button type="button" onClick={() => setShowAdd(true)}>Agregar carta</button>
             <button type="button" onClick={handleLoadSamples} disabled={isLoadingSamples}>
               {isLoadingSamples ? 'Loading sample cards...' : 'Load sample cards'}
             </button>
@@ -171,6 +174,7 @@ export default function BinderPage() {
           ))}
         </ul>
       </div>
+      {showAdd && <AddCard onClose={() => setShowAdd(false)} />}
     </section>
   )
 }

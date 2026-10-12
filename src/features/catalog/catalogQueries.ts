@@ -33,3 +33,15 @@ export function usePrinting(id: string) {
     retry: 1,
   })
 }
+
+/** Fetch printings for an oracle id. */
+export function usePrintings(oracleId: string) {
+  const normalizedId = oracleId.trim()
+  return useQuery({
+    queryKey: catalogKeys.printings(normalizedId),
+    queryFn: ({ signal }) => scryfallClient.fetchPrintings(normalizedId, signal),
+    enabled: normalizedId.length > 0,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  })
+}
