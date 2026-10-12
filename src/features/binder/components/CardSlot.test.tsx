@@ -1,13 +1,13 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import CardSlot from './CardSlot'
-import type { BinderEntry } from '../../../shared/types/mtg'
+import CardSlot from '@/features/binder/components/CardSlot'
+import type { BinderEntry } from '@/shared/types/mtg'
 
-vi.mock('../../catalog/catalogQueries', () => ({
+vi.mock('@/features/catalog/catalogQueries', () => ({
   usePrinting: vi.fn(),
 }))
 
-import { usePrinting } from '../../catalog/catalogQueries'
+import { usePrinting } from '@/features/catalog/catalogQueries'
 
 const mockUsePrinting = usePrinting as any
 

@@ -1,4 +1,4 @@
-import type { BinderEntry, WantEntry } from '../types/mtg'
+import type { BinderEntry, WantEntry } from '@/shared/types/mtg'
 
 /** Storage key shared by every binder persistence implementation. */
 export const BINDER_STORAGE_KEY = 'binder-app:binder:v1'

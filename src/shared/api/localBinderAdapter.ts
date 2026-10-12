@@ -4,7 +4,7 @@ import {
   createEmptyBinder,
   type BinderPort,
   type BinderSnapshot,
-} from './binderPort'
+} from '@/shared/api/binderPort'
 
 /**
  * The localStorage payload mirrors the zustand `persist` envelope

@@ -1,11 +1,11 @@
 import { useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { scryfallClient } from '../../../shared/api/scryfallClient'
-import type { BinderEntry } from '../../../shared/types/mtg'
-import { catalogKeys } from '../../catalog/catalogQueries'
-import { useBinderStore } from '../state/binderStore'
-import CardSlot from './CardSlot'
-import AddCard from './AddCard'
+import { scryfallClient } from '@/shared/api/scryfallClient'
+import type { BinderEntry } from '@/shared/types/mtg'
+import { catalogKeys } from '@/features/catalog/catalogQueries'
+import { useBinderStore } from '@/features/binder/state/binderStore'
+import CardSlot from '@/features/binder/components/CardSlot'
+import AddCard from '@/features/binder/components/AddCard'
 
 /** Pockets per binder page: a 5x3 trading-card page. */
 const SLOTS_PER_PAGE = 15

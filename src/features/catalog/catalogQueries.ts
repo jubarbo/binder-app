@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { scryfallClient } from '../../shared/api/scryfallClient'
+import { scryfallClient } from '@/shared/api/scryfallClient'
 
 /** Scoped query-key factory for catalog data. */
 export const catalogKeys = {

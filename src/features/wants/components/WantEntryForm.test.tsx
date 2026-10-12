@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import WantEntryForm from './WantEntryForm'
+import WantEntryForm from '@/features/wants/components/WantEntryForm'
 
 const { addWantMock } = vi.hoisted(() => ({ addWantMock: vi.fn() }))
 
-vi.mock('../../binder/state/binderStore', () => ({
+vi.mock('@/features/binder/state/binderStore', () => ({
   useBinderStore: (selector: any) => selector({ addWant: addWantMock }),
 }))
 

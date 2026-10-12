@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import type { BinderEntry } from '../../../shared/types/mtg'
-import { usePrinting } from '../../catalog/catalogQueries'
-import Card3D from './Card3D'
+import type { BinderEntry } from '@/shared/types/mtg'
+import { usePrinting } from '@/features/catalog/catalogQueries'
+import Card3D from '@/features/binder/components/Card3D'
 
 interface CardSlotProps {
   /** The physical printing the user owns in this pocket. */

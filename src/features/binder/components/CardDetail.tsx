@@ -1,4 +1,4 @@
-import type { BinderEntry, Printing } from '../../../shared/types/mtg'
+import type { BinderEntry, Printing } from '@/shared/types/mtg'
 
 interface CardDetailProps {
   entry: BinderEntry

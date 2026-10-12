@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import BinderPage from './BinderPage'
+import BinderPage from '@/features/binder/components/BinderPage'
 
 vi.mock('@/features/binder/state/binderStore', () => ({
   useBinderStore: vi.fn((selector: any) => {

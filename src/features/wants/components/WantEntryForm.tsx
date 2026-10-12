@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useBinderStore } from '../../binder/state/binderStore'
+import { useBinderStore } from '@/features/binder/state/binderStore'
 
 const schema = z.object({
   oracleId: z.string().min(1, 'Requerido'),

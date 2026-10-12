@@ -56,10 +56,15 @@ unused seams must be wired or removed deliberately, not left as ambiguous half-s
       Wants, Cerrar sesión.
       — Done: single accessible dropdown with a hamburger trigger (`aria-haspopup`/`aria-expanded`,
       `role="menu"`/`menuitem`, Escape/outside-click/item-activation close); token-based CSS.
-- [ ] **N2 Drop dnd-kit**: remove the `@dnd-kit/*` dependencies (zero imports) and the
+- [x] **N2 Drop dnd-kit**: remove the `@dnd-kit/*` dependencies (zero imports) and the
       drag-and-drop row from `AGENTS.md`; note in `tactile-binder.md` that dnd-kit is not used.
-- [ ] **N4 Path alias `@/`**: add the alias to `vite.config.ts` and `tsconfig.app.json` (`paths`) and
+      — Done: commit `7e7239c` (package.json/package-lock, AGENTS.md, tactile-binder.md).
+- [x] **N4 Path alias `@/`**: add the alias to `vite.config.ts` and `tsconfig.app.json` (`paths`) and
       replace every relative import under `src/` with `@/...`.
+      — Done: alias in `vite.config.ts` (`resolve.alias`) and `tsconfig.app.json` (`paths`, no
+      `baseUrl` for TS6); all `src/` imports rewritten; `vi.mock` strings updated; `.tsx` extension
+      dropped on `@/app/App`. Working tree, pending commit. Checks green: build / oxlint / vitest
+      (4 files, 5 tests).
 - [ ] **N1 Wire CardDetail**: open the card detail modal from a binder card, passing the resolved
       printing; remove `CardDetail.tsx` from the dead-code list.
 - [ ] **N3 i18n -> Spanish**: normalize ALL user-facing UI copy to neutral Spanish.
@@ -69,7 +74,8 @@ unused seams must be wired or removed deliberately, not left as ambiguous half-s
       duplicate persistence) and unused `CONDITIONS`/`WANT_PRIORITIES`.
 - [x] **G1 Reconcile feature doc with reality**: decided — dnd-kit dropped (N2), `CardDetail` kept
       and wired (N1); add-card flight animation remains open.
-- [ ] **C3 Stale comment**: `SLOTS_PER_PAGE = 15` comment says "3x3 page" but the grid is 5 columns.
+- [x] **C3 Stale comment**: `SLOTS_PER_PAGE = 15` comment says "3x3 page" but the grid is 5 columns.
+      — Done: commit `7e7239c`.
 - [ ] **A1 Overlay accessibility**: Escape-to-close, focus handling, `aria-modal` for `AddCard` and the
       `Card3D` zoom overlay.
 - [ ] **P1 Data/perf polish**: search error/empty UI, sort/limit printing lists, optional route
@@ -109,6 +115,9 @@ and `src/index.css`, `vite.config.ts`, `package.json` inside `binder-app/` only.
 ## Status
 
 - Branch `feature/code-review-fixes` from `dev` at `b6f6e14`.
-- Section 1 (B1–B3) committed `8456547`; AGENTS.md translation committed `ce02476`.
+- Section 1 (B1–B3) committed `8456547`; AGENTS.md translation `ce02476`; N2 + C3 `7e7239c`.
+- N4 (path alias `@/`) complete in the working tree, **pending user-approved commit**; build / oxlint /
+  vitest all green.
 - RDD assess (base `b6f6e14`): medium, `review_due=false` (`under_budget`).
-- Next: N2 (drop dnd-kit), N4 (alias), N1 (CardDetail), N3 (Spanish i18n).
+- Next: commit N4, then N1 (CardDetail), N3 (Spanish i18n), D2 (sample loader), D1b (dead code),
+  A1 (overlay a11y), P1 (perf polish).

@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { BINDER_STORAGE_KEY, BINDER_STORAGE_VERSION } from '../../../shared/api/binderPort'
-import type { BinderEntry, WantEntry } from '../../../shared/types/mtg'
+import { BINDER_STORAGE_KEY, BINDER_STORAGE_VERSION } from '@/shared/api/binderPort'
+import type { BinderEntry, WantEntry } from '@/shared/types/mtg'
 
 /** Persisted slice of the binder state (serializable, no actions). */
 interface BinderPersistedState {

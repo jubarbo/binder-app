@@ -1,6 +1,6 @@
 import { motion, useMotionValue, useTransform, useReducedMotion } from 'motion/react'
 import { useState, useRef } from 'react'
-import type { BinderEntry, Printing } from '../../../shared/types/mtg'
+import type { BinderEntry, Printing } from '@/shared/types/mtg'
 
 interface Card3DProps {
   entry: BinderEntry

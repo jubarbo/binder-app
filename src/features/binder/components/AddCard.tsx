@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
-import { useSearchCards, usePrintings } from '../../catalog/catalogQueries'
-import type { OracleCard, Printing } from '../../../shared/types/mtg'
-import { useBinderStore } from '../state/binderStore'
-import { useDebouncedValue } from '../../../shared/hooks/useDebouncedValue'
+import { useSearchCards, usePrintings } from '@/features/catalog/catalogQueries'
+import type { OracleCard, Printing } from '@/shared/types/mtg'
+import { useBinderStore } from '@/features/binder/state/binderStore'
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
 
 interface AddCardProps {
   onClose?: () => void

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import Card3D from './Card3D'
-import type { BinderEntry, Printing } from '../../../shared/types/mtg'
+import Card3D from '@/features/binder/components/Card3D'
+import type { BinderEntry, Printing } from '@/shared/types/mtg'
 
 describe('Card3D', () => {
   it('renders with image and alt', () => {

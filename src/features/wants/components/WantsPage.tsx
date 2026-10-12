@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useBinderStore } from '../../binder/state/binderStore'
-import WantEntryForm from './WantEntryForm'
+import { useBinderStore } from '@/features/binder/state/binderStore'
+import WantEntryForm from '@/features/wants/components/WantEntryForm'
 
 export default function WantsPage() {
   const wants = useBinderStore((state) => state.wants)
