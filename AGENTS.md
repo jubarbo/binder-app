@@ -1,14 +1,17 @@
-# binder-app — Agent Instructions
+# binder-app — Instrucciones del Agente
 
-binder-app is the tactile virtual binder of MTGApp: a highly interactive, animated interface for browsing a physical Magic: The Gathering collection as if handling a real binder. Stack: React 19 + Vite + TypeScript. Catalog comes from the live Scryfall API. Standalone git repository (the MTGApp root folder owns only shared conventions — see `../AGENTS.md`).
+binder-app es el archivador virtual táctil de MTGApp: una interfaz interactiva y animada para explorar una colección física de Magic: The Gathering como si se tratara de un archivador real. Tecnología: React 19 + Vite + TypeScript. El catálogo proviene de la API de Scryfall. Repositorio Git independiente (la carpeta raíz de MTGApp solo contiene las convenciones compartidas; consulte `../AGENTS.md`).
 
-## Quick path
+## Ruta rápida
 
-1. Read the active feature document in `odd/tasks/` before editing — it holds scope, tasks, and the current state.
-2. Respect the port boundaries: catalog goes through `src/shared/api/catalogPort.ts`, user binder persistence through `src/shared/api/binderPort.ts`.
-3. Follow the oracle/printing split exactly (see Data model). It is the contract for future matching.
-4. Verify before reporting done: `npm run build` and `npx oxlint` must pass.
-5. Do not commit, push, or open PRs unless the user explicitly asks. Do not add AI attribution to commits.
+1. Lea el documento de características activas en `odd/tasks/` antes de editarlo; contiene el alcance, las tareas y el estado actual.
+
+2. Respete los límites de los puertos: el catálogo se gestiona a través de `src/shared/api/catalogPort.ts`, y la persistencia del archivador de usuario a través de `src/shared/api/binderPort.ts`.
+
+3. Siga la división oráculo/impresión al pie de la letra (consulte el modelo de datos). Es el contrato para la coincidencia futura.
+4. Antes de informar, verifique que `npm run build` y `npx oxlint` se hayan completado correctamente.
+
+5. No realice commits, pushes ni abra solicitudes de extracción a menos que el usuario lo solicite explícitamente. No añada atribuciones de IA a los commits.
 
 ## Idioma y comunicación
 - Responde SIEMPRE en español rioplatense, incluso si el código, los logs o los comentarios están en inglés.
@@ -35,52 +38,72 @@ Reglas obligatorias:
 - Nunca hacer `force-push` sobre ramas compartidas.
 - Antes de crear un PR, confirmar la rama base correcta según este flujo.
 
-## Engram memory
+## Memoria de Engram
 
-- This repo's Engram memory lives under project `binder-app` (bridged copy of the legacy `mtgapp` observations on 2026-10-10).
-- If historical context is missing, search the legacy bucket: `mem_search(project: "mtgapp", ...)` or `all_projects: true`.
+- La memoria de Engram de este repositorio reside en el proyecto `binder-app` (copia puenteada de las observaciones heredadas de `mtgapp` del 10/10/2026).
 
-## Data model (non-negotiable)
+- Si falta el contexto histórico, busque en el bucket heredado: `mem_search(project: "mtgapp", ...)` o `all_projects: true`.
 
-| Concept | Key | Rule |
+## Modelo de datos (no negociable)
+
+| Concepto | Clave | Regla |
+
 |---|---|---|
-| "The card" | `oracleId` | Identity for search and matching. Wants (`WantEntry`) reference this. |
-| "The physical card" | printing `id` | Owned cards (`BinderEntry`) reference this — your binder holds specific printings (set + collector number), not abstract cards. |
-| Want preference | `preferredPrintingId?` | Optional: restricting a want to a specific edition. |
 
-Matching defaults to `oracleId`; printing is a refinement, never the primary key of a want.
+| "La carta" | `oracleId` | Identidad para búsqueda y coincidencia. Los deseos (`WantEntry`) hacen referencia a esto. |
 
-## Architecture
+| "La carta física" | `id de impresión` | Las cartas que posee (`BinderEntry`) hacen referencia a esto: su carpeta contiene impresiones específicas (conjunto + número de coleccionista), no cartas abstractas. |
 
-| Area | Decision |
+| Preferencia de deseo | `preferredPrintingId?` | Opcional: restringir un deseo a una edición específica.
+
+La coincidencia predeterminada es `oracleId`; la impresión es un refinamiento, nunca la clave principal de una solicitud.
+
+## Arquitectura
+
+| Área | Decisión |
+
 |---|---|
-| Stack | React 19, Vite 8, TypeScript 6, react-router-dom v7 |
-| Server state | TanStack Query (catalog cache: `staleTime` 5 min) |
-| Client/UI state | Zustand (binder store persisted under key `binder-app:binder:v1`, versioned) |
-| Forms | react-hook-form + zod |
-| Drag & drop | **@dnd-kit** (not react-dnd — unmaintained since 2022) |
-| Motion | `motion` package (Framer Motion's new name), `reducedMotion="user"` globally |
-| Layout | Feature-based: `src/features/<name>/` (components, hooks, state). Shared code in `src/shared/`. App shell in `src/app/` |
-| Root | `src/app/App.tsx` (the scaffold `src/App.tsx` was intentionally removed) |
 
-## Scryfall gotchas (verified)
+| Pila | React 19, Vite 8, TypeScript 6, react-router-dom v7 |
 
-- Double-faced / modal cards omit top-level `image_uris`; resolve images from `card_faces[0].image_uris`.
-- Missing prices arrive as `null`; normalize to `undefined`.
-- Tokens may lack `oracle_id`; fall back to the printing id.
-- Rate limit ≈ 10 req/s; keep caching in TanStack Query.
+| Estado del servidor | Consulta TanStack (caché de catálogo: `staleTime` 5 min) |
 
-## TypeScript & lint conventions
+| Estado del cliente/interfaz de usuario | Zustand (almacenamiento de Binder persistente bajo la clave `binder-app:binder:v1`, versionado) |
 
-- The scaffold tsconfig uses `verbatimModuleSyntax` + `erasableSyntaxOnly`: use `import type` and never enums (use string unions).
-- `strict: true` is not set in tsconfig, but write strict-compatible code anyway.
-- oxlint `react/only-export-components`: keep component files component-only; put singletons (e.g. `queryClient`) in their own module.
-- No test runner is configured yet; verification is build + lint. When tests arrive (vitest planned), keep behavior-first tests.
+| Formularios | react-hook-form + zod |
 
-## Checklist before finishing any task
+| Arrastrar y soltar | **@dnd-kit** (no react-dnd — sin mantenimiento desde 2022) |
 
-- [ ] `npm run build` passes
-- [ ] `npx oxlint` passes
-- [ ] Changes stay inside the authorized scope for the task
-- [ ] No new dependencies without justification
-- [ ] Code and comments in English; no emojis in artifacts
+| Movimiento | Paquete `motion` (nuevo nombre de Framer Motion), `reducedMotion="user"` globalmente |
+
+| Diseño | Basado en características: `src/features/<name>/` (componentes, hooks, estado). Código compartido en `src/shared/`. Estructura de la aplicación en `src/app/` |
+
+| Raíz | `src/app/App.tsx` (el scaffold `src/App.tsx` se eliminó intencionalmente) |
+
+## Problemas comunes de Scryfall (verificados)
+
+- Las tarjetas modales o de doble cara omiten `image_uris` de nivel superior; las imágenes se resuelven a partir de `card_faces[0].image_uris`.
+
+- Los precios faltantes llegan como `null`; se normalizan a `undefined`.
+
+- Los tokens pueden carecer de `oracle_id`; se utiliza el ID de impresión.
+
+- Límite de velocidad ≈ 10 solicitudes/s; se mantiene el almacenamiento en caché en TanStack Query.
+
+## Convenciones de TypeScript y lint
+
+- El scaffold tsconfig usa `verbatimModuleSyntax` + `erasableSyntaxOnly`: usa `import type` y nunca enumeraciones (usa uniones de cadenas).
+
+- `strict: true` no está configurado en tsconfig, pero escribe código compatible con strict de todos modos.
+
+- oxlint `react/only-export-components`: mantén los archivos de componentes como componentes exclusivos; coloca los singletons (p. ej., `queryClient`) en su propio módulo.
+
+- Aún no hay ningún ejecutor de pruebas configurado; la verificación es build + lint. Cuando lleguen las pruebas (vitest está previsto), mantén las pruebas con enfoque behavior-first.
+
+## Lista de verificación antes de finalizar cualquier tarea
+
+- [ ] `npm run build` se ejecuta correctamente
+- [ ] `npx oxlint` se ejecuta correctamente
+- [ ] Los cambios se mantienen dentro del ámbito autorizado para la tarea
+- [ ] No se añaden nuevas dependencias sin justificación
+- [ ] El código y los comentarios están en inglés; No hay emojis en los artefactos
