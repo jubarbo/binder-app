@@ -93,3 +93,6 @@ Directories `src/app`, `src/shared/api`, `src/features/*` and top-level entry fi
 - T1: delegated direct (writer trigger: 2+ non-trivial files).
 - T2: delegated direct (writer trigger: 2+ non-trivial files) — in progress. New repo branch point: `697305b` (binder-app standalone). T1's RDD verdict: N/A (review abandoned during migration; next work-unit commit starts a fresh review lifecycle).
 - T2 commit: `44768f5` (work-unit: BinderPage + CardSlot + index.css). Verified: build PASS, oxlint PASS, dev-smoke PASS. RDD assess: medium, slice_budget_reached (507 lines), review_due=true. Consent: granted (lineage `review-28ea5c7f2555b2e8`, lens `review-reliability`, revision `sha256:d67c40841b735e795d76c08a29a1172dcc92d36b9f72d91f0e5d8a4129391be7`). STATUS: lens slot reoffered UNREVIEWED — reviewer Task transport `opencode_review_transport_binding_invalid` (session workspace != repo binder-app). RESUME: open a session with cwd in binder-app, run the exact collected STATUS for lineage `review-28ea5c7f2555b2e8`, launch the reviewer task, capture, then acknowledge.
+
+## Status
+- All tasks T1-T6 complete. build/oxlint/vitest pass. dev/staging synced.
