@@ -11,7 +11,7 @@ interface CardSlotProps {
 
 function cardAltText(entry: BinderEntry, setName: string, collectorNumber: string): string {
   if (setName && collectorNumber) return `${setName} #${collectorNumber}`
-  return `Card printing ${entry.printingId}`
+  return `Impresión ${entry.printingId}`
 }
 
 /**
@@ -28,7 +28,7 @@ export default function CardSlot({ entry }: CardSlotProps) {
 
   if (isPending) {
     return (
-      <div className="card-slot card-slot--loading" aria-busy="true" aria-label="Loading card">
+      <div className="card-slot card-slot--loading" aria-busy="true" aria-label="Cargando carta">
         <span className="card-skeleton" />
       </div>
     )
@@ -36,7 +36,7 @@ export default function CardSlot({ entry }: CardSlotProps) {
 
   if (isError || !printing) {
     return (
-      <div className="card-slot card-slot--error" role="img" aria-label="Card failed to load">
+      <div className="card-slot card-slot--error" role="img" aria-label="No se pudo cargar la carta">
         <span className="card-slot-error-mark">?</span>
         <span className="card-slot-error-id">{entry.printingId}</span>
       </div>
@@ -48,7 +48,7 @@ export default function CardSlot({ entry }: CardSlotProps) {
   const alt = cardAltText(entry, printing.setName, printing.collectorNumber)
 
   const quantityBadge = entry.quantity > 1 ? (
-    <span className="card-quantity-badge" aria-label={`Quantity ${entry.quantity}`}>
+    <span className="card-quantity-badge" aria-label={`Cantidad ${entry.quantity}`}>
       {entry.quantity}
     </span>
   ) : null

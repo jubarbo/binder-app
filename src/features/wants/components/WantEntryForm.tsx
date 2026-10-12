@@ -44,7 +44,7 @@ export default function WantEntryForm({ onSubmit }: Props) {
     <form onSubmit={handleSubmit(submit)} className="want-form">
       <input
         {...register('oracleId')}
-        placeholder="Oracle ID"
+        placeholder="ID de oráculo"
         className="add-card-input"
       />
       {errors.oracleId?.message && <span>{errors.oracleId.message}</span>}
@@ -59,10 +59,10 @@ export default function WantEntryForm({ onSubmit }: Props) {
       {errors.quantity?.message && <span>{errors.quantity.message}</span>}
       <input
         {...register('preferredPrintingId')}
-        placeholder="Printing ID (opcional)"
+        placeholder="ID de impresión (opcional)"
         className="add-card-input"
       />
-      <button type="submit">Agregar want</button>
+      <button type="submit">Agregar deseo</button>
     </form>
   )
 }

@@ -49,13 +49,14 @@ describe('CardSlot', () => {
   it('renders loading placeholder when pending', () => {
     mockUsePrinting.mockReturnValue({ data: undefined, isPending: true, isError: false })
     renderSlot()
-    expect(screen.getByLabelText(/Loading card/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Cargando carta/i)).toBeInTheDocument()
   })
 
   it('renders error state when error', () => {
     mockUsePrinting.mockReturnValue({ data: undefined, isPending: false, isError: true })
     renderSlot()
     expect(screen.getByText('?')).toBeInTheDocument()
+    expect(screen.getByLabelText('No se pudo cargar la carta')).toBeInTheDocument()
   })
 
   it('navigates to the card detail route when a resolved card is clicked', () => {

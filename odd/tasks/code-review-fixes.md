@@ -74,7 +74,14 @@ unused seams must be wired or removed deliberately, not left as ambiguous half-s
       Spanish metadata). `Card3D` exposes `onOpenDetail` and the inline zoom was removed (dead CSS
       dropped). Writer evidence: RED→GREEN; `npm run build` OK, `npx oxlint` clean,
       `npx vitest run` 5 files / 12 tests. Working tree, pending commit.
-- [ ] **N3 i18n -> Spanish**: normalize ALL user-facing UI copy to neutral Spanish.
+- [x] **N3 i18n -> Spanish**: normalize ALL user-facing UI copy to neutral Spanish.
+      — Done: all visible text, `aria-label`, placeholder and `alt` copy translated (BinderPage
+      empty/sample/nav copy, CardSlot loading/error + quantity, Card3D label/"Sin imagen", CardDetail
+      "Para intercambio", WantsPage/WantEntryForm). Glossary: keep "Binder" (brand); "Wants" ->
+      "Deseos", "trade" -> "intercambio"; `index.html` `lang="es"` + title "Binder". Data values
+      (`language: 'en'`, Scryfall queries) untouched. Writer evidence: RED->GREEN; `npm run build` OK,
+      `npx oxlint` clean, `npx vitest run` 5 files / 12 tests; grep shows no English UI copy left.
+      Working tree, pending commit.
 - [ ] **D2 Remove T2 sample loader**: `SAMPLE_CARDS`, `resolveSamplePrintingId`, `loadSampleCards`,
       and the "Load sample cards" empty-state action.
 - [ ] **D1b Remove remaining dead code**: `binderPort.ts` + `localBinderAdapter.ts` (never consumed;
@@ -132,8 +139,9 @@ and `src/index.css`, `vite.config.ts`, `package.json` inside `binder-app/` only.
 - N4 (path alias `@/`) committed `3578b41`.
 - N1 (wire `CardDetail` as route `/card/:entryId`) committed on `feature/code-review-fixes`;
   build / oxlint / vitest green (5 files, 12 tests).
-- RDD assess on `3578b41` (base `b6f6e14`): medium, `review_due=true` (`slice_budget_reached`).
-  Review **blocked**: the returned `consent/v3` envelope cannot be presented (no native question UI
-  in this runtime). Gate pending resolution by the user.
-- Next: commit N1, then N3 (Spanish i18n), D2 (sample loader), D1b (dead code), A1 (overlay a11y),
-  P1 (perf polish).
+- N3 (i18n -> Spanish) complete in the working tree, **pending user-approved commit**; build /
+  oxlint / vitest green (5 files, 12 tests).
+- RDD (base `b6f6e14`): candidate medium, review_due=true (`slice_budget_reached`). Review
+  **blocked**: the `consent/v3` envelope cannot be presented (no native question UI in this runtime).
+  Gate pending resolution by the user.
+- Next: commit N3, then D2 (sample loader), D1b (dead code), A1 (overlay a11y), P1 (perf polish).

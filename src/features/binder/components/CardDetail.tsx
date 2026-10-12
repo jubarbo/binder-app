@@ -32,7 +32,7 @@ export default function CardDetail({ entry, printing }: CardDetailProps) {
         <p><strong>Cantidad:</strong> {entry.quantity}</p>
         <p><strong>Condición:</strong> {entry.condition}</p>
         <p><strong>Idioma:</strong> {entry.language}</p>
-        <p><strong>Para trade:</strong> {entry.forTrade ? 'Sí' : 'No'}</p>
+        <p><strong>Para intercambio:</strong> {entry.forTrade ? 'Sí' : 'No'}</p>
       </div>
     </>
   )

@@ -30,11 +30,11 @@ export function AppLayout() {
     <div className="app-shell">
       <header className="app-nav">
         <span className="app-brand">Binder</span>
-        <nav className="app-nav-links" aria-label="Main navigation">
+        <nav className="app-nav-links" aria-label="Navegación principal">
           <NavLink to="/" end>
             Binder
           </NavLink>
-          <NavLink to="/wants">Wants</NavLink>
+          <NavLink to="/wants">Deseos</NavLink>
         </nav>
         <div className="app-user-menu" ref={menuRef}>
           <button
@@ -42,7 +42,7 @@ export function AppLayout() {
             className="app-user-menu-trigger"
             aria-haspopup="menu"
             aria-expanded={userMenuOpen}
-            aria-label="Menu"
+            aria-label="Menú"
             onClick={() => setUserMenuOpen((open) => !open)}
           >
             <svg
@@ -79,7 +79,7 @@ export function AppLayout() {
                 className="app-user-menu-item"
                 onClick={closeUserMenu}
               >
-                Wants
+                Deseos
               </NavLink>
               <button
                 type="button"

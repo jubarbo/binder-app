@@ -16,10 +16,10 @@ describe('WantEntryForm', () => {
   it('submits a want with priority "normal"', async () => {
     render(<WantEntryForm />)
 
-    fireEvent.change(screen.getByPlaceholderText('Oracle ID'), {
+    fireEvent.change(screen.getByPlaceholderText('ID de oráculo'), {
       target: { value: 'oracle-id-123' },
     })
-    fireEvent.click(screen.getByText('Agregar want'))
+    fireEvent.click(screen.getByText('Agregar deseo'))
 
     await waitFor(() => expect(addWantMock).toHaveBeenCalled())
     expect(addWantMock).toHaveBeenCalledWith(

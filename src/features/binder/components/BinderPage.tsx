@@ -115,14 +115,14 @@ export default function BinderPage() {
       <section className="page binder-page">
         <h1>Binder</h1>
         <div className="binder-empty">
-          <p>Your binder is empty. Add cards to start filling the pages.</p>
+          <p>Tu binder está vacío. Agrega cartas para empezar a llenar las páginas.</p>
           <div className="binder-dev-action">
             <button type="button" onClick={() => setShowAdd(true)}>Agregar carta</button>
             <button type="button" onClick={handleLoadSamples} disabled={isLoadingSamples}>
-              {isLoadingSamples ? 'Loading sample cards...' : 'Load sample cards'}
+              {isLoadingSamples ? 'Cargando cartas de ejemplo...' : 'Cargar cartas de ejemplo'}
             </button>
             <p className="binder-dev-note">
-              Temporary dev action; real card search arrives in a later task.
+              Acción temporal de desarrollo; la búsqueda real de cartas llega en una tarea posterior.
             </p>
           </div>
         </div>
@@ -141,27 +141,27 @@ export default function BinderPage() {
               className="binder-nav-button"
               onClick={() => setPageIndex(currentPage - 1)}
               disabled={currentPage <= 0}
-              aria-label="Previous page"
+              aria-label="Página anterior"
             >
-              Prev
+              Anterior
             </button>
             <span className="binder-page-indicator" aria-live="polite">
-              Page {currentPage + 1} of {pageCount}
+              Página {currentPage + 1} de {pageCount}
             </span>
             <button
               type="button"
               className="binder-nav-button"
               onClick={() => setPageIndex(currentPage + 1)}
               disabled={currentPage >= pageCount - 1}
-              aria-label="Next page"
+              aria-label="Página siguiente"
             >
-              Next
+              Siguiente
             </button>
           </div>
         )}
       </header>
       <div className="binder-page-frame">
-        <ul className="binder-grid" aria-label={`Binder page ${currentPage + 1} of ${pageCount}`}>
+        <ul className="binder-grid" aria-label={`Página del binder ${currentPage + 1} de ${pageCount}`}>
           {pageEntries.map((entry) => (
             <li key={entry.id} className="binder-slot">
               <CardSlot entry={entry} />

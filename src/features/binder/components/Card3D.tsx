@@ -79,7 +79,7 @@ export default function Card3D({
       onClick={onOpenDetail}
       role="button"
       tabIndex={0}
-      aria-label={`Card ${alt}, view details`}
+      aria-label={`Carta ${alt}, ver detalle`}
     >
       <span className="card-image-frame">
         {hasSmall && (
@@ -110,7 +110,7 @@ export default function Card3D({
             )}
           </>
         ) : (
-          !hasSmall && <span className="card-slot-error-mark">No image</span>
+          !hasSmall && <span className="card-slot-error-mark">Sin imagen</span>
         )}
       </span>
       {quantityBadge}
