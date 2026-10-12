@@ -58,7 +58,7 @@ future matching works without a redesign.
       (quantity / condition / set).
 - [x] **T4 Add-card flow**: search → pick printing → flight animation into a slot; dnd-kit
       drop support; optimistic binder update.
-- [ ] **T5 Wants list + card detail**: want-entry UI + card detail view + routing polish.
+- [ ] **T5 Wants list + card detail**: (in progress) want-entry UI + card detail view + routing polish.
 - [ ] **T6 Reduced motion, perf pass, final verification**.
 
 ## Authorized scope
