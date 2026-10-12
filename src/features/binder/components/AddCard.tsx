@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from 'motion/react'
 import { useSearchCards, usePrintings } from '../../catalog/catalogQueries'
 import type { OracleCard, Printing } from '../../../shared/types/mtg'
 import { useBinderStore } from '../state/binderStore'
+import { useDebouncedValue } from '../../../shared/hooks/useDebouncedValue'
 
 interface AddCardProps {
   onClose?: () => void
@@ -10,12 +11,13 @@ interface AddCardProps {
 
 export default function AddCard({ onClose }: AddCardProps) {
   const [query, setQuery] = useState('')
+  const debouncedQuery = useDebouncedValue(query)
   const [selectedCard, setSelectedCard] = useState<OracleCard | null>(null)
   const [selectedPrinting, setSelectedPrinting] = useState<Printing | null>(null)
   const [isAdding, setIsAdding] = useState(false)
   const prefersReducedMotion = useReducedMotion()
   
-  const { data: searchResults } = useSearchCards(query)
+  const { data: searchResults } = useSearchCards(debouncedQuery)
   const { data: printings } = usePrintings(selectedCard?.oracleId || '')
   const addEntry = useBinderStore((s) => s.addEntry)
   
