@@ -96,10 +96,12 @@ unused seams must be wired or removed deliberately, not left as ambiguous half-s
       dropped unused `CONDITIONS`/`WANT_PRIORITIES` (`Condition`/`WantPriority` types kept), and
       updated `AGENTS.md` + `tactile-binder.md` so neither still presents `BinderPort` as the seam.
       The `CatalogPort` seam stays (it is wired via `scryfallClient`).
-- [ ] **B4 Empty-state add-card is a no-op** (discovered during D2): the empty branch in
+- [x] **B4 Empty-state add-card is a no-op** (discovered during D2): the empty branch in
       `BinderPage.tsx` returns early and never renders `{showAdd && <AddCard/>}` (only the non-empty
       branch does), so "Agregar carta" with an empty binder opens nothing — a first-run dead end.
       Pre-existing. Fix: render `AddCard` from the empty branch too (its own commit).
+      — Done: `BinderPage.tsx` renders a shared `addCardModal` from both branches; new
+      behavior-first test `opens the add-card dialog from the empty state` (observed RED → GREEN).
 - [x] **G1 Reconcile feature doc with reality**: decided — dnd-kit dropped (N2), `CardDetail` kept
       and wired (N1); add-card flight animation remains open.
 - [x] **C3 Stale comment**: `SLOTS_PER_PAGE = 15` comment says "3x3 page" but the grid is 5 columns.
@@ -154,11 +156,12 @@ and `src/index.css`, `vite.config.ts`, `package.json` inside `binder-app/` only.
 - N1 (wire `CardDetail` as route `/card/:entryId`) committed on `feature/code-review-fixes`;
   build / oxlint / vitest green (5 files, 12 tests).
 - N3 (i18n -> Spanish) committed `4cac989`.
-- D2 (T2 sample loader) + D1b (dead binder port, option (a)) complete in the working tree,
-  **pending user-approved commit**; build / oxlint / vitest green (5 files, 12 tests); grep proves
-  zero references to the deleted modules/symbols.
-- B4 found during D2: empty-state "Agregar carta" is a no-op (pre-existing). Not yet fixed.
+- D2 (T2 sample loader) + D1b (dead binder port, option (a)) committed `0164c31`; build / oxlint /
+  vitest green (5 files, 12 tests); grep proves zero references to the deleted modules/symbols.
+- B4 (empty-state "Agregar carta" was a no-op, pre-existing) fixed in the working tree,
+  **pending user-approved commit**; +1 test (RED → GREEN); build / oxlint / vitest green
+  (5 files, 13 tests).
 - RDD (base `b6f6e14`): candidate medium, review_due=true (`slice_budget_reached`). Review
   **blocked**: the `consent/v3` envelope cannot be presented (no native question UI in this runtime).
   Gate pending resolution by the user.
-- Next: commit D2+D1b, then B4 (empty-state modal), A1 (overlay a11y), P1 (perf polish).
+- Next: commit B4, then A1 (overlay a11y), P1 (perf polish).

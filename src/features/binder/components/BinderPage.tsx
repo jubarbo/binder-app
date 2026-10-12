@@ -20,6 +20,7 @@ export default function BinderPage() {
   const pageStart = currentPage * SLOTS_PER_PAGE
   const pageEntries = entries.slice(pageStart, pageStart + SLOTS_PER_PAGE)
   const emptySlotCount = SLOTS_PER_PAGE - pageEntries.length
+  const addCardModal = showAdd ? <AddCard onClose={() => setShowAdd(false)} /> : null
 
   if (entries.length === 0) {
     return (
@@ -29,6 +30,7 @@ export default function BinderPage() {
           <p>Tu binder está vacío. Agrega cartas para empezar a llenar las páginas.</p>
           <button type="button" onClick={() => setShowAdd(true)}>Agregar carta</button>
         </div>
+        {addCardModal}
       </section>
     )
   }
@@ -77,7 +79,7 @@ export default function BinderPage() {
           ))}
         </ul>
       </div>
-      {showAdd && <AddCard onClose={() => setShowAdd(false)} />}
+      {addCardModal}
     </section>
   )
 }
