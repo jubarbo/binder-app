@@ -12,6 +12,12 @@ export function AppLayout() {
           </NavLink>
           <NavLink to="/wants">Wants</NavLink>
         </nav>
+        <nav className="app-nav-links" aria-label="User navigation">
+          <span>Mi cuenta</span>
+          <NavLink to="/" end>Binder</NavLink>
+          <NavLink to="/wants">Wants</NavLink>
+          <button type="button">Cerrar sesión</button>
+        </nav>
       </header>
       <main className="app-main">
         <Outlet />
