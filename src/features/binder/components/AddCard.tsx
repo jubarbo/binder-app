@@ -76,8 +76,10 @@ export default function AddCard({ onClose }: AddCardProps) {
         key={card.oracleId}
         onClick={() => handleSelectCard(card)}
         className="add-card-result-item"
+        aria-label={card.name}
       >
-        {card.name}
+        <span className="add-card-result-name">{card.name}</span>
+        {card.typeLine && <span className="add-card-result-meta">{card.typeLine}</span>}
       </button>
     ))
   }
@@ -134,7 +136,7 @@ export default function AddCard({ onClose }: AddCardProps) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar carta..."
-              className="add-card-input"
+              className="field"
             />
             <div className="add-card-results">{renderSearchResults()}</div>
           </>
@@ -147,7 +149,7 @@ export default function AddCard({ onClose }: AddCardProps) {
                 const p = printings?.find((pr) => pr.id === e.target.value)
                 setSelectedPrinting(p || null)
               }}
-              className="add-card-input"
+              className="field"
             >
               <option value="">Seleccionar impresión</option>
               {isPrintingsTruncated && (
@@ -162,8 +164,9 @@ export default function AddCard({ onClose }: AddCardProps) {
               ))}
             </select>
             <div className="add-card-actions">
-              <button onClick={() => setSelectedCard(null)}>Atrás</button>
+              <button className="btn btn--ghost" onClick={() => setSelectedCard(null)}>Atrás</button>
               <button
+                className="btn btn--primary"
                 onClick={handleAdd}
                 disabled={!selectedPrinting || isAdding}
               >
