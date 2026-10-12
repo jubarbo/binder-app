@@ -9,12 +9,15 @@ describe('Card3D', () => {
     const printing: Printing = {
       id: 'p1',
       oracleId: 'o1',
+      setCode: 'TST',
       setName: 'Test Set',
       collectorNumber: '123',
+      rarity: 'common',
+      finishes: ['nonfoil'],
       imageSmall: '',
       imageNormal: 'http://example.com/n.png',
       imageLarge: '',
-      priceUsd: undefined,
+      prices: undefined,
     }
     render(
       <Card3D
