@@ -115,8 +115,16 @@ unused seams must be wired or removed deliberately, not left as ambiguous half-s
       `Card3D` root gained an `onKeyDown` for Enter/Space. New `AddCard.test.tsx` (4 tests) and 3
       tests in `Card3D.test.tsx` (observed RED → GREEN). Tab focus-trap left as a follow-up (out of
       scope; jsdom cannot test it).
-- [ ] **P1 Data/perf polish**: search error/empty UI, sort/limit printing lists, optional route
+- [x] **P1 Data/perf polish**: search error/empty UI, sort/limit printing lists, optional route
       code-splitting for the >500 kB bundle.
+      — Done in two units: **P1a** (`1ea58fe`): `AddCard` renders searching/error/empty states
+      (`isPending`/`isError`; empty-query guard first — TanStack v5 reports `isPending` for disabled
+      queries); printings sorted by `setName` (es) then numeric `collectorNumber`, capped at 25 with a
+      disabled "Mostrando 25 de N ediciones" notice. Tests via hoisted catalog-query mock (+7, RED →
+      GREEN). **P1b** (`a2d1fc7`): `CardDetailPage`/`WantsPage` now `React.lazy` + per-route
+      `Suspense` (`.route-fallback`, `aria-busy`); `BinderPage` stays eager. Entry chunk went from a
+      single 605.61 kB to 484.68 kB (+ lazy chunks CardDetailPage 2.06 kB, WantsPage 118.88 kB); the
+      >500 kB warning is gone. Lazy components live in a non-component map (`react/only-export-components`).
 
 ## Authorized scope
 
@@ -166,10 +174,14 @@ and `src/index.css`, `vite.config.ts`, `package.json` inside `binder-app/` only.
   vitest green (5 files, 12 tests); grep proves zero references to the deleted modules/symbols.
 - B4 (empty-state "Agregar carta" was a no-op, pre-existing) committed `0e96fec`; +1 test
   (RED → GREEN).
-- A1 (AddCard dialog a11y + Card3D keyboard, re-scoped) complete in the working tree,
-  **pending user-approved commit**; +7 tests (RED → GREEN); build / oxlint / vitest green
-  (6 files, 20 tests).
+- A1 (AddCard dialog a11y + Card3D keyboard, re-scoped) committed `5af9718`; +7 tests
+  (RED → GREEN); build / oxlint / vitest green (6 files, 20 tests).
+- P1 done in two units: P1a `1ea58fe` (search status states + printings sort/limit, +7 tests) and
+  P1b `a2d1fc7` (route code-splitting, entry chunk 484.68 kB < 500 kB); vitest 27/27, build,
+  oxlint green.
+- **Feature complete**: every review finding (B1–B4, N1–N4, D1b/D2, G1, C3, A1, P1) is resolved on
+  `feature/code-review-fixes`. Merge to `dev` and PRs remain pending (no remote/`gh`).
 - RDD (base `b6f6e14`): candidate medium, review_due=true (`slice_budget_reached`). Review
   **blocked**: the `consent/v3` envelope cannot be presented (no native question UI in this runtime).
   Gate pending resolution by the user.
-- Next: commit A1, then P1 (perf polish).
+- Next: look & feel feature (branch from this tip; `odd/tasks/look-and-feel.md`).
