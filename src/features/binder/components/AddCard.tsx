@@ -9,6 +9,9 @@ interface AddCardProps {
   onClose?: () => void
 }
 
+/** Maximum number of printing options rendered before the list is truncated. */
+const MAX_PRINTING_OPTIONS = 25
+
 export default function AddCard({ onClose }: AddCardProps) {
   const [query, setQuery] = useState('')
   const debouncedQuery = useDebouncedValue(query)
@@ -29,9 +32,55 @@ export default function AddCard({ onClose }: AddCardProps) {
     }
   }, [])
 
-  const { data: searchResults } = useSearchCards(debouncedQuery)
+  const {
+    data: searchResults,
+    isPending: isSearchPending,
+    isError: isSearchError,
+  } = useSearchCards(debouncedQuery)
   const { data: printings } = usePrintings(selectedCard?.oracleId || '')
   const addEntry = useBinderStore((s) => s.addEntry)
+
+  // A disabled (empty-query) TanStack query still reports `isPending`, so the
+  // empty-input guard must run before the loading state is considered.
+  const hasQuery = query.trim().length > 0
+
+  const sortedPrintings = [...(printings ?? [])].sort((a, b) => {
+    const bySet = a.setName.localeCompare(b.setName, 'es')
+    if (bySet !== 0) return bySet
+    return a.collectorNumber.localeCompare(b.collectorNumber, 'es', { numeric: true })
+  })
+  const visiblePrintings = sortedPrintings.slice(0, MAX_PRINTING_OPTIONS)
+  const isPrintingsTruncated = sortedPrintings.length > MAX_PRINTING_OPTIONS
+
+  const renderSearchResults = () => {
+    if (!hasQuery) return null
+    if (isSearchError) {
+      return (
+        <p className="add-card-status add-card-status--error" role="alert">
+          No se pudo buscar. Intenta de nuevo.
+        </p>
+      )
+    }
+    if (isSearchPending && !searchResults) {
+      return (
+        <p className="add-card-status" aria-live="polite">
+          Buscando…
+        </p>
+      )
+    }
+    if (searchResults && searchResults.length === 0) {
+      return <p className="add-card-status">Sin resultados para tu búsqueda.</p>
+    }
+    return searchResults?.map((card) => (
+      <button
+        key={card.oracleId}
+        onClick={() => handleSelectCard(card)}
+        className="add-card-result-item"
+      >
+        {card.name}
+      </button>
+    ))
+  }
   
   const handleSelectCard = (card: OracleCard) => {
     setSelectedCard(card)
@@ -87,17 +136,7 @@ export default function AddCard({ onClose }: AddCardProps) {
               placeholder="Buscar carta..."
               className="add-card-input"
             />
-            <div className="add-card-results">
-              {searchResults?.map((card) => (
-                <button
-                  key={card.oracleId}
-                  onClick={() => handleSelectCard(card)}
-                  className="add-card-result-item"
-                >
-                  {card.name}
-                </button>
-              ))}
-            </div>
+            <div className="add-card-results">{renderSearchResults()}</div>
           </>
         ) : (
           <>
@@ -111,7 +150,12 @@ export default function AddCard({ onClose }: AddCardProps) {
               className="add-card-input"
             >
               <option value="">Seleccionar impresión</option>
-              {printings?.map((p) => (
+              {isPrintingsTruncated && (
+                <option value="" disabled>
+                  Mostrando {MAX_PRINTING_OPTIONS} de {sortedPrintings.length} ediciones
+                </option>
+              )}
+              {visiblePrintings.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.setName} #{p.collectorNumber}
                 </option>
