@@ -247,6 +247,12 @@ svg {
   color: var(--color-text-muted);
 }
 
+/* Lazy route fallback */
+.route-fallback {
+  padding: var(--space-5);
+  color: var(--color-text-muted);
+}
+
 /* Binder page (T2) */
 .binder-header {
   display: flex;
