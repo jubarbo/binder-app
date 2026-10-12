@@ -65,8 +65,15 @@ unused seams must be wired or removed deliberately, not left as ambiguous half-s
       `baseUrl` for TS6); all `src/` imports rewritten; `vi.mock` strings updated; `.tsx` extension
       dropped on `@/app/App`. Working tree, pending commit. Checks green: build / oxlint / vitest
       (4 files, 5 tests).
-- [ ] **N1 Wire CardDetail**: open the card detail modal from a binder card, passing the resolved
+- [x] **N1 Wire CardDetail**: open the card detail from a binder card, passing the resolved
       printing; remove `CardDetail.tsx` from the dead-code list.
+      — Done (routed page, per user): route `/card/:entryId` under `AppLayout`; `CardSlot` navigates
+      on card click (`useNavigate`) and renders no modal; new container `CardDetailPage` resolves the
+      `BinderEntry` from the store and the `Printing` via `usePrinting`, with not-found/loading/error
+      states; `CardDetail` is pure presentation (image `imageLarge || imageNormal || imageSmall` +
+      Spanish metadata). `Card3D` exposes `onOpenDetail` and the inline zoom was removed (dead CSS
+      dropped). Writer evidence: RED→GREEN; `npm run build` OK, `npx oxlint` clean,
+      `npx vitest run` 5 files / 12 tests. Working tree, pending commit.
 - [ ] **N3 i18n -> Spanish**: normalize ALL user-facing UI copy to neutral Spanish.
 - [ ] **D2 Remove T2 sample loader**: `SAMPLE_CARDS`, `resolveSamplePrintingId`, `loadSampleCards`,
       and the "Load sample cards" empty-state action.
@@ -77,7 +84,8 @@ unused seams must be wired or removed deliberately, not left as ambiguous half-s
 - [x] **C3 Stale comment**: `SLOTS_PER_PAGE = 15` comment says "3x3 page" but the grid is 5 columns.
       — Done: commit `7e7239c`.
 - [ ] **A1 Overlay accessibility**: Escape-to-close, focus handling, `aria-modal` for `AddCard` and the
-      `Card3D` zoom overlay.
+      `CardDetail` modal; keyboard activation (Enter/Space) for the `Card3D` card button (the old
+      `Card3D` zoom overlay was removed in N1).
 - [ ] **P1 Data/perf polish**: search error/empty UI, sort/limit printing lists, optional route
       code-splitting for the >500 kB bundle.
 
@@ -102,7 +110,12 @@ and `src/index.css`, `vite.config.ts`, `package.json` inside `binder-app/` only.
 
 ## Delivery
 
-- Strategy: `ask-on-risk` (default).
+- Strategy: `feature-branch-chain` (chosen after the branch exceeded the ~400-line review budget).
+- Deferred: the repo has **no git remote and no `gh`**, so no PR can be opened. Trackers/children are
+  not created yet; work-unit commits land directly on `feature/code-review-fixes` for now.
+- Chain plan (for when a remote exists): tracker `feature/code-review-fixes` (PR base `dev`) with
+  stacked child branches per remaining section (`fixes/crf-01-n1-card-detail`, `fixes/crf-02-n3-i18n`,
+  ...).
 - Branch: `feature/code-review-fixes` (base `dev`).
 - Commits: one per section, created only after user approval.
 
@@ -116,8 +129,11 @@ and `src/index.css`, `vite.config.ts`, `package.json` inside `binder-app/` only.
 
 - Branch `feature/code-review-fixes` from `dev` at `b6f6e14`.
 - Section 1 (B1–B3) committed `8456547`; AGENTS.md translation `ce02476`; N2 + C3 `7e7239c`.
-- N4 (path alias `@/`) complete in the working tree, **pending user-approved commit**; build / oxlint /
-  vitest all green.
-- RDD assess (base `b6f6e14`): medium, `review_due=false` (`under_budget`).
-- Next: commit N4, then N1 (CardDetail), N3 (Spanish i18n), D2 (sample loader), D1b (dead code),
-  A1 (overlay a11y), P1 (perf polish).
+- N4 (path alias `@/`) committed `3578b41`.
+- N1 (wire `CardDetail` as route `/card/:entryId`) committed on `feature/code-review-fixes`;
+  build / oxlint / vitest green (5 files, 12 tests).
+- RDD assess on `3578b41` (base `b6f6e14`): medium, `review_due=true` (`slice_budget_reached`).
+  Review **blocked**: the returned `consent/v3` envelope cannot be presented (no native question UI
+  in this runtime). Gate pending resolution by the user.
+- Next: commit N1, then N3 (Spanish i18n), D2 (sample loader), D1b (dead code), A1 (overlay a11y),
+  P1 (perf polish).

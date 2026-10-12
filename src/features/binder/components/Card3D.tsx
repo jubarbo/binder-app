@@ -1,5 +1,5 @@
 import { motion, useMotionValue, useTransform, useReducedMotion } from 'motion/react'
-import { useState, useRef } from 'react'
+import { useRef } from 'react'
 import type { BinderEntry, Printing } from '@/shared/types/mtg'
 
 interface Card3DProps {
@@ -11,6 +11,7 @@ interface Card3DProps {
   normalLoaded: boolean
   setNormalLoaded: (loaded: boolean) => void
   quantityBadge?: React.ReactNode
+  onOpenDetail?: () => void
 }
 
 export default function Card3D({
@@ -22,10 +23,10 @@ export default function Card3D({
   normalLoaded,
   setNormalLoaded,
   quantityBadge,
+  onOpenDetail,
 }: Card3DProps) {
   const prefersReducedMotion = useReducedMotion()
   const ref = useRef<HTMLDivElement>(null)
-  const [isZoomed, setIsZoomed] = useState(false)
 
   const x = useMotionValue(0)
   const y = useMotionValue(0)
@@ -62,7 +63,7 @@ export default function Card3D({
   return (
     <motion.div
       ref={ref}
-      className={`card-slot card-slot--ready${entry.quantity > 1 ? ' card-slot--stacked' : ''} ${isZoomed ? 'card-slot--zoomed' : ''}`}
+      className={`card-slot card-slot--ready${entry.quantity > 1 ? ' card-slot--stacked' : ''}`}
       style={
         prefersReducedMotion
           ? undefined
@@ -75,11 +76,10 @@ export default function Card3D({
       }
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      onClick={() => setIsZoomed((z) => !z)}
+      onClick={onOpenDetail}
       role="button"
       tabIndex={0}
-      aria-pressed={isZoomed}
-      aria-label={`Card ${alt}${isZoomed ? ', zoomed' : ', click to zoom'}`}
+      aria-label={`Card ${alt}, view details`}
     >
       <span className="card-image-frame">
         {hasSmall && (
@@ -114,11 +114,6 @@ export default function Card3D({
         )}
       </span>
       {quantityBadge}
-      {isZoomed && (
-        <div className="card-zoom-overlay" onClick={(e) => { e.stopPropagation(); setIsZoomed(false); }} role="dialog" aria-label="Card zoom">
-          <img src={printing.imageNormal || printing.imageSmall} alt={alt} />
-        </div>
-      )}
     </motion.div>
   )
 }

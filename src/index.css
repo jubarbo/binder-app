@@ -504,11 +504,6 @@ svg {
   cursor: pointer;
 }
 
-.card-slot--zoomed {
-  z-index: 10;
-  transform: scale(1.5) !important;
-}
-
 .card-glare {
   position: absolute;
   inset: 0;
@@ -516,27 +511,25 @@ svg {
   mix-blend-mode: screen;
 }
 
-.card-zoom-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.85);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  cursor: zoom-out;
-}
-
-.card-zoom-overlay img {
-  max-width: 90vw;
-  max-height: 90vh;
-  border-radius: 12px;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .card-slot {
     transition: none;
   }
+}
+
+/* Card detail page */
+.card-detail-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 420px;
+}
+
+.card-detail-image {
+  display: block;
+  width: 100%;
+  border-radius: 12px;
+  margin-bottom: var(--space-4);
 }
 
 /* Add card flow */

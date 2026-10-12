@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { BinderEntry } from '@/shared/types/mtg'
 import { usePrinting } from '@/features/catalog/catalogQueries'
 import Card3D from '@/features/binder/components/Card3D'
@@ -20,6 +21,7 @@ function cardAltText(entry: BinderEntry, setName: string, collectorNumber: strin
  */
 export default function CardSlot({ entry }: CardSlotProps) {
   const { data: printing, isPending, isError } = usePrinting(entry.printingId)
+  const navigate = useNavigate()
   // Tracks whether the high-resolution image has painted yet, so the small
   // image can stand in while it loads.
   const [normalLoaded, setNormalLoaded] = useState(false)
@@ -61,6 +63,7 @@ export default function CardSlot({ entry }: CardSlotProps) {
       normalLoaded={normalLoaded}
       setNormalLoaded={setNormalLoaded}
       quantityBadge={quantityBadge}
+      onOpenDetail={() => navigate(`/card/${entry.id}`)}
     />
   )
 }
