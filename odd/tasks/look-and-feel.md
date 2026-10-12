@@ -48,17 +48,22 @@ app feel finished, improve keyboard/focus usability, and keep both themes (light
 
 ## Tasks
 
-- [ ] **WU-1 Design foundations**: tokens (`--radius-sm/md/lg`, `--color-focus`, `--transition-*`,
-      `--color-success`), global `:focus-visible`, `font: inherit` for controls. Verified build/lint/tests.
-- [ ] **WU-2 Shared controls**: `.btn`/`.btn--primary`/`.btn--ghost`, `.field`/`.field-error`,
-      `.want-form`; applied to WantsPage toggle, WantEntryForm (errors get `role="alert"`),
-      binder-empty button.
-- [ ] **WU-3 AddCard dialog**: `.add-card-status` (+error), result-item meta line, dialog radius/
-      shadow, `.btn` actions.
-- [ ] **WU-4 Binder hero**: board, pockets, card hover + focus, page transition + stagger
-      (reduced-motion aware), badge.
-- [ ] **WU-5 Card detail**: back link to `/`, two-column layout, card styling.
-- [ ] **WU-6 Wants list**: real classes instead of inline styles, styled empty state.
+- [x] **WU-1 Design foundations**: tokens (`--radius-sm/md/lg`, `--color-focus`, `--transition-*`,
+      `--color-success`), global `:focus-visible`, `font: inherit` for controls. Commit `e1a6c98`.
+- [x] **WU-2 Shared controls**: `.btn`/`.btn--primary`/`.btn--ghost`, `.field`/`.field-error`,
+      `.want-form`; applied to WantsPage toggle, WantEntryForm (errors `role="alert"`),
+      binder-empty button. Commit `4d6cb56`.
+- [x] **WU-3 AddCard dialog**: `.add-card-status` (+error), result-item meta line (name + typeLine,
+      `aria-label` keeps the exact accessible name asserted by tests), dialog radius/shadow,
+      `.btn` actions. Commit `a4adcb6`.
+- [x] **WU-4 Binder hero**: frame gradient + inset shadow, pocket groove, card hover via `filter`
+      (no clash with Card3D tilt), page-change slide + slot stagger (`useReducedMotion` aware),
+      badge ring. Commit `4871ac7`.
+- [x] **WU-5 Card detail**: back link "← Volver al binder", two-column layout (`dl`/`dt`/`dd`
+      metadata card), placeholder image; fixed the "Nombre:" row that mislabeled `setName` (now
+      `Set: setName (setCode #n)`); test link query updated to `/Volver/`. Commit `6b1b422`.
+- [x] **WU-6 Wants list**: `.wants-list`/`.want-item`/`.want-item-fields` replace inline styles;
+      styled empty state. Commit `aa9aa4e`.
 
 ## Authorized scope
 
@@ -93,4 +98,13 @@ app feel finished, improve keyboard/focus usability, and keep both themes (light
 
 - Branch `feature/look-and-feel` from code-review-fixes tip. `.codegraph/` added to `.gitignore`
   (`2b0f31c`) so `git`/`review assess` are clean.
-- WU-1..WU-6 pending.
+- **All 6 WU complete and committed**: `e1a6c98` (WU-1), `4d6cb56` (WU-2), `a4adcb6` (WU-3),
+  `4871ac7` (WU-4), `6b1b422` (WU-5), `aa9aa4e` (WU-6). Optional WU-7 responsive not started.
+- Build / oxlint / vitest green (27 tests) after every unit.
+- RDD gate: accumulated slice (base `2b0f31c`, 9 files, 621 lines) = medium,
+  `slice_budget_reached` → assess returned the exact STATUS preflight; START returned
+  `gentle-ai.review-integration.consent/v3` (blocking). **Blocked**: this runtime has no native
+  `question` UI, and v3 forbids chat-token fallback. Review authority pending human decision on a
+  compatible runtime; delivery follows ordinary repo policy meanwhile.
+- Next: user decision on the consent gate (then merge `feature/code-review-fixes` → `dev` order;
+  optionally WU-7 responsive).
