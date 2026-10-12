@@ -11,29 +11,61 @@ interface CardDetailProps {
  */
 export default function CardDetail({ entry, printing }: CardDetailProps) {
   return (
-    <>
-      {printing && (
-        <div>
+    <div className="card-detail-grid">
+      <div className="card-detail-media">
+        {printing ? (
           <img
             className="card-detail-image"
             src={printing.imageLarge || printing.imageNormal || printing.imageSmall}
             alt={`${printing.setName} #${printing.collectorNumber}`}
             draggable={false}
           />
-          <p><strong>Nombre:</strong> {printing.setName}</p>
-          <p><strong>Set:</strong> {printing.setCode} #{printing.collectorNumber}</p>
-          <p><strong>Rareza:</strong> {printing.rarity}</p>
-          {printing.prices && (
-            <p><strong>Precio USD:</strong> {printing.prices.usd || 'N/A'}</p>
-          )}
-        </div>
-      )}
-      <div>
-        <p><strong>Cantidad:</strong> {entry.quantity}</p>
-        <p><strong>Condición:</strong> {entry.condition}</p>
-        <p><strong>Idioma:</strong> {entry.language}</p>
-        <p><strong>Para intercambio:</strong> {entry.forTrade ? 'Sí' : 'No'}</p>
+        ) : (
+          <span
+            className="card-detail-image card-detail-image--placeholder"
+            role="img"
+            aria-label="Sin imagen disponible"
+          />
+        )}
       </div>
-    </>
+      <dl className="card-detail-meta">
+        {printing && (
+          <>
+            <div className="card-detail-row">
+              <dt>Set:</dt>
+              <dd>
+                {printing.setName} ({printing.setCode} #{printing.collectorNumber})
+              </dd>
+            </div>
+            <div className="card-detail-row">
+              <dt>Rareza:</dt>
+              <dd>{printing.rarity}</dd>
+            </div>
+            {printing.prices && (
+              <div className="card-detail-row">
+                <dt>Precio USD:</dt>
+                <dd>{printing.prices.usd || 'N/A'}</dd>
+              </div>
+            )}
+          </>
+        )}
+        <div className="card-detail-row">
+          <dt>Cantidad:</dt>
+          <dd>{entry.quantity}</dd>
+        </div>
+        <div className="card-detail-row">
+          <dt>Condición:</dt>
+          <dd>{entry.condition}</dd>
+        </div>
+        <div className="card-detail-row">
+          <dt>Idioma:</dt>
+          <dd>{entry.language}</dd>
+        </div>
+        <div className="card-detail-row">
+          <dt>Para intercambio:</dt>
+          <dd>{entry.forTrade ? 'Sí' : 'No'}</dd>
+        </div>
+      </dl>
+    </div>
   )
 }

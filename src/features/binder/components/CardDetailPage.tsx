@@ -18,7 +18,7 @@ export default function CardDetailPage() {
       <section className="page card-detail-page">
         <h1>Detalle de carta</h1>
         <p>Carta no encontrada.</p>
-        <Link to="/">Volver</Link>
+        <Link to="/" className="card-detail-back">← Volver al binder</Link>
       </section>
     )
   }
@@ -28,7 +28,7 @@ export default function CardDetailPage() {
       <section className="page card-detail-page">
         <h1>Detalle de carta</h1>
         <p>Cargando carta...</p>
-        <Link to="/">Volver</Link>
+        <Link to="/" className="card-detail-back">← Volver al binder</Link>
       </section>
     )
   }
@@ -38,7 +38,7 @@ export default function CardDetailPage() {
       <section className="page card-detail-page">
         <h1>Detalle de carta</h1>
         <p>No se pudo cargar la carta.</p>
-        <Link to="/">Volver</Link>
+        <Link to="/" className="card-detail-back">← Volver al binder</Link>
       </section>
     )
   }
@@ -46,7 +46,7 @@ export default function CardDetailPage() {
   return (
     <section className="page card-detail-page">
       <h1>Detalle de carta</h1>
-      <Link to="/">Volver</Link>
+      <Link to="/" className="card-detail-back">← Volver al binder</Link>
       <CardDetail entry={entry} printing={printing} />
     </section>
   )

@@ -9,21 +9,36 @@ export default function WantsPage() {
   return (
     <section className="page">
       <h1>Deseos</h1>
-      <button onClick={() => setShowForm(!showForm)}>
+      <button className="btn btn--primary" onClick={() => setShowForm(!showForm)}>
         {showForm ? 'Ocultar' : 'Agregar deseo'}
       </button>
       {showForm && <WantEntryForm onSubmit={() => setShowForm(false)} />}
-      <ul style={{ listStyle: 'none', padding: 0 }}>
-        {wants.map((w) => (
-          <li key={w.id} style={{ padding: 'var(--space-2)', border: '1px solid var(--color-border)', marginBottom: 'var(--space-2)' }}>
-            <div>Oráculo: {w.oracleId}</div>
-            <div>Cantidad: {w.quantity}</div>
-            {w.preferredPrintingId && <div>Impresión: {w.preferredPrintingId}</div>}
-            
-          </li>
-        ))}
-      </ul>
-      {wants.length === 0 && <p>Sin deseos</p>}
+      {wants.length === 0 ? (
+        <p className="wants-empty">Sin deseos todavía. Agrega una carta que quieras conseguir.</p>
+      ) : (
+        <ul className="wants-list">
+          {wants.map((w) => (
+            <li key={w.id} className="want-item">
+              <dl className="want-item-fields">
+                <div className="want-item-row">
+                  <dt>Oráculo:</dt>
+                  <dd>{w.oracleId}</dd>
+                </div>
+                <div className="want-item-row">
+                  <dt>Cantidad:</dt>
+                  <dd>{w.quantity}</dd>
+                </div>
+                {w.preferredPrintingId && (
+                  <div className="want-item-row">
+                    <dt>Impresión:</dt>
+                    <dd>{w.preferredPrintingId}</dd>
+                  </div>
+                )}
+              </dl>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   )
 }

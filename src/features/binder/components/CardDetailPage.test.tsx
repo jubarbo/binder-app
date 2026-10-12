@@ -70,13 +70,13 @@ describe('CardDetailPage', () => {
     expect(screen.getByRole('heading', { name: 'Detalle de carta' })).toBeInTheDocument()
     expect(screen.getByAltText('Test Set #123')).toBeInTheDocument()
     expect(screen.getByText(/Cantidad:/)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Volver' })).toHaveAttribute('href', '/')
+    expect(screen.getByRole('link', { name: /Volver/ })).toHaveAttribute('href', '/')
   })
 
   it('shows the not-found state and a link back to the binder for an unknown id', () => {
     renderPage('missing')
     expect(screen.getByText(/no encontrada/i)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Volver' })).toHaveAttribute('href', '/')
+    expect(screen.getByRole('link', { name: /Volver/ })).toHaveAttribute('href', '/')
   })
 
   it('shows a loading state while the printing is pending', () => {
