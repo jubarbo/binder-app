@@ -412,6 +412,33 @@ describe('WantEntryForm preferred printing', () => {
     )
   })
 
+  it('clears the printing selection when a want is added', async () => {
+    await openPicker()
+    fireEvent.click(
+      screen.getByRole('button', { name: /Limited Edition Alpha #161/ }),
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar a Deseos' }))
+    await waitFor(() => expect(addWantSpy).toHaveBeenCalledTimes(1))
+    // AnimatePresence keeps the old preview mounted while it exits; wait for
+    // the unmount before asserting on a fresh mount of the same card.
+    await waitFor(() =>
+      expect(document.querySelector('.want-preview')).not.toBeInTheDocument(),
+    )
+
+    // Verifying the same card again must start clean: the previously
+    // remembered printing selection does not resurface.
+    typeQuery('lightning bolt')
+    fireEvent.keyDown(screen.getByPlaceholderText('Buscar carta...'), {
+      key: 'Enter',
+    })
+    await screen.findByRole('img', { name: 'Lightning Bolt' })
+    fireEvent.click(screen.getByRole('button', { name: 'Elegir impresión' }))
+
+    expect(
+      screen.getByRole('button', { name: /Limited Edition Alpha #161/ }),
+    ).toHaveAttribute('aria-pressed', 'false')
+  })
+
   it('cancels the selection when the picker panel closes', async () => {
     await openPicker()
     fireEvent.click(

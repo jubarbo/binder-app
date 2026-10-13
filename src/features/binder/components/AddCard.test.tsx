@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import AddCard from '@/features/binder/components/AddCard'
+import { useBinderStore } from '@/features/binder/state/binderStore'
 import type { OracleCard, Printing } from '@/shared/types/mtg'
 
 interface QueryState<T> {
@@ -195,5 +196,69 @@ describe('AddCard printings', () => {
     expect(screen.queryByRole('option', { name: /Mostrando \d+ de \d+ ediciones/ })).not.toBeInTheDocument()
     const select = screen.getByRole('combobox')
     expect(Array.from(select.querySelectorAll('option')).filter((o) => o.value !== '')).toHaveLength(25)
+  })
+})
+
+describe('AddCard finish', () => {
+  const addEntrySpy = vi.fn()
+
+  beforeEach(() => {
+    useBinderStore.setState({ addEntry: addEntrySpy })
+    addEntrySpy.mockClear()
+    states.search = { data: [makeCard()], isPending: false, isError: false }
+  })
+
+  /** Open the dialog, pick the card and select its only printing. */
+  function selectPrinting(finishes: string[]) {
+    states.printings = {
+      data: [makePrinting({ finishes })],
+      isPending: false,
+      isError: false,
+    }
+    renderAddCard()
+    typeQuery('bolt')
+    fireEvent.click(screen.getByRole('button', { name: 'Lightning Bolt' }))
+    fireEvent.change(screen.getByRole('combobox', { name: 'Impresión' }), {
+      target: { value: 'printing-1' },
+    })
+  }
+
+  it('offers a finish select when the printing has several finishes', () => {
+    selectPrinting(['nonfoil', 'foil'])
+
+    const finishSelect = screen.getByRole('combobox', { name: 'Acabado' })
+    expect(finishSelect).toHaveValue('nonfoil')
+    fireEvent.change(finishSelect, { target: { value: 'foil' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar' }))
+
+    expect(addEntrySpy).toHaveBeenCalledWith(
+      expect.objectContaining({ printingId: 'printing-1', finish: 'foil' }),
+    )
+  })
+
+  it('auto-assigns the only finish without showing a select', () => {
+    selectPrinting(['foil'])
+
+    expect(
+      screen.queryByRole('combobox', { name: 'Acabado' }),
+    ).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar' }))
+
+    expect(addEntrySpy).toHaveBeenCalledWith(
+      expect.objectContaining({ printingId: 'printing-1', finish: 'foil' }),
+    )
+  })
+
+  it('ignores finishes the app does not model (e.g. digital)', () => {
+    selectPrinting(['digital'])
+
+    expect(
+      screen.queryByRole('combobox', { name: 'Acabado' }),
+    ).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar' }))
+
+    expect(addEntrySpy).toHaveBeenCalledWith(
+      expect.objectContaining({ printingId: 'printing-1', finish: undefined }),
+    )
   })
 })

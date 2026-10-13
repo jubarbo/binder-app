@@ -1270,6 +1270,30 @@ svg {
   font-weight: 600;
 }
 
+.card-detail-edit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.card-detail-edit textarea.field {
+  resize: vertical;
+  min-height: 4.5rem;
+}
+
+.card-detail-edit-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* The edit controls sit under the metadata column, not under the image. */
+@media (min-width: 720px) {
+  .card-detail-edit,
+  .card-detail-edit-trigger {
+    grid-column: 2;
+  }
+}
+
 /* Wants list */
 .wants-list {
   display: grid;

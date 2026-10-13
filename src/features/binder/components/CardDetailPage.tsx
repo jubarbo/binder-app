@@ -12,6 +12,7 @@ import CardDetail from '@/features/binder/components/CardDetail'
 export default function CardDetailPage() {
   const { entryId } = useParams<{ entryId: string }>()
   const entry = useBinderStore((state) => state.entries.find((item) => item.id === entryId))
+  const updateEntryDetails = useBinderStore((state) => state.updateEntryDetails)
   const { data: printing, isPending, isError } = usePrinting(entry?.printingId ?? '')
 
   if (!entry) {
@@ -60,7 +61,11 @@ export default function CardDetailPage() {
     >
       <h1>Detalle de carta</h1>
       <Link to="/" className="card-detail-back">← Volver al binder</Link>
-      <CardDetail entry={entry} printing={printing} />
+      <CardDetail
+        entry={entry}
+        printing={printing}
+        onSaveDetails={(patch) => updateEntryDetails(entry.id, patch)}
+      />
     </motion.section>
   )
 }

@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { useSearchCards, usePrintings } from '@/features/catalog/catalogQueries'
-import type { OracleCard, Printing } from '@/shared/types/mtg'
+import type { Finish, OracleCard, Printing } from '@/shared/types/mtg'
 import { useBinderStore } from '@/features/binder/state/binderStore'
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
 
@@ -12,11 +12,25 @@ interface AddCardProps {
 /** Maximum number of printing options rendered before the list is truncated. */
 const MAX_PRINTING_OPTIONS = 25
 
+const FINISH_LABELS: Record<Finish, string> = {
+  nonfoil: 'Nonfoil',
+  foil: 'Foil',
+  etched: 'Etched',
+}
+const KNOWN_FINISHES = Object.keys(FINISH_LABELS) as Finish[]
+
+/** The finishes of a printing the app can model (Scryfall also reports e.g. `digital`). */
+const knownFinishesOf = (printing: Printing): Finish[] =>
+  printing.finishes.filter((f): f is Finish =>
+    (KNOWN_FINISHES as string[]).includes(f),
+  )
+
 export default function AddCard({ onClose }: AddCardProps) {
   const [query, setQuery] = useState('')
   const debouncedQuery = useDebouncedValue(query)
   const [selectedCard, setSelectedCard] = useState<OracleCard | null>(null)
   const [selectedPrinting, setSelectedPrinting] = useState<Printing | null>(null)
+  const [selectedFinish, setSelectedFinish] = useState<Finish | null>(null)
   const [isAdding, setIsAdding] = useState(false)
   const prefersReducedMotion = useReducedMotion()
   const titleId = useId()
@@ -95,6 +109,7 @@ export default function AddCard({ onClose }: AddCardProps) {
     addEntry({
       id: crypto.randomUUID(),
       printingId: selectedPrinting.id,
+      finish: selectedFinish ?? undefined,
       quantity: 1,
       condition: 'NM',
       language: 'en',
@@ -144,10 +159,14 @@ export default function AddCard({ onClose }: AddCardProps) {
           <>
             <h3>{selectedCard.name}</h3>
             <select
+              aria-label="Impresión"
               value={selectedPrinting?.id || ''}
               onChange={(e) => {
-                const p = printings?.find((pr) => pr.id === e.target.value)
-                setSelectedPrinting(p || null)
+                const p = printings?.find((pr) => pr.id === e.target.value) ?? null
+                setSelectedPrinting(p)
+                // Default to the printing's first modelled finish; printings
+                // with no modelled finish stay undeclared.
+                setSelectedFinish(p ? (knownFinishesOf(p)[0] ?? null) : null)
               }}
               className="field"
             >
@@ -163,6 +182,21 @@ export default function AddCard({ onClose }: AddCardProps) {
                 </option>
               ))}
             </select>
+            {selectedPrinting &&
+              knownFinishesOf(selectedPrinting).length > 1 && (
+                <select
+                  aria-label="Acabado"
+                  value={selectedFinish ?? ''}
+                  onChange={(e) => setSelectedFinish(e.target.value as Finish)}
+                  className="field"
+                >
+                  {knownFinishesOf(selectedPrinting).map((f) => (
+                    <option key={f} value={f}>
+                      {FINISH_LABELS[f]}
+                    </option>
+                  ))}
+                </select>
+              )}
             <div className="add-card-actions">
               <button className="btn btn--ghost" onClick={() => setSelectedCard(null)}>Atrás</button>
               <button

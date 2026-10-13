@@ -44,15 +44,26 @@ export interface Printing {
 /** Physical condition grading for a held card. */
 export type Condition = 'NM' | 'LP' | 'MP' | 'HP' | 'DMG'
 
+/** Physical finish of a held copy (foil variants change both price and play). */
+export type Finish = 'nonfoil' | 'foil' | 'etched'
+
 /** A physical card the user owns and keeps in their binder. */
 export interface BinderEntry {
   id: string
   /** References the physical printing (see `Printing.id`). */
   printingId: string
+  /**
+   * Finish of THIS copy. Optional: entries added before it existed cannot
+   * declare an honest value, so the UI shows "No declarado" for them instead
+   * of guessing.
+   */
+  finish?: Finish
   quantity: number
   condition: Condition
   language: string
   forTrade: boolean
+  /** Free-text notes for the owner (defects, signatures, provenance). */
+  notes?: string
 }
 
 /** Priority ranking for a wanted card. */

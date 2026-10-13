@@ -198,6 +198,7 @@ export default function WantEntryForm({ onSubmit }: Props) {
     setSelected(null)
     setVerifyName('')
     setPreview(null)
+    setPrintingChoice(null)
     setZoomOpen(false)
     onSubmit?.()
   }

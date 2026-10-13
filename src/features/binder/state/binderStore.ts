@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { BinderEntry, WantEntry } from '@/shared/types/mtg'
+import type { BinderEntry, Finish, WantEntry } from '@/shared/types/mtg'
 
 /** Binder persistence storage key (zustand persist). */
 const BINDER_STORAGE_KEY = 'binder-app:binder:v1'
@@ -20,6 +20,11 @@ interface BinderState extends BinderPersistedState {
   removeEntry: (id: string) => void
   updateQuantity: (id: string, quantity: number) => void
   toggleForTrade: (id: string) => void
+  /** Patch the editable details (finish, notes) of one entry. */
+  updateEntryDetails: (
+    id: string,
+    patch: { finish?: Finish; notes?: string },
+  ) => void
   addWant: (want: WantEntry) => void
   removeWant: (id: string) => void
 }
@@ -48,6 +53,13 @@ export const useBinderStore = create<BinderState>()(
         set((state) => ({
           entries: state.entries.map((entry) =>
             entry.id === id ? { ...entry, forTrade: !entry.forTrade } : entry,
+          ),
+        })),
+
+      updateEntryDetails: (id, patch) =>
+        set((state) => ({
+          entries: state.entries.map((entry) =>
+            entry.id === id ? { ...entry, ...patch } : entry,
           ),
         })),
 
