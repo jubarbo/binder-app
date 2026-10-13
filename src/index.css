@@ -1,31 +1,31 @@
 /* Tactile Binder design tokens and base reset. */
 
 :root {
-  color-scheme: light dark;
+  color-scheme: dark;
 
   /* Fonts */
   --font-sans:
     system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Consolas, monospace;
 
-  /* Colors */
-  --color-bg: #f4f3f6;
-  --color-surface: #ffffff;
-  --color-text: #1b1a21;
-  --color-text-muted: #6b6375;
-  --color-border: #e2e1e6;
-  --color-accent: #6d28d9;
-  --color-accent-soft: rgba(109, 40, 217, 0.12);
-  --color-on-accent: #ffffff;
-  --color-danger: #b91c1c;
+  /* Colors — game-table theme: walnut, leather, parchment, antique gold. */
+  --color-bg: #241a12;
+  --color-surface: #33241a;
+  --color-text: #ece0c8;
+  --color-text-muted: #ab9878;
+  --color-border: #55402c;
+  --color-accent: #d4a444;
+  --color-accent-soft: rgba(212, 164, 68, 0.16);
+  --color-on-accent: #2a1c0d;
+  --color-danger: #d4574a;
 
-  /* Shadows */
+  /* Shadows — warm, deep enough for a dark table. */
   --shadow-sm:
-    0 1px 2px rgba(27, 26, 33, 0.08);
+    0 1px 2px rgba(10, 6, 3, 0.4);
   --shadow-md:
-    0 4px 10px -2px rgba(27, 26, 33, 0.14), 0 2px 4px -2px rgba(27, 26, 33, 0.1);
+    0 4px 10px -2px rgba(10, 6, 3, 0.5), 0 2px 4px -2px rgba(10, 6, 3, 0.4);
   --shadow-lg:
-    0 12px 28px -6px rgba(27, 26, 33, 0.22), 0 4px 10px -4px rgba(27, 26, 33, 0.16);
+    0 12px 28px -6px rgba(10, 6, 3, 0.6), 0 4px 10px -4px rgba(10, 6, 3, 0.5);
 
   /* Radius */
   --radius-sm: 6px;
@@ -40,7 +40,7 @@
   --transition-base: 240ms ease;
 
   /* Feedback */
-  --color-success: #15803d;
+  --color-success: #4d9a52;
 
   /* Card geometry: MTG frame proportions (w / h). */
   --card-aspect-ratio: 63 / 88;
@@ -72,16 +72,16 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #16171d;
-    --color-surface: #1f2028;
-    --color-text: #f3f4f6;
-    --color-text-muted: #9ca3af;
-    --color-border: #383a45;
-    --color-accent: #a78bfa;
-    --color-accent-soft: rgba(167, 139, 250, 0.16);
-    --color-on-accent: #14121a;
-    --color-danger: #f87171;
-    --color-success: #4ade80;
+    --color-bg: #1c140d;
+    --color-surface: #2a1d14;
+    --color-text: #f0e6d0;
+    --color-text-muted: #9c8a6c;
+    --color-border: #4a3726;
+    --color-accent: #e0b45c;
+    --color-accent-soft: rgba(224, 180, 92, 0.18);
+    --color-on-accent: #241708;
+    --color-danger: #e0705f;
+    --color-success: #6cb873;
 
     --shadow-sm:
       0 1px 2px rgba(0, 0, 0, 0.4);
@@ -242,6 +242,21 @@ svg {
   display: flex;
   flex-direction: column;
   min-height: 100svh;
+  background-color: var(--color-bg);
+  /* Walnut grain + a warm lamp glow over the table. */
+  background-image:
+    radial-gradient(
+      150% 80% at 50% -20%,
+      rgba(212, 164, 68, 0.08),
+      transparent 60%
+    ),
+    repeating-linear-gradient(
+      6deg,
+      rgba(255, 226, 178, 0.02) 0 3px,
+      rgba(0, 0, 0, 0.045) 3px 8px,
+      rgba(255, 226, 178, 0.012) 8px 14px,
+      rgba(0, 0, 0, 0.03) 14px 21px
+    );
 }
 
 .app-nav {
@@ -251,8 +266,16 @@ svg {
   gap: var(--space-4);
   padding-inline: var(--space-5);
   height: 56px;
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
+  /* Leather strap across the top, stitched along its lower edge. */
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 220, 170, 0.025) 0 2px,
+      rgba(0, 0, 0, 0.04) 2px 4px
+    ),
+    linear-gradient(180deg, #3b2b1e 0%, #2f2116 100%);
+  border-bottom: 1.5px dashed rgba(224, 197, 133, 0.45);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
 .app-brand {
@@ -416,14 +439,20 @@ svg {
 /* The physical binder page: a dark, slightly recessed board that holds pockets. */
 .binder-page-frame {
   padding: var(--space-4);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 220, 170, 0.1);
   border-radius: 14px;
   background:
-    radial-gradient(120% 100% at 50% 0%, #262a36 0%, #1b1d26 58%, #14151c 100%);
+    repeating-linear-gradient(
+      4deg,
+      rgba(255, 214, 160, 0.035) 0 4px,
+      rgba(0, 0, 0, 0.06) 4px 10px,
+      rgba(255, 214, 160, 0.02) 10px 17px
+    ),
+    radial-gradient(120% 100% at 50% 0%, #4a3520 0%, #352617 58%, #241a10 100%);
   box-shadow:
     var(--shadow-lg),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    inset 0 -10px 18px rgba(0, 0, 0, 0.28);
+    inset 0 1px 0 rgba(255, 226, 180, 0.06),
+    inset 0 -10px 18px rgba(0, 0, 0, 0.35);
 }
 
 .binder-grid {
@@ -447,10 +476,16 @@ svg {
   display: block;
   width: 100%;
   aspect-ratio: var(--card-aspect-ratio);
-  border: 1.5px dashed rgba(255, 255, 255, 0.22);
+  border: 1.5px dashed rgba(224, 197, 133, 0.38);
   border-radius: 4.5%;
-  background: rgba(255, 255, 255, 0.04);
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.35);
+  background: linear-gradient(
+    160deg,
+    rgba(74, 52, 34, 0.75),
+    rgba(45, 31, 20, 0.85)
+  );
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.5),
+    inset 0 -1px 0 rgba(255, 220, 170, 0.07);
 }
 
 /* Empty binder state */
@@ -477,7 +512,7 @@ svg {
 }
 
 .card-slot--ready {
-  background: #0f1015;
+  background: #1b1209;
   transition: filter var(--transition-fast);
 }
 
@@ -539,32 +574,36 @@ svg {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.25rem;
-  height: 1.25rem;
-  padding: 0 0.3rem;
-  border-radius: 999px;
-  background: var(--color-accent);
-  color: var(--color-on-accent);
-  border: 1px solid var(--color-on-accent);
-  font-size: 0.75rem;
+  min-width: 1.875rem;
+  height: 1.875rem;
+  padding: 0 0.6rem;
+  /* Leather tag: rectangular, tooled stitch inside the edge. */
+  border-radius: 6px;
+  background: linear-gradient(160deg, #4a3524 0%, #34251a 100%);
+  color: var(--color-text);
+  border: 1px solid rgba(224, 197, 133, 0.5);
+  outline: 1px dashed rgba(224, 197, 133, 0.35);
+  outline-offset: -4.5px;
+  font-size: 1.08rem;
+  letter-spacing: 0.03em;
   font-weight: 700;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 /* Loading skeleton */
 .card-slot--loading {
-  background: #1f2028;
+  background: #2c2016;
 }
 
 .card-skeleton {
   display: block;
   width: 100%;
   height: 100%;
-  background-color: rgba(255, 255, 255, 0.06);
+  background-color: rgba(255, 226, 178, 0.06);
   background-image: linear-gradient(
     100deg,
     transparent 25%,
-    rgba(255, 255, 255, 0.16) 50%,
+    rgba(255, 226, 178, 0.16) 50%,
     transparent 75%
   );
   background-size: 200% 100%;
@@ -905,7 +944,7 @@ svg {
   position: fixed;
   overflow: hidden;
   border-radius: 4.5%;
-  background: #0f1015;
+  background: #1b1209;
   transform-origin: center center;
   transform-style: preserve-3d;
   will-change: transform, opacity;
