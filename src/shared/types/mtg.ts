@@ -74,6 +74,12 @@ export interface WantEntry {
   /** Representative image of the default printing (see `OracleCard`). */
   imageNormal?: string
   preferredPrintingId?: string
+  /**
+   * Human-readable snapshot of the preferred printing (set and collector
+   * number), taken at add time: the list labels the want without resolving
+   * the printing id.
+   */
+  printingLabel?: string
   quantity: number
   priority: WantPriority
 }

@@ -7,7 +7,7 @@ import {
   within,
 } from '@testing-library/react'
 import WantEntryForm from '@/features/wants/components/WantEntryForm'
-import type { OracleCard } from '@/shared/types/mtg'
+import type { OracleCard, Printing } from '@/shared/types/mtg'
 
 interface QueryState<T> {
   data: T | null
@@ -26,19 +26,31 @@ const states = vi.hoisted(() => ({
     isPending: false,
     isError: false,
   } as QueryState<OracleCard>,
+  printings: {
+    data: null,
+    isPending: false,
+    isError: false,
+  } as QueryState<Printing[]>,
 }))
 
 const addWantSpy = vi.hoisted(() => vi.fn())
+const wantsState = vi.hoisted(() => ({
+  wants: [] as Array<Record<string, unknown>>,
+}))
 
 vi.mock('@/features/catalog/catalogQueries', () => ({
   useSearchCards: () => states.search,
   useNamed: () => states.named,
+  usePrintings: () => states.printings,
 }))
 
 vi.mock('@/features/binder/state/binderStore', () => ({
   useBinderStore: (
-    selector: (state: { addWant: typeof addWantSpy }) => unknown,
-  ) => selector({ addWant: addWantSpy }),
+    selector: (state: {
+      addWant: typeof addWantSpy
+      wants: typeof wantsState.wants
+    }) => unknown,
+  ) => selector({ addWant: addWantSpy, wants: wantsState.wants }),
 }))
 
 function makeCard(overrides: Partial<OracleCard> = {}): OracleCard {
@@ -50,6 +62,22 @@ function makeCard(overrides: Partial<OracleCard> = {}): OracleCard {
     typeLine: 'Instant',
     oracleText: 'Deal 3 damage to any target.',
     imageNormal: 'https://img.example/bolt.jpg',
+    ...overrides,
+  }
+}
+
+function makePrinting(overrides: Partial<Printing> = {}): Printing {
+  return {
+    id: 'printing-1',
+    oracleId: 'oracle-bolt',
+    setCode: 'LEB',
+    setName: 'Limited Edition Alpha',
+    collectorNumber: '161',
+    rarity: 'common',
+    finishes: ['nonfoil'],
+    imageSmall: 'https://img.example/bolt-small.jpg',
+    imageNormal: 'https://img.example/bolt-printing.jpg',
+    imageLarge: 'https://img.example/bolt-large.jpg',
     ...overrides,
   }
 }
@@ -67,6 +95,8 @@ function typeQuery(value: string) {
 beforeEach(() => {
   states.search = { data: null, isPending: false, isError: false }
   states.named = { data: null, isPending: false, isError: false }
+  states.printings = { data: null, isPending: false, isError: false }
+  wantsState.wants = []
   addWantSpy.mockReset()
 })
 
@@ -320,5 +350,372 @@ describe('WantEntryForm card zoom', () => {
     await waitFor(() =>
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     )
+  })
+})
+
+describe('WantEntryForm preferred printing', () => {
+  async function openPicker() {
+    states.named = { data: makeCard(), isPending: false, isError: false }
+    states.printings = {
+      data: [
+        makePrinting(),
+        makePrinting({
+          id: 'printing-2',
+          setName: 'Magic 2011',
+          collectorNumber: '146',
+        }),
+      ],
+      isPending: false,
+      isError: false,
+    }
+    renderForm()
+    typeQuery('lightning bolt')
+    fireEvent.keyDown(screen.getByPlaceholderText('Buscar carta...'), {
+      key: 'Enter',
+    })
+    await screen.findByRole('img', { name: 'Lightning Bolt' })
+    fireEvent.click(screen.getByRole('button', { name: 'Elegir impresión' }))
+    return screen.findByRole('button', { name: /Limited Edition Alpha #161/ })
+  }
+
+  it('lets the user pick a printing and stores it on the want', async () => {
+    const first = await openPicker()
+    expect(
+      screen.getByRole('button', { name: /Magic 2011 #146/ }),
+    ).toBeInTheDocument()
+
+    fireEvent.click(first)
+
+    // No chip: the shaded card itself shows the selection, and the preview
+    // art switches to the chosen printing.
+    expect(
+      screen.queryByText('Limited Edition Alpha #161'),
+    ).not.toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Lightning Bolt' })).toHaveAttribute(
+      'src',
+      'https://img.example/bolt-printing.jpg',
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar a Deseos' }))
+
+    await waitFor(() =>
+      expect(addWantSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          oracleId: 'oracle-bolt',
+          // The want carries the printing's art, so the list thumbnail and
+          // edition describe the physical card that was asked for.
+          imageNormal: 'https://img.example/bolt-printing.jpg',
+          preferredPrintingId: 'printing-1',
+          printingLabel: 'Limited Edition Alpha #161',
+        }),
+      ),
+    )
+  })
+
+  it('cancels the selection when the picker panel closes', async () => {
+    await openPicker()
+    fireEvent.click(
+      screen.getByRole('button', { name: /Limited Edition Alpha #161/ }),
+    )
+    expect(screen.getByRole('img', { name: 'Lightning Bolt' })).toHaveAttribute(
+      'src',
+      'https://img.example/bolt-printing.jpg',
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ocultar impresiones' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Elegir impresión' }))
+
+    // Reopening starts clean: no pressed card and the default art is back.
+    expect(
+      screen.getByRole('button', { name: /Limited Edition Alpha #161/ }),
+    ).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('img', { name: 'Lightning Bolt' })).toHaveAttribute(
+      'src',
+      'https://img.example/bolt.jpg',
+    )
+  })
+
+  it('blocks adding an oracle card that is already in the wants list', async () => {
+    wantsState.wants = [
+      { id: 'w1', oracleId: 'oracle-bolt', quantity: 1, priority: 'normal' },
+    ]
+    states.named = { data: makeCard(), isPending: false, isError: false }
+    renderForm()
+    typeQuery('lightning bolt')
+    fireEvent.keyDown(screen.getByPlaceholderText('Buscar carta...'), {
+      key: 'Enter',
+    })
+    await screen.findByRole('img', { name: 'Lightning Bolt' })
+
+    expect(
+      screen.getByRole('button', { name: 'Agregar a Deseos' }),
+    ).toBeDisabled()
+    expect(
+      screen.getByText('Esta carta ya está en tu lista.'),
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar a Deseos' }))
+    expect(addWantSpy).not.toHaveBeenCalled()
+  })
+
+  it('allows the oracle add when only printings of the card are wanted', async () => {
+    wantsState.wants = [
+      {
+        id: 'w1',
+        oracleId: 'oracle-bolt',
+        preferredPrintingId: 'printing-1',
+        quantity: 1,
+        priority: 'normal',
+      },
+    ]
+    states.named = { data: makeCard(), isPending: false, isError: false }
+    renderForm()
+    typeQuery('lightning bolt')
+    fireEvent.keyDown(screen.getByPlaceholderText('Buscar carta...'), {
+      key: 'Enter',
+    })
+    await screen.findByRole('img', { name: 'Lightning Bolt' })
+
+    const addButton = screen.getByRole('button', { name: 'Agregar a Deseos' })
+    expect(addButton).toBeEnabled()
+    expect(
+      screen.queryByText('Esta carta ya está en tu lista.'),
+    ).not.toBeInTheDocument()
+
+    fireEvent.click(addButton)
+    // The new want is oracle-level: no printing rides along.
+    await waitFor(() => {
+      expect(addWantSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          oracleId: 'oracle-bolt',
+          imageNormal: 'https://img.example/bolt.jpg',
+        }),
+      )
+      expect(addWantSpy).toHaveBeenCalledWith(
+        expect.not.objectContaining({
+          preferredPrintingId: expect.anything(),
+        }),
+      )
+    })
+  })
+
+  it('enables the blocked oracle form once a printing is selected', async () => {
+    wantsState.wants = [
+      { id: 'w1', oracleId: 'oracle-bolt', quantity: 1, priority: 'normal' },
+    ]
+    states.named = { data: makeCard(), isPending: false, isError: false }
+    states.printings = {
+      data: [
+        makePrinting(),
+        makePrinting({
+          id: 'printing-2',
+          setName: 'Magic 2011',
+          collectorNumber: '146',
+        }),
+      ],
+      isPending: false,
+      isError: false,
+    }
+    renderForm()
+    typeQuery('lightning bolt')
+    fireEvent.keyDown(screen.getByPlaceholderText('Buscar carta...'), {
+      key: 'Enter',
+    })
+    await screen.findByRole('img', { name: 'Lightning Bolt' })
+
+    // Oracle already wanted: the plain oracle add is blocked...
+    const addButton = screen.getByRole('button', { name: 'Agregar a Deseos' })
+    expect(addButton).toBeDisabled()
+    expect(
+      screen.getByText('Esta carta ya está en tu lista.'),
+    ).toBeInTheDocument()
+
+    // ...but picking a concrete printing makes the button add that printing.
+    fireEvent.click(screen.getByRole('button', { name: 'Elegir impresión' }))
+    fireEvent.click(screen.getByRole('button', { name: /Magic 2011 #146/ }))
+
+    expect(addButton).toBeEnabled()
+    expect(
+      screen.queryByText('Esta carta ya está en tu lista.'),
+    ).not.toBeInTheDocument()
+
+    fireEvent.click(addButton)
+    await waitFor(() =>
+      expect(addWantSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          oracleId: 'oracle-bolt',
+          preferredPrintingId: 'printing-2',
+          printingLabel: 'Magic 2011 #146',
+        }),
+      ),
+    )
+  })
+
+  it('filters out printings already in the wants list', async () => {
+    wantsState.wants = [
+      {
+        id: 'w1',
+        oracleId: 'oracle-bolt',
+        preferredPrintingId: 'printing-1',
+        quantity: 1,
+        priority: 'normal',
+      },
+    ]
+    states.named = { data: makeCard(), isPending: false, isError: false }
+    states.printings = {
+      data: [
+        makePrinting(),
+        makePrinting({
+          id: 'printing-2',
+          setName: 'Magic 2011',
+          collectorNumber: '146',
+        }),
+      ],
+      isPending: false,
+      isError: false,
+    }
+    renderForm()
+    typeQuery('lightning bolt')
+    fireEvent.keyDown(screen.getByPlaceholderText('Buscar carta...'), {
+      key: 'Enter',
+    })
+    await screen.findByRole('img', { name: 'Lightning Bolt' })
+    fireEvent.click(screen.getByRole('button', { name: 'Elegir impresión' }))
+
+    expect(
+      screen.queryByRole('button', { name: /Limited Edition Alpha #161/ }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /Magic 2011 #146/ }),
+    ).toBeInTheDocument()
+  })
+
+  it('clears the preferred printing when another card is verified', async () => {
+    await openPicker()
+    fireEvent.click(
+      screen.getByRole('button', { name: /Limited Edition Alpha #161/ }),
+    )
+    expect(screen.getByRole('img', { name: 'Lightning Bolt' })).toHaveAttribute(
+      'src',
+      'https://img.example/bolt-printing.jpg',
+    )
+
+    states.named = {
+      data: makeCard({
+        oracleId: 'oracle-angel',
+        name: 'Lightning Angel',
+        typeLine: 'Creature — Angel',
+        oracleText: 'Flying, vigilance, haste.',
+        imageNormal: 'https://img.example/angel.jpg',
+      }),
+      isPending: false,
+      isError: false,
+    }
+    typeQuery('lightning angel')
+    fireEvent.keyDown(screen.getByPlaceholderText('Buscar carta...'), {
+      key: 'Enter',
+    })
+
+    // The new card previews with its own art: the old printing never leaks.
+    expect(
+      await screen.findByRole('img', { name: 'Lightning Angel' }),
+    ).toHaveAttribute('src', 'https://img.example/angel.jpg')
+  })
+
+  it('hides the picker when the printings fail to load', async () => {
+    states.named = { data: makeCard(), isPending: false, isError: false }
+    states.printings = { data: null, isPending: false, isError: true }
+    renderForm()
+    typeQuery('lightning bolt')
+    fireEvent.keyDown(screen.getByPlaceholderText('Buscar carta...'), {
+      key: 'Enter',
+    })
+    await screen.findByRole('img', { name: 'Lightning Bolt' })
+
+    // No data, no button: the oracle-level want still works.
+    expect(
+      screen.queryByRole('button', { name: 'Elegir impresión' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('hides the picker button while the printings are pending', async () => {
+    states.named = { data: makeCard(), isPending: false, isError: false }
+    states.printings = { data: null, isPending: true, isError: false }
+    renderForm()
+    typeQuery('lightning bolt')
+    fireEvent.keyDown(screen.getByPlaceholderText('Buscar carta...'), {
+      key: 'Enter',
+    })
+    await screen.findByRole('img', { name: 'Lightning Bolt' })
+
+    expect(
+      screen.queryByRole('button', { name: 'Elegir impresión' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('hides the picker button when the card has a single printing', async () => {
+    states.named = { data: makeCard(), isPending: false, isError: false }
+    states.printings = {
+      data: [makePrinting()],
+      isPending: false,
+      isError: false,
+    }
+    renderForm()
+    typeQuery('lightning bolt')
+    fireEvent.keyDown(screen.getByPlaceholderText('Buscar carta...'), {
+      key: 'Enter',
+    })
+    await screen.findByRole('img', { name: 'Lightning Bolt' })
+
+    expect(
+      screen.queryByRole('button', { name: 'Elegir impresión' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('keeps the panel open and shades the selected printing', async () => {
+    const first = await openPicker()
+
+    fireEvent.click(first)
+
+    // The chosen card stays in place, pressed and shaded like hover.
+    expect(first).toHaveAttribute('aria-pressed', 'true')
+    expect(first.className).toContain('want-printing-item--active')
+    expect(
+      screen.getByRole('button', { name: 'Ocultar impresiones' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Lightning Bolt' })).toHaveAttribute(
+      'src',
+      'https://img.example/bolt-printing.jpg',
+    )
+  })
+
+  it('filters the printings by edition name and never submits on Enter', async () => {
+    await openPicker()
+
+    const filter = screen.getByPlaceholderText('Buscar edición...')
+    fireEvent.change(filter, { target: { value: 'magic' } })
+
+    expect(
+      screen.getByRole('button', { name: /Magic 2011 #146/ }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /Limited Edition Alpha #161/ }),
+    ).not.toBeInTheDocument()
+
+    // Enter inside the filter must not submit the want form.
+    fireEvent.keyDown(filter, { key: 'Enter' })
+    expect(addWantSpy).not.toHaveBeenCalled()
+
+    // An edition-less match reports an empty result.
+    fireEvent.change(filter, { target: { value: 'zzz' } })
+    expect(
+      screen.getByText('Sin ediciones para tu búsqueda.'),
+    ).toBeInTheDocument()
+
+    // Clearing the filter restores the full list.
+    fireEvent.change(filter, { target: { value: '' } })
+    expect(
+      screen.getByRole('button', { name: /Limited Edition Alpha #161/ }),
+    ).toBeInTheDocument()
   })
 })

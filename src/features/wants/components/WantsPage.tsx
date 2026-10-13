@@ -35,7 +35,12 @@ export default function WantsPage() {
                 )}
                 {w.preferredPrintingId && (
                   <span className="want-item-printing">
-                    {w.preferredPrintingId}
+                    {w.printingLabel ?? w.preferredPrintingId}
+                  </span>
+                )}
+                {!w.preferredPrintingId && (
+                  <span className="want-item-printing want-item-printing--oracle">
+                    Cualquier impresión
                   </span>
                 )}
               </div>

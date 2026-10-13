@@ -8,7 +8,8 @@ import { useSearchCards, useNamed } from '@/features/catalog/catalogQueries'
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
 import { useCardRock } from '@/shared/hooks/useCardRock'
 import WantCardZoom from '@/features/wants/components/WantCardZoom'
-import type { OracleCard } from '@/shared/types/mtg'
+import PrintingPicker from '@/features/wants/components/PrintingPicker'
+import type { OracleCard, Printing } from '@/shared/types/mtg'
 
 const schema = z.object({
   quantity: z.coerce.number().int().min(1).max(99),
@@ -71,11 +72,16 @@ function WantPreviewCard({ card, onZoom }: WantPreviewCardProps) {
 
 export default function WantEntryForm({ onSubmit }: Props) {
   const addWant = useBinderStore((s) => s.addWant)
+  const wants = useBinderStore((s) => s.wants)
   const [query, setQuery] = useState('')
   const debouncedQuery = useDebouncedValue(query)
   const [selected, setSelected] = useState<OracleCard | null>(null)
   const [verifyName, setVerifyName] = useState('')
   const [preview, setPreview] = useState<OracleCard | null>(null)
+  const [printingChoice, setPrintingChoice] = useState<{
+    oracleId: string
+    printing: Printing
+  } | null>(null)
   const [zoomOpen, setZoomOpen] = useState(false)
   const {
     register,
@@ -110,6 +116,29 @@ export default function WantEntryForm({ onSubmit }: Props) {
     else if (isVerifyError) setPreview(null)
   }, [verifyName, verifiedCard, isVerifyError])
 
+  // The printing choice is keyed by oracle: switching cards (or a failed
+  // lookup) derives no preference, so no reset effect is needed.
+  const preferredPrinting =
+    printingChoice && preview && printingChoice.oracleId === preview.oracleId
+      ? printingChoice.printing
+      : null
+  // A chosen printing swaps the preview art; name and text stay oracle-level.
+  const displayCard =
+    preview && preferredPrinting
+      ? { ...preview, imageNormal: preferredPrinting.imageNormal }
+      : preview
+  // Only an oracle-level want blocks another oracle add, and only while no
+  // printing is selected: picking a concrete printing always allows it
+  // (exact repeats are filtered out of the picker).
+  const oracleWanted =
+    preview !== null &&
+    wants.some(
+      (w) => w.oracleId === preview.oracleId && !w.preferredPrintingId,
+    )
+  const addBlocked = oracleWanted && preferredPrinting === null
+  const wantedPrintingIds = new Set(
+    wants.flatMap((w) => (w.preferredPrintingId ? [w.preferredPrintingId] : [])),
+  )
   const suggestionPicked = selected !== null && matchesName(selected, query)
   const previewIsCurrent =
     preview !== null && hasQuery && matchesName(preview, query)
@@ -146,15 +175,21 @@ export default function WantEntryForm({ onSubmit }: Props) {
   }
 
   const submit = (data: FormOutput) => {
-    if (!preview) return
+    if (!displayCard || addBlocked) return
     addWant({
       id: crypto.randomUUID(),
-      oracleId: preview.oracleId,
+      oracleId: displayCard.oracleId,
       // Oracle-level display snapshot: the list cannot resolve a card by
       // oracle id (no such endpoint), so name, type and image ride along.
-      name: preview.name,
-      typeLine: preview.typeLine,
-      imageNormal: preview.imageNormal,
+      name: displayCard.name,
+      typeLine: displayCard.typeLine,
+      imageNormal: displayCard.imageNormal,
+      // Optional printing refinement; the label keeps the list readable
+      // without resolving the id.
+      preferredPrintingId: preferredPrinting?.id,
+      printingLabel: preferredPrinting
+        ? `${preferredPrinting.setName} #${preferredPrinting.collectorNumber}`
+        : undefined,
       quantity: data.quantity,
       priority: 'normal',
     })
@@ -249,33 +284,48 @@ export default function WantEntryForm({ onSubmit }: Props) {
         {/* The preview follows the input: emptying the input hides it, and
             both directions run the same enter/exit transition. */}
         <AnimatePresence>
-          {hasQuery && !isVerifying && preview && (
+          {hasQuery && !isVerifying && displayCard && (
             <motion.div
-              key={preview.oracleId}
+              key={displayCard.oracleId}
               className="want-preview"
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 12 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}
             >
-              {preview.imageNormal ? (
+              {displayCard.imageNormal ? (
                 <WantPreviewCard
-                  card={preview}
+                  card={displayCard}
                   onZoom={() => setZoomOpen(true)}
                 />
               ) : (
                 <div className="want-preview-img want-preview-img--fallback">
-                  {preview.name}
+                  {displayCard.name}
                 </div>
               )}
               <div className="want-preview-body">
-                <span className="want-preview-name">{preview.name}</span>
-                {preview.typeLine && (
-                  <span className="want-preview-type">{preview.typeLine}</span>
+                <span className="want-preview-name">{displayCard.name}</span>
+                {displayCard.typeLine && (
+                  <span className="want-preview-type">
+                    {displayCard.typeLine}
+                  </span>
                 )}
-                {preview.oracleText && (
-                  <p className="want-preview-text">{preview.oracleText}</p>
+                {displayCard.oracleText && (
+                  <p className="want-preview-text">{displayCard.oracleText}</p>
                 )}
+                <PrintingPicker
+                  key={displayCard.oracleId}
+                  oracleId={displayCard.oracleId}
+                  takenPrintingIds={wantedPrintingIds}
+                  selected={preferredPrinting}
+                  onSelect={(printing) =>
+                    setPrintingChoice({
+                      oracleId: displayCard.oracleId,
+                      printing,
+                    })
+                  }
+                  onClear={() => setPrintingChoice(null)}
+                />
                 <div className="want-preview-actions">
                   <input
                     type="number"
@@ -286,7 +336,11 @@ export default function WantEntryForm({ onSubmit }: Props) {
                     className="field want-preview-quantity"
                     {...register('quantity')}
                   />
-                  <button type="submit" className="btn btn--primary">
+                  <button
+                    type="submit"
+                    className="btn btn--primary"
+                    disabled={addBlocked}
+                  >
                     Agregar a Deseos
                   </button>
                 </div>
@@ -295,16 +349,21 @@ export default function WantEntryForm({ onSubmit }: Props) {
                     {errors.quantity.message}
                   </span>
                 )}
+                {addBlocked && (
+                  <p className="want-form-status">
+                    Esta carta ya está en tu lista.
+                  </p>
+                )}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </form>
       <AnimatePresence>
-        {zoomOpen && hasQuery && preview && (
+        {zoomOpen && hasQuery && displayCard && (
           <WantCardZoom
-            key={preview.oracleId}
-            card={preview}
+            key={displayCard.oracleId}
+            card={displayCard}
             onClose={() => setZoomOpen(false)}
           />
         )}

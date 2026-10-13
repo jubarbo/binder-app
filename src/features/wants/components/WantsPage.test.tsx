@@ -82,6 +82,35 @@ describe('WantsPage', () => {
     expect(document.querySelector('.want-item-thumb')).toBeNull()
   })
 
+  it('shows the printing label of a want with a preferred printing', () => {
+    seedWant({
+      preferredPrintingId: 'pr-9',
+      printingLabel: 'Limited Edition Alpha #161',
+    })
+
+    renderPage()
+
+    expect(screen.getByText('Limited Edition Alpha #161')).toBeInTheDocument()
+    expect(screen.queryByText('pr-9')).not.toBeInTheDocument()
+  })
+
+  it('shows "Cualquier impresión" for an oracle-level want', () => {
+    seedWant({
+      name: 'Lightning Bolt',
+      oracleId: 'oracle-bolt',
+      typeLine: 'Instant',
+      imageNormal: 'https://img.example/bolt.jpg',
+      quantity: 1,
+      priority: 'normal',
+    })
+
+    renderPage()
+
+    expect(screen.getByText('Cualquier impresión')).toBeInTheDocument()
+    const printing = screen.getByText('Cualquier impresión').closest('.want-item-printing')
+    expect(printing).toHaveClass('want-item-printing--oracle')
+  })
+
   it('shows the empty state when there are no wants', () => {
     renderPage()
 

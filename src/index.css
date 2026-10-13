@@ -269,22 +269,27 @@ svg {
   scrollbar-color: var(--color-text-muted) transparent;
 }
 
-/* ... and the WebKit pseudo-elements (older Chromium, Safari). */
-.want-search-list::-webkit-scrollbar {
+/* ... and the WebKit pseudo-elements (older Chromium, Safari); the printing
+   picker list shares the same themed scroll. */
+.want-search-list::-webkit-scrollbar,
+.want-printing-list::-webkit-scrollbar {
   width: 8px;
 }
 
-.want-search-list::-webkit-scrollbar-track {
+.want-search-list::-webkit-scrollbar-track,
+.want-printing-list::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.want-search-list::-webkit-scrollbar-thumb {
+.want-search-list::-webkit-scrollbar-thumb,
+.want-printing-list::-webkit-scrollbar-thumb {
   background: var(--color-text-muted);
   border: 2px solid var(--color-bg);
   border-radius: var(--radius-sm);
 }
 
-.want-search-list::-webkit-scrollbar-thumb:hover {
+.want-search-list::-webkit-scrollbar-thumb:hover,
+.want-printing-list::-webkit-scrollbar-thumb:hover {
   background: var(--color-text);
 }
 
@@ -380,6 +385,8 @@ svg {
 .want-preview-card {
   position: relative;
   flex: none;
+  /* The panel below can outgrow the card: the card must not stretch. */
+  align-self: flex-start;
   cursor: zoom-in;
   border-radius: 4.5%;
   transform-style: preserve-3d;
@@ -402,6 +409,7 @@ svg {
 }
 
 .want-preview-img--fallback {
+  align-self: flex-start;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -435,6 +443,97 @@ svg {
   line-height: 1.4;
   white-space: pre-line;
   overflow-wrap: anywhere;
+}
+
+/* Preferred-printing picker: the optional refinement under the preview. */
+.want-printing {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.want-printing-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.want-printing-panel {
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+}
+
+.want-printing-filter {
+  width: 100%;
+  margin-bottom: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.want-printing-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: var(--space-2);
+  max-height: 280px;
+  overflow-y: auto;
+  /* Wheel scrolling stops here instead of chaining to the page behind. */
+  overscroll-behavior: contain;
+  /* Thin, themed scrollbar: standard properties (Firefox, Chromium). */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-text-muted) transparent;
+}
+
+.want-printing-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  padding: var(--space-1);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: center;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.want-printing-item:hover {
+  background: var(--color-accent-soft);
+}
+
+.want-printing-item--active {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.want-printing-img {
+  width: 100%;
+  aspect-ratio: var(--card-aspect-ratio);
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.want-printing-set {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.want-printing-meta {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  text-transform: capitalize;
 }
 
 .want-preview-actions {
@@ -1253,6 +1352,10 @@ svg {
   color: var(--color-text-muted);
   font-size: var(--text-sm);
   overflow-wrap: anywhere;
+}
+
+.want-item-printing--oracle {
+  font-style: italic;
 }
 
 .want-item-qty {
