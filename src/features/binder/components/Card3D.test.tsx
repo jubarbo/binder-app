@@ -111,6 +111,26 @@ describe('Card3D', () => {
     expect(onOpenDetail).not.toHaveBeenCalled()
   })
 
+  it('handles hover motion events without errors', () => {
+    render(
+      <Card3D
+        entry={entry}
+        printing={printing}
+        alt="Test Card"
+        hasSmall={false}
+        hasNormal={true}
+        normalLoaded={true}
+        setNormalLoaded={vi.fn()}
+      />
+    )
+    const card = screen.getByRole('button')
+    // Rock/lift handlers must never throw; the rocking itself is visual-only.
+    fireEvent.mouseEnter(card)
+    fireEvent.mouseMove(card, { clientX: 30, clientY: 40 })
+    fireEvent.mouseLeave(card)
+    expect(card).toHaveAttribute('aria-label', 'Carta Test Card, ver detalle')
+  })
+
   it('no longer toggles an inline zoom overlay on click', () => {
     render(
       <Card3D

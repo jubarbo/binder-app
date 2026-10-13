@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { useReducedMotion } from 'motion/react'
 import type { BinderEntry } from '@/shared/types/mtg'
 import { usePrinting } from '@/features/catalog/catalogQueries'
 import Card3D from '@/features/binder/components/Card3D'
+import { isFlightActive, useFlightStore } from '@/features/binder/transition/flightStore'
 
 interface CardSlotProps {
   /** The physical printing the user owns in this pocket. */
@@ -22,6 +24,8 @@ function cardAltText(entry: BinderEntry, setName: string, collectorNumber: strin
 export default function CardSlot({ entry }: CardSlotProps) {
   const { data: printing, isPending, isError } = usePrinting(entry.printingId)
   const navigate = useNavigate()
+  const location = useLocation()
+  const prefersReducedMotion = useReducedMotion()
   // Tracks whether the high-resolution image has painted yet, so the small
   // image can stand in while it loads.
   const [normalLoaded, setNormalLoaded] = useState(false)
@@ -53,6 +57,30 @@ export default function CardSlot({ entry }: CardSlotProps) {
     </span>
   ) : null
 
+  const openDetail = (element: HTMLDivElement) => {
+    // Fresh store read: rapid repeat clicks must not start a second flight,
+    // even before React re-renders.
+    const { flight, beginFlight } = useFlightStore.getState()
+    if (isFlightActive(flight, performance.now())) return
+    if (prefersReducedMotion) {
+      navigate(`/card/${entry.id}`)
+      return
+    }
+    const rect = element.getBoundingClientRect()
+    beginFlight({
+      entryId: entry.id,
+      imageSmall: printing.imageSmall,
+      // Fly with exactly what the user was already seeing: the sharp layer is
+      // only carried over once the grid has hydrated it, so it can never pop
+      // in mid-flight with a visible crossfade.
+      imageNormal: normalLoaded ? printing.imageNormal : '',
+      alt,
+      start: { top: rect.top, left: rect.left, width: rect.width, height: rect.height },
+      locationKey: location.key,
+    })
+    // The route swap is scheduled by the overlay, hidden under full black.
+  }
+
   return (
     <Card3D
       entry={entry}
@@ -63,7 +91,7 @@ export default function CardSlot({ entry }: CardSlotProps) {
       normalLoaded={normalLoaded}
       setNormalLoaded={setNormalLoaded}
       quantityBadge={quantityBadge}
-      onOpenDetail={() => navigate(`/card/${entry.id}`)}
+      onOpenDetail={openDetail}
     />
   )
 }

@@ -63,7 +63,23 @@ export interface WantEntry {
   id: string
   /** References the logical card (see `OracleCard.oracleId`). */
   oracleId: string
+  /**
+   * Oracle-level display snapshot taken when the want was added. Optional:
+   * wants stored before the snapshot existed render from `oracleId` alone.
+   * There is no "card by oracle id" endpoint, so the list cannot resolve
+   * these fields later.
+   */
+  name?: string
+  typeLine?: string
+  /** Representative image of the default printing (see `OracleCard`). */
+  imageNormal?: string
   preferredPrintingId?: string
+  /**
+   * Human-readable snapshot of the preferred printing (set and collector
+   * number), taken at add time: the list labels the want without resolving
+   * the printing id.
+   */
+  printingLabel?: string
   quantity: number
   priority: WantPriority
 }

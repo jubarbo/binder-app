@@ -1,7 +1,8 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import { MemoryRouter, Routes, Route, useParams } from 'react-router-dom'
+import { MemoryRouter } from 'react-router-dom'
 import CardSlot from '@/features/binder/components/CardSlot'
+import { useFlightStore } from '@/features/binder/transition/flightStore'
 import type { BinderEntry, Printing } from '@/shared/types/mtg'
 
 vi.mock('@/features/catalog/catalogQueries', () => ({
@@ -10,7 +11,7 @@ vi.mock('@/features/catalog/catalogQueries', () => ({
 
 import { usePrinting } from '@/features/catalog/catalogQueries'
 
-const mockUsePrinting = usePrinting as any
+const mockUsePrinting = usePrinting as unknown as ReturnType<typeof vi.fn>
 
 const entry: BinderEntry = { id: 'e1', printingId: 'p1', quantity: 1, condition: 'NM', language: 'en', forTrade: true }
 
@@ -28,24 +29,19 @@ const printing: Printing = {
   prices: undefined,
 }
 
-/** Probe route that echoes the matched entryId so navigation is observable. */
-function DetailProbe() {
-  const { entryId } = useParams()
-  return <div>{`detail-${entryId}`}</div>
-}
-
 function renderSlot() {
   return render(
     <MemoryRouter initialEntries={['/']}>
-      <Routes>
-        <Route path="/" element={<CardSlot entry={entry} />} />
-        <Route path="/card/:entryId" element={<DetailProbe />} />
-      </Routes>
-    </MemoryRouter>
+      <CardSlot entry={entry} />
+    </MemoryRouter>,
   )
 }
 
 describe('CardSlot', () => {
+  beforeEach(() => {
+    useFlightStore.setState({ flight: null })
+  })
+
   it('renders loading placeholder when pending', () => {
     mockUsePrinting.mockReturnValue({ data: undefined, isPending: true, isError: false })
     renderSlot()
@@ -59,10 +55,10 @@ describe('CardSlot', () => {
     expect(screen.getByLabelText('No se pudo cargar la carta')).toBeInTheDocument()
   })
 
-  it('navigates to the card detail route when a resolved card is clicked', () => {
+  it('starts a flight on click; the route swap belongs to the overlay', () => {
     mockUsePrinting.mockReturnValue({ data: printing, isPending: false, isError: false })
     renderSlot()
     fireEvent.click(screen.getByRole('button'))
-    expect(screen.getByText('detail-e1')).toBeInTheDocument()
+    expect(useFlightStore.getState().flight?.entryId).toBe('e1')
   })
 })
