@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { useBinderStore } from '@/features/binder/state/binderStore'
 import CardSlot from '@/features/binder/components/CardSlot'
@@ -7,15 +7,25 @@ import AddCard from '@/features/binder/components/AddCard'
 /** Pockets per binder page: a 5x3 trading-card page. */
 const SLOTS_PER_PAGE = 15
 
+/** sessionStorage key so returning from a detail keeps the binder page. */
+const PAGE_INDEX_STORAGE_KEY = 'binder-app:grid-page'
+
 /**
  * Binder page (T2): renders the persisted entries as a pocket-page grid with
  * prev/next navigation. Empty slots keep the 5x3 page shape.
  */
 export default function BinderPage() {
   const entries = useBinderStore((state) => state.entries)
-  const [pageIndex, setPageIndex] = useState(0)
+  const [pageIndex, setPageIndex] = useState(() => {
+    const stored = sessionStorage.getItem(PAGE_INDEX_STORAGE_KEY)
+    return stored !== null && /^\d+$/.test(stored) ? Number(stored) : 0
+  })
   const [showAdd, setShowAdd] = useState(false)
   const prefersReducedMotion = useReducedMotion()
+
+  useEffect(() => {
+    sessionStorage.setItem(PAGE_INDEX_STORAGE_KEY, String(pageIndex))
+  }, [pageIndex])
 
   const pageCount = Math.max(1, Math.ceil(entries.length / SLOTS_PER_PAGE))
   const currentPage = Math.min(pageIndex, pageCount - 1)

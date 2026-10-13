@@ -1,4 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
+import { motion } from 'motion/react'
 import { useBinderStore } from '@/features/binder/state/binderStore'
 import { usePrinting } from '@/features/catalog/catalogQueries'
 import CardDetail from '@/features/binder/components/CardDetail'
@@ -44,10 +45,15 @@ export default function CardDetailPage() {
   }
 
   return (
-    <section className="page card-detail-page">
+    <motion.section
+      className="page card-detail-page"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.18, delay: 0.08, ease: 'easeOut' }}
+    >
       <h1>Detalle de carta</h1>
       <Link to="/" className="card-detail-back">← Volver al binder</Link>
       <CardDetail entry={entry} printing={printing} />
-    </section>
+    </motion.section>
   )
 }

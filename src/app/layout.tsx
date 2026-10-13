@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
+import CardFlightOverlay from '@/features/binder/components/CardFlightOverlay'
 
 /** App shell: top navigation plus the routed page outlet. */
 export function AppLayout() {
@@ -96,6 +97,7 @@ export function AppLayout() {
       <main className="app-main">
         <Outlet />
       </main>
+      <CardFlightOverlay />
     </div>
   )
 }

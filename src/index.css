@@ -437,6 +437,10 @@ svg {
 
 .binder-slot {
   position: relative;
+  /* Perspective lives on the pocket (the parent), so the tilting card inside
+     gets real depth instead of a flat orthographic rotation. A shorter
+     perspective length makes each degree of tilt read deeper. */
+  perspective: 800px;
 }
 
 .binder-empty-pocket {
@@ -477,9 +481,23 @@ svg {
   transition: filter var(--transition-fast);
 }
 
-/* Hover polish: filter only, so it never clashes with the Card3D tilt transform. */
+/* Hover lift-off via box-shadow only. A `filter` here would force the card
+   into its own raster surface and flatten the 3D context, so the spring's
+   composited transforms would scale a stale raster and leave the card soft.
+   box-shadow paints in local space and transforms with the card instead. */
 .card-slot--ready:hover {
-  filter: brightness(1.06) drop-shadow(0 10px 14px rgba(0, 0, 0, 0.35));
+  box-shadow:
+    0 14px 22px rgba(0, 0, 0, 0.4),
+    0 4px 6px rgba(0, 0, 0, 0.25);
+}
+
+/* Stacked shadows must survive the hover rule: same specificity, later wins. */
+.card-slot--stacked:hover {
+  box-shadow:
+    2px 2px 0 0 rgba(255, 255, 255, 0.1),
+    4px 4px 0 0 rgba(255, 255, 255, 0.05),
+    0 14px 22px rgba(0, 0, 0, 0.4),
+    0 4px 6px rgba(0, 0, 0, 0.25);
 }
 
 /* Stacked-cards look for quantity > 1: offset card edges behind the top card. */
@@ -603,7 +621,10 @@ svg {
 /* Card3D effects */
 .card-slot {
   transform-style: preserve-3d;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  /* No transform transition: motion owns the transform (springs + tilt), and
+     a CSS transition on top would lag the rocking at fractional values,
+     causing resampling blur. Only the shadow eases in CSS. */
+  transition: box-shadow 0.2s ease;
   cursor: pointer;
 }
 
@@ -856,4 +877,54 @@ svg {
   .add-card-modal {
     animation: none;
   }
+}
+
+/* Card flight transition overlay (feature: card-3d-transition). Purely
+   decorative layer: always pointer-events none and aria-hidden. */
+.card-flight-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+}
+
+.card-flight-perspective {
+  position: absolute;
+  inset: 0;
+  perspective: 1100px;
+}
+
+.card-flight-dim {
+  position: absolute;
+  inset: 0;
+  /* Near-black (not pure black) so the sink reads soft, never a harsh cut. */
+  background: #0a0a0c;
+}
+
+.card-flight-card {
+  position: fixed;
+  overflow: hidden;
+  border-radius: 4.5%;
+  background: #0f1015;
+  transform-origin: center center;
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+}
+
+.card-flight-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* High-resolution image stands in over the small one once it has painted. */
+.card-flight-img--full {
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.card-flight-img--full[data-loaded='true'] {
+  opacity: 1;
 }
