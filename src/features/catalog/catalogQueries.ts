@@ -34,6 +34,18 @@ export function usePrinting(id: string) {
   })
 }
 
+/** Resolve one logical card by (fuzzy) name — the "view card" step. */
+export function useNamed(name: string) {
+  const normalizedName = name.trim()
+  return useQuery({
+    queryKey: catalogKeys.named(normalizedName),
+    queryFn: ({ signal }) => scryfallClient.fetchNamed(normalizedName, signal),
+    enabled: normalizedName.length > 0,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  })
+}
+
 /** Fetch printings for an oracle id. */
 export function usePrintings(oracleId: string) {
   const normalizedId = oracleId.trim()

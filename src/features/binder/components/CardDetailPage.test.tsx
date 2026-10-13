@@ -79,11 +79,14 @@ describe('CardDetailPage', () => {
     expect(screen.getByRole('link', { name: /Volver/ })).toHaveAttribute('href', '/')
   })
 
-  it('shows a loading state while the printing is pending', () => {
+  it('shows a loading skeleton while the printing is pending', () => {
     stateMock.entries = [entry]
     mockUsePrinting.mockReturnValue({ data: undefined, isPending: true, isError: false })
     renderPage('e1')
-    expect(screen.getByText(/Cargando/i)).toBeInTheDocument()
+    expect(screen.getByLabelText('Cargando carta')).toHaveAttribute(
+      'aria-busy',
+      'true',
+    )
   })
 
   it('shows an error state when the printing fails or is missing', () => {

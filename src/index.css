@@ -237,6 +237,305 @@ svg {
   box-shadow: var(--shadow-sm);
 }
 
+/* Search input + verify button share one row. */
+.want-search-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: stretch;
+}
+
+.want-search-row .field {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Autocomplete dropdown. */
+.want-search-list {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-1);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-height: 260px;
+  overflow-y: auto;
+  /* Wheel scrolling stops here instead of chaining to the page behind. */
+  overscroll-behavior: contain;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  /* Thin, themed scrollbar: standard properties (Firefox, Chromium) ... */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-text-muted) transparent;
+}
+
+/* ... and the WebKit pseudo-elements (older Chromium, Safari). */
+.want-search-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.want-search-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.want-search-list::-webkit-scrollbar-thumb {
+  background: var(--color-text-muted);
+  border: 2px solid var(--color-bg);
+  border-radius: var(--radius-sm);
+}
+
+.want-search-list::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text);
+}
+
+.want-search-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  color: var(--color-text);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color var(--transition-fast);
+}
+
+.want-search-item:hover {
+  background: var(--color-accent-soft);
+}
+
+.want-search-item-name {
+  font-weight: 600;
+}
+
+.want-search-item-meta {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.want-form-status {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+/* Three-dot search loader: replaces the "Buscando…" text while the
+   autocomplete query is in flight. */
+.want-loader {
+  display: flex;
+  justify-content: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+}
+
+.want-loader-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+  animation: want-loader-bounce 1.2s ease-in-out infinite;
+}
+
+.want-loader-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.want-loader-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes want-loader-bounce {
+  0%,
+  80%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+
+  40% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+.want-form-status--error {
+  color: var(--color-danger);
+}
+
+/* Verified card preview: the card laid out on the table. */
+.want-preview {
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  box-shadow: var(--shadow-sm);
+  perspective: 800px;
+}
+
+/* Rocking card: the binder grid's physical hover, shared via useCardRock. */
+.want-preview-card {
+  position: relative;
+  flex: none;
+  cursor: zoom-in;
+  border-radius: 4.5%;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.want-preview-card:hover {
+  box-shadow:
+    0 14px 22px rgba(0, 0, 0, 0.4),
+    0 4px 6px rgba(0, 0, 0, 0.25);
+}
+
+.want-preview-img {
+  width: 210px;
+  aspect-ratio: var(--card-aspect-ratio);
+  object-fit: cover;
+  border-radius: 4.5%;
+  background: #1b1209;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
+}
+
+.want-preview-img--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.want-preview-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+}
+
+.want-preview-name {
+  font-weight: 700;
+}
+
+.want-preview-type {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+/* Card effect text; pre-line keeps Scryfall's line breaks. */
+.want-preview-text {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.want-preview-actions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  margin-top: auto;
+  flex-wrap: wrap;
+}
+
+.want-preview-quantity {
+  width: 5rem;
+}
+
+/* Preview skeleton: sizes only; the shimmer comes from `.skeleton`. */
+.want-skeleton--card {
+  width: 210px;
+  aspect-ratio: var(--card-aspect-ratio);
+  flex: none;
+  border-radius: 4.5%;
+}
+
+.want-skeleton--name {
+  width: 55%;
+  height: 1.2em;
+  border-radius: var(--radius-sm);
+}
+
+.want-skeleton--type {
+  width: 35%;
+  height: 0.9em;
+  border-radius: var(--radius-sm);
+}
+
+.want-skeleton--actions {
+  width: 210px;
+  max-width: 100%;
+  height: 2.4em;
+  border-radius: var(--radius-sm);
+}
+
+/* Card zoom modal: the still, large card over the table (no rocking). */
+.want-zoom-overlay {
+  position: fixed;
+  inset: 0;
+  /* Semi-opaque scrim: partially hides the page behind while the modal is
+     open; any click on the overlay (outside the panel) closes it. */
+  background: rgba(0, 0, 0, 0.7);
+  cursor: zoom-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.want-zoom-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: min(92vw, 420px);
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  cursor: default;
+}
+
+.want-zoom-panel:focus {
+  outline: none;
+}
+
+.want-zoom-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.want-zoom-header h2 {
+  margin: 0;
+  font-size: var(--text-lg);
+}
+
+.want-zoom-img {
+  display: block;
+  height: min(78vh, 520px);
+  width: auto;
+  aspect-ratio: var(--card-aspect-ratio);
+  margin-inline: auto;
+  border-radius: 4.5%;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+}
+
+.want-zoom-type {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
 /* App shell */
 .app-shell {
   display: flex;
@@ -590,15 +889,15 @@ svg {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
-/* Loading skeleton */
+/* Loading skeleton: shared shimmer reused by the binder slots, the card
+   detail page and the wants preview. Sizes live on each modifier. */
 .card-slot--loading {
   background: #2c2016;
 }
 
-.card-skeleton {
+.card-skeleton,
+.skeleton {
   display: block;
-  width: 100%;
-  height: 100%;
   background-color: rgba(255, 226, 178, 0.06);
   background-image: linear-gradient(
     100deg,
@@ -608,6 +907,11 @@ svg {
   );
   background-size: 200% 100%;
   animation: binder-shimmer 1.4s ease-in-out infinite;
+}
+
+.card-skeleton {
+  width: 100%;
+  height: 100%;
 }
 
 @keyframes binder-shimmer {
@@ -819,6 +1123,19 @@ svg {
   border: 1px dashed var(--color-border);
 }
 
+/* Detail skeleton: mirrors .card-detail-grid's two columns while loading. */
+.card-detail-skeleton-media {
+  width: 100%;
+  max-width: 420px;
+  aspect-ratio: var(--card-aspect-ratio);
+  border-radius: var(--radius-lg);
+}
+
+.card-detail-skeleton-meta {
+  min-height: 240px;
+  border-radius: var(--radius-lg);
+}
+
 .card-detail-meta {
   display: grid;
   gap: var(--space-2);
@@ -864,6 +1181,10 @@ svg {
 }
 
 .want-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -871,28 +1192,114 @@ svg {
   box-shadow: var(--shadow-sm);
 }
 
-.want-item-fields {
-  display: grid;
-  gap: var(--space-1);
-  margin: 0;
+/* 96x134 keeps the 488x680 Scryfall ratio for the thumbnail. */
+.want-item-thumb {
+  flex-shrink: 0;
+  width: 96px;
+  height: 134px;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
 }
 
-.want-item-row {
+/* Remove button mounted over the card's top-right vertex. */
+.want-item-remove {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
   display: grid;
-  grid-template-columns: 120px 1fr;
-  gap: var(--space-3);
-  align-items: baseline;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
-.want-item-row dt {
+.want-item-remove:hover,
+.want-item-remove:focus-visible {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.want-item-info {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.want-item-name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.want-item-type {
   color: var(--color-text-muted);
   font-size: var(--text-sm);
 }
 
-.want-item-row dd {
+.want-item-printing {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+
+.want-item-qty {
+  flex-shrink: 0;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Confirmation dialog for removing a want: same choreography as the card
+   zoom modal (portal to body, semi-opaque scrim, panel scale + fade). */
+.want-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.want-confirm-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: min(92vw, 420px);
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  cursor: default;
+}
+
+.want-confirm-text {
   margin: 0;
   font-weight: 600;
-  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.want-confirm-actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
 }
 
 .wants-empty {

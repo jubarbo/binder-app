@@ -28,7 +28,14 @@ export default function CardDetailPage() {
     return (
       <section className="page card-detail-page">
         <h1>Detalle de carta</h1>
-        <p>Cargando carta...</p>
+        <div
+          className="card-detail-grid"
+          aria-busy="true"
+          aria-label="Cargando carta"
+        >
+          <span className="skeleton card-detail-skeleton-media" />
+          <span className="skeleton card-detail-skeleton-meta" />
+        </div>
         <Link to="/" className="card-detail-back">← Volver al binder</Link>
       </section>
     )
