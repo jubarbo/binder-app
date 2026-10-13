@@ -175,3 +175,16 @@ remote (repo policy: no push/PR unless requested). Test runner: `npx vitest run`
   settle swings), and `.binder-slot` perspective 1000 → 800px so each degree
   of tilt reads deeper. Scale stays within the 12px grid gap (~5px/side).
   Gates green: tsc, oxlint 0, vitest 41/41. Still NOT committed.
+- **L10** (2026-10-12): work-unit commit `dce1a98` — "feat(binder): cinematic
+  3D flight to detail with physical hover rocking" on
+  `feature/card-3d-transition` (base dev@1b91a54, 13 files, +916/-36,
+  includes this doc and the 41-test suite). Native review assessment returned
+  risk=high / review_due=true with reason `unassessable` (OpenCode 2.0.27 not
+  eligible for immutable receipt review: V2 plugin relay declaration
+  missing); no next_transition was returned, so no lifecycle was started and
+  no PASS was fabricated; typed unavailable result preserved. Independent
+  verifier (background) verdict: PASS, no change-caused blockers — all S1-S8
+  ok, tsc exit 0, oxlint exit 0, vitest 41/41 observed. Advisories: build
+  gate intentionally not re-run by the verifier (tsc is its type-level
+  equivalent); a same-millisecond user navigation could theoretically slip
+  past the locationKey guard (not realistically reproducible).
