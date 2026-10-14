@@ -312,10 +312,11 @@ svg {
   background: var(--color-accent-soft);
 }
 
-/* Decorative thumbnail of the card behind the suggestion. */
+/* Decorative thumbnail of the card behind the suggestion, pinned to the
+   right of the row: the name and type line come first. */
 .card-search-item-thumb {
   flex: 0 0 auto;
-  width: 36px;
+  width: 81px;
   aspect-ratio: var(--card-aspect-ratio);
   object-fit: cover;
   border: 1px solid var(--color-border);
@@ -326,6 +327,7 @@ svg {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+  flex: 1 1 auto;
   min-width: 0;
 }
 

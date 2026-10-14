@@ -92,6 +92,12 @@ export default function CardSearch({
                 onClick={() => onSelect(card)}
                 aria-label={card.name}
               >
+                <span className="card-search-item-body">
+                  <span className="card-search-item-name">{card.name}</span>
+                  {card.typeLine && (
+                    <span className="card-search-item-meta">{card.typeLine}</span>
+                  )}
+                </span>
                 {card.imageNormal && (
                   <img
                     className="card-search-item-thumb"
@@ -102,12 +108,6 @@ export default function CardSearch({
                     draggable={false}
                   />
                 )}
-                <span className="card-search-item-body">
-                  <span className="card-search-item-name">{card.name}</span>
-                  {card.typeLine && (
-                    <span className="card-search-item-meta">{card.typeLine}</span>
-                  )}
-                </span>
               </button>
             </li>
           ))}
