@@ -1,16 +1,14 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
-import { useSearchCards, usePrintings } from '@/features/catalog/catalogQueries'
+import { usePrintings } from '@/features/catalog/catalogQueries'
 import type { Finish, OracleCard, Printing } from '@/shared/types/mtg'
 import { useBinderStore } from '@/features/binder/state/binderStore'
-import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
+import CardSearch from '@/shared/components/CardSearch'
+import { useScrollLock } from '@/shared/hooks/useScrollLock'
 
 interface AddCardProps {
   onClose?: () => void
 }
-
-/** Maximum number of printing options rendered before the list is truncated. */
-const MAX_PRINTING_OPTIONS = 25
 
 const FINISH_LABELS: Record<Finish, string> = {
   nonfoil: 'Nonfoil',
@@ -25,16 +23,33 @@ const knownFinishesOf = (printing: Printing): Finish[] =>
     (KNOWN_FINISHES as string[]).includes(f),
   )
 
+/**
+ * True when the printing offers exactly nonfoil and foil: the only set the
+ * checkbox can express honestly. Etched stays on the select.
+ */
+const isFoilToggle = (printing: Printing) => {
+  const finishes = knownFinishesOf(printing)
+  return (
+    finishes.length === 2 &&
+    finishes.includes('nonfoil') &&
+    finishes.includes('foil')
+  )
+}
+
 export default function AddCard({ onClose }: AddCardProps) {
   const [query, setQuery] = useState('')
-  const debouncedQuery = useDebouncedValue(query)
   const [selectedCard, setSelectedCard] = useState<OracleCard | null>(null)
+  const [selectedEdition, setSelectedEdition] = useState<string | null>(null)
   const [selectedPrinting, setSelectedPrinting] = useState<Printing | null>(null)
   const [selectedFinish, setSelectedFinish] = useState<Finish | null>(null)
+  const [quantity, setQuantity] = useState(1)
   const [isAdding, setIsAdding] = useState(false)
   const prefersReducedMotion = useReducedMotion()
   const titleId = useId()
   const searchInputRef = useRef<HTMLInputElement>(null)
+
+  // The dialog owns the page: the binder behind it must not scroll.
+  useScrollLock(true)
 
   // Move focus into the dialog on mount and restore it to the trigger on unmount.
   // A full Tab focus-trap is intentionally out of scope; tracked as a follow-up.
@@ -46,60 +61,61 @@ export default function AddCard({ onClose }: AddCardProps) {
     }
   }, [])
 
-  const {
-    data: searchResults,
-    isPending: isSearchPending,
-    isError: isSearchError,
-  } = useSearchCards(debouncedQuery)
   const { data: printings } = usePrintings(selectedCard?.oracleId || '')
   const addEntry = useBinderStore((s) => s.addEntry)
 
-  // A disabled (empty-query) TanStack query still reports `isPending`, so the
-  // empty-input guard must run before the loading state is considered.
-  const hasQuery = query.trim().length > 0
+  // Memoized on the query data so the list keeps a stable identity: the
+  // default selection below keys off its first element, and a fresh object
+  // per render would re-run it.
+  const sortedPrintings = useMemo(
+    () =>
+      [...(printings ?? [])].sort((a, b) => {
+        const bySet = a.setName.localeCompare(b.setName, 'es')
+        if (bySet !== 0) return bySet
+        return a.collectorNumber.localeCompare(b.collectorNumber, 'es', { numeric: true })
+      }),
+    [printings],
+  )
 
-  const sortedPrintings = [...(printings ?? [])].sort((a, b) => {
-    const bySet = a.setName.localeCompare(b.setName, 'es')
-    if (bySet !== 0) return bySet
-    return a.collectorNumber.localeCompare(b.collectorNumber, 'es', { numeric: true })
-  })
-  const visiblePrintings = sortedPrintings.slice(0, MAX_PRINTING_OPTIONS)
-  const isPrintingsTruncated = sortedPrintings.length > MAX_PRINTING_OPTIONS
+  // The picker runs in two steps so no dropdown ever gets long, however many
+  // printings a card has: pick the edition, then the collector number inside
+  // it. Editions are the unique set names of the already-sorted printings, so
+  // both lists stay short by construction.
+  const editions = useMemo(
+    () => [...new Set(sortedPrintings.map((p) => p.setName))],
+    [sortedPrintings],
+  )
+  const editionPrintings = useMemo(
+    () =>
+      selectedEdition === null
+        ? []
+        : sortedPrintings.filter((p) => p.setName === selectedEdition),
+    [sortedPrintings, selectedEdition],
+  )
 
-  const renderSearchResults = () => {
-    if (!hasQuery) return null
-    if (isSearchError) {
-      return (
-        <p className="add-card-status add-card-status--error" role="alert">
-          No se pudo buscar. Intenta de nuevo.
-        </p>
-      )
-    }
-    if (isSearchPending && !searchResults) {
-      return (
-        <p className="add-card-status" aria-live="polite">
-          Buscando…
-        </p>
-      )
-    }
-    if (searchResults && searchResults.length === 0) {
-      return <p className="add-card-status">Sin resultados para tu búsqueda.</p>
-    }
-    return searchResults?.map((card) => (
-      <button
-        key={card.oracleId}
-        onClick={() => handleSelectCard(card)}
-        className="add-card-result-item"
-        aria-label={card.name}
-      >
-        <span className="add-card-result-name">{card.name}</span>
-        {card.typeLine && <span className="add-card-result-meta">{card.typeLine}</span>}
-      </button>
-    ))
+  // The catalog answers asynchronously, so the default selection is derived
+  // while rendering: the moment the lists land with nothing chosen, the first
+  // edition and its first printing — carrying its first known finish, the same
+  // rule the manual onChange applies — become the selection and the modal
+  // opens ready to add. Changing the edition re-arms the printing the same way.
+  // React discards this render and re-renders with the new state (the
+  // documented "adjust state during render" pattern), and a printing inside the
+  // current edition always wins over the default.
+  const firstEdition = editions[0]
+  if (firstEdition && selectedEdition === null) {
+    setSelectedEdition(firstEdition)
   }
-  
+  const firstPrinting = editionPrintings[0]
+  if (firstPrinting && selectedPrinting?.setName !== selectedEdition) {
+    setSelectedPrinting(firstPrinting)
+    setSelectedFinish(knownFinishesOf(firstPrinting)[0] ?? null)
+    // A fresh printing starts at a quantity of one.
+    setQuantity(1)
+  }
+
   const handleSelectCard = (card: OracleCard) => {
     setSelectedCard(card)
+    setSelectedEdition(null)
     setSelectedPrinting(null)
   }
   
@@ -110,7 +126,7 @@ export default function AddCard({ onClose }: AddCardProps) {
       id: crypto.randomUUID(),
       printingId: selectedPrinting.id,
       finish: selectedFinish ?? undefined,
-      quantity: 1,
+      quantity: Math.min(99, Math.max(1, Math.round(quantity) || 1)),
       condition: 'NM',
       language: 'en',
       forTrade: true,
@@ -144,45 +160,73 @@ export default function AddCard({ onClose }: AddCardProps) {
       >
         <h2 id={titleId}>Agregar carta</h2>
         {!selectedCard ? (
-          <>
-            <input
-              ref={searchInputRef}
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar carta..."
-              className="field"
-            />
-            <div className="add-card-results">{renderSearchResults()}</div>
-          </>
+          <CardSearch
+            query={query}
+            onQueryChange={setQuery}
+            onSelect={handleSelectCard}
+            inputRef={searchInputRef}
+          />
         ) : (
           <>
             <h3>{selectedCard.name}</h3>
             <select
-              aria-label="Impresión"
+              aria-label="Edición"
+              value={selectedEdition ?? ''}
+              onChange={(e) => setSelectedEdition(e.target.value || null)}
+              className="field"
+            >
+              <option value="">Seleccionar edición</option>
+              {editions.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Número de coleccionista"
               value={selectedPrinting?.id || ''}
               onChange={(e) => {
-                const p = printings?.find((pr) => pr.id === e.target.value) ?? null
+                const p = editionPrintings.find((pr) => pr.id === e.target.value) ?? null
                 setSelectedPrinting(p)
                 // Default to the printing's first modelled finish; printings
                 // with no modelled finish stay undeclared.
                 setSelectedFinish(p ? (knownFinishesOf(p)[0] ?? null) : null)
+                // A fresh printing starts at a quantity of one.
+                setQuantity(1)
               }}
               className="field"
             >
-              <option value="">Seleccionar impresión</option>
-              {isPrintingsTruncated && (
-                <option value="" disabled>
-                  Mostrando {MAX_PRINTING_OPTIONS} de {sortedPrintings.length} ediciones
-                </option>
-              )}
-              {visiblePrintings.map((p) => (
+              {editionPrintings.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.setName} #{p.collectorNumber}
+                  #{p.collectorNumber}
                 </option>
               ))}
             </select>
-            {selectedPrinting &&
+            {selectedPrinting && (
+              <img
+                className="add-card-preview"
+                src={
+                  selectedPrinting.imageLarge ||
+                  selectedPrinting.imageNormal ||
+                  selectedPrinting.imageSmall
+                }
+                alt={`${selectedPrinting.setName} #${selectedPrinting.collectorNumber}`}
+                draggable={false}
+              />
+            )}
+            {selectedPrinting && isFoilToggle(selectedPrinting) ? (
+              <label className="add-card-finish-toggle">
+                <input
+                  type="checkbox"
+                  checked={selectedFinish === 'foil'}
+                  onChange={(e) =>
+                    setSelectedFinish(e.target.checked ? 'foil' : 'nonfoil')
+                  }
+                />
+                Foil
+              </label>
+            ) : (
+              selectedPrinting &&
               knownFinishesOf(selectedPrinting).length > 1 && (
                 <select
                   aria-label="Acabado"
@@ -196,7 +240,17 @@ export default function AddCard({ onClose }: AddCardProps) {
                     </option>
                   ))}
                 </select>
-              )}
+              )
+            )}
+            <input
+              type="number"
+              aria-label="Cantidad"
+              min={1}
+              max={99}
+              value={quantity}
+              onChange={(e) => setQuantity(Number(e.target.value))}
+              className="field add-card-quantity"
+            />
             <div className="add-card-actions">
               <button className="btn btn--ghost" onClick={() => setSelectedCard(null)}>Atrás</button>
               <button

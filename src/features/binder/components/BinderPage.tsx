@@ -75,31 +75,40 @@ export default function BinderPage() {
     <section className="page binder-page">
       <header className="binder-header">
         <h1>Binder</h1>
-        {pageCount > 1 && (
-          <div className="binder-nav">
-            <button
-              type="button"
-              className="binder-nav-button"
-              onClick={() => setPageIndex(currentPage - 1)}
-              disabled={currentPage <= 0}
-              aria-label="Página anterior"
-            >
-              Anterior
-            </button>
-            <span className="binder-page-indicator" aria-live="polite">
-              Página {currentPage + 1} de {pageCount}
-            </span>
-            <button
-              type="button"
-              className="binder-nav-button"
-              onClick={() => setPageIndex(currentPage + 1)}
-              disabled={currentPage >= pageCount - 1}
-              aria-label="Página siguiente"
-            >
-              Siguiente
-            </button>
-          </div>
-        )}
+        <div className="binder-header-actions">
+          {pageCount > 1 && (
+            <div className="binder-nav">
+              <button
+                type="button"
+                className="binder-nav-button"
+                onClick={() => setPageIndex(currentPage - 1)}
+                disabled={currentPage <= 0}
+                aria-label="Página anterior"
+              >
+                Anterior
+              </button>
+              <span className="binder-page-indicator" aria-live="polite">
+                Página {currentPage + 1} de {pageCount}
+              </span>
+              <button
+                type="button"
+                className="binder-nav-button"
+                onClick={() => setPageIndex(currentPage + 1)}
+                disabled={currentPage >= pageCount - 1}
+                aria-label="Página siguiente"
+              >
+                Siguiente
+              </button>
+            </div>
+          )}
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={() => setShowAdd(true)}
+          >
+            Agregar carta
+          </button>
+        </div>
       </header>
       <div className="binder-page-frame">
         <motion.ul
@@ -117,11 +126,26 @@ export default function BinderPage() {
               <CardSlot entry={entry} />
             </motion.li>
           ))}
-          {Array.from({ length: emptySlotCount }, (_, index) => (
-            <li key={`empty-${index}`} className="binder-slot binder-slot--empty" aria-hidden="true">
-              <span className="binder-empty-pocket" />
-            </li>
-          ))}
+          {Array.from({ length: emptySlotCount }, (_, index) =>
+            index === 0 ? (
+              // The first free pocket is the add shortcut; the rest keep the
+              // page shape as decorative spacers.
+              <li key="empty-add" className="binder-slot binder-slot--empty">
+                <button
+                  type="button"
+                  className="binder-add-pocket"
+                  onClick={() => setShowAdd(true)}
+                  aria-label="Agregar una carta en este espacio"
+                >
+                  <span aria-hidden="true">+</span>
+                </button>
+              </li>
+            ) : (
+              <li key={`empty-${index}`} className="binder-slot binder-slot--empty" aria-hidden="true">
+                <span className="binder-empty-pocket" />
+              </li>
+            ),
+          )}
         </motion.ul>
       </div>
       {addCardModal}

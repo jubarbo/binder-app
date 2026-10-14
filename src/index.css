@@ -238,19 +238,19 @@ svg {
 }
 
 /* Search input + verify button share one row. */
-.want-search-row {
+.card-search-row {
   display: flex;
   gap: var(--space-2);
   align-items: stretch;
 }
 
-.want-search-row .field {
+.card-search-row .field {
   flex: 1;
   min-width: 0;
 }
 
 /* Autocomplete dropdown. */
-.want-search-list {
+.card-search-list {
   list-style: none;
   margin: 0;
   padding: var(--space-1);
@@ -271,29 +271,29 @@ svg {
 
 /* ... and the WebKit pseudo-elements (older Chromium, Safari); the printing
    picker list shares the same themed scroll. */
-.want-search-list::-webkit-scrollbar,
+.card-search-list::-webkit-scrollbar,
 .want-printing-list::-webkit-scrollbar {
   width: 8px;
 }
 
-.want-search-list::-webkit-scrollbar-track,
+.card-search-list::-webkit-scrollbar-track,
 .want-printing-list::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.want-search-list::-webkit-scrollbar-thumb,
+.card-search-list::-webkit-scrollbar-thumb,
 .want-printing-list::-webkit-scrollbar-thumb {
   background: var(--color-text-muted);
   border: 2px solid var(--color-bg);
   border-radius: var(--radius-sm);
 }
 
-.want-search-list::-webkit-scrollbar-thumb:hover,
+.card-search-list::-webkit-scrollbar-thumb:hover,
 .want-printing-list::-webkit-scrollbar-thumb:hover {
   background: var(--color-text);
 }
 
-.want-search-item {
+.card-search-item {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
@@ -307,15 +307,15 @@ svg {
   transition: background-color var(--transition-fast);
 }
 
-.want-search-item:hover {
+.card-search-item:hover {
   background: var(--color-accent-soft);
 }
 
-.want-search-item-name {
+.card-search-item-name {
   font-weight: 600;
 }
 
-.want-search-item-meta {
+.card-search-item-meta {
   font-size: var(--text-sm);
   color: var(--color-text-muted);
 }
@@ -328,30 +328,30 @@ svg {
 
 /* Three-dot search loader: replaces the "Buscando…" text while the
    autocomplete query is in flight. */
-.want-loader {
+.card-search-loader {
   display: flex;
   justify-content: flex-start;
   gap: var(--space-2);
   padding: var(--space-2) 0;
 }
 
-.want-loader-dot {
+.card-search-loader-dot {
   width: 4px;
   height: 4px;
   border-radius: 50%;
   background: var(--color-text-muted);
-  animation: want-loader-bounce 1.2s ease-in-out infinite;
+  animation: card-search-loader-bounce 1.2s ease-in-out infinite;
 }
 
-.want-loader-dot:nth-child(2) {
+.card-search-loader-dot:nth-child(2) {
   animation-delay: 0.15s;
 }
 
-.want-loader-dot:nth-child(3) {
+.card-search-loader-dot:nth-child(3) {
   animation-delay: 0.3s;
 }
 
-@keyframes want-loader-bounce {
+@keyframes card-search-loader-bounce {
   0%,
   80%,
   100% {
@@ -363,6 +363,17 @@ svg {
     opacity: 1;
     transform: translateY(-2px);
   }
+}
+
+/* Shared search status messages (empty / error). */
+.card-search-status {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.card-search-status--error {
+  color: var(--color-danger);
 }
 
 .want-form-status--error {
@@ -576,7 +587,7 @@ svg {
 }
 
 /* Card zoom modal: the still, large card over the table (no rocking). */
-.want-zoom-overlay {
+.zoom-overlay {
   position: fixed;
   inset: 0;
   /* Semi-opaque scrim: partially hides the page behind while the modal is
@@ -589,7 +600,7 @@ svg {
   z-index: 100;
 }
 
-.want-zoom-panel {
+.zoom-panel {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
@@ -602,33 +613,44 @@ svg {
   cursor: default;
 }
 
-.want-zoom-panel:focus {
+.zoom-panel:focus {
   outline: none;
 }
 
-.want-zoom-header {
+.zoom-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
 }
 
-.want-zoom-header h2 {
+.zoom-header h2 {
   margin: 0;
   font-size: var(--text-lg);
 }
 
-.want-zoom-img {
+/* Clipping box around the zoomed image: it hugs the centered card (the panel
+   is wider) so the foil band lands exactly on the artwork, and it owns the
+   radius and shadow because `overflow: hidden` would clip the image's own. */
+.zoom-frame {
+  position: relative;
+  display: block;
+  width: fit-content;
+  margin-inline: auto;
+  overflow: hidden;
+  border-radius: 4.5%;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+}
+
+.zoom-img {
   display: block;
   height: min(78vh, 520px);
   width: auto;
   aspect-ratio: var(--card-aspect-ratio);
   margin-inline: auto;
-  border-radius: 4.5%;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
 }
 
-.want-zoom-type {
+.zoom-type {
   margin: 0;
   font-size: var(--text-sm);
   color: var(--color-text-muted);
@@ -805,6 +827,12 @@ svg {
   margin-bottom: 0;
 }
 
+.binder-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
 .binder-nav {
   display: flex;
   align-items: center;
@@ -884,6 +912,45 @@ svg {
   box-shadow:
     inset 0 2px 6px rgba(0, 0, 0, 0.5),
     inset 0 -1px 0 rgba(255, 220, 170, 0.07);
+}
+
+/* The first free pocket doubles as the add shortcut: the same pocket, with a
+   muted plus that lights up on hover and keyboard focus. */
+.binder-add-pocket {
+  display: flex;
+  width: 100%;
+  aspect-ratio: var(--card-aspect-ratio);
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1.5px dashed rgba(224, 197, 133, 0.38);
+  border-radius: 4.5%;
+  background: linear-gradient(
+    160deg,
+    rgba(74, 52, 34, 0.75),
+    rgba(45, 31, 20, 0.85)
+  );
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.5),
+    inset 0 -1px 0 rgba(255, 220, 170, 0.07);
+  color: rgba(224, 197, 133, 0.55);
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  font-weight: 300;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.binder-add-pocket:hover {
+  color: var(--color-accent);
+  border-color: rgba(224, 197, 133, 0.65);
+}
+
+.binder-add-pocket:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 /* Empty binder state */
@@ -1077,6 +1144,67 @@ svg {
   mix-blend-mode: screen;
 }
 
+/* Holographic foil band: an oversized rainbow gradient screened over the art,
+   split into two layers on purpose. The outer layer takes motion's inline
+   pointer transform; a keyframe on that same element would override it. The
+   inner band owns the gradient and the continuous sweep, and both transforms
+   are composited, so the animation never repaints the card (animating
+   background-position would repaint every frame). Rendered for every copy
+   declared foil; under reduced motion the sweep is dropped (media query
+   below) and the band stays as a static stripe, so the finish is still
+   readable without motion.
+
+   `screen`, not `color-dodge`: dodge divides the backdrop by (1 - source), so
+   over mid-dark art it does almost nothing and over light art it blows the
+   highlights out — the band was invisible on most cards. Screen only ever adds
+   light, which reads as a holo sheen on any artwork, and 0.55 keeps it present
+   without going garish. */
+.card-foil {
+  position: absolute;
+  inset: -35%;
+  z-index: 2;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0.55;
+  will-change: transform;
+}
+
+.card-foil-band {
+  position: absolute;
+  inset: -25%;
+  will-change: transform;
+  background: linear-gradient(
+    115deg,
+    transparent 25%,
+    rgba(255, 0, 128, 0.6) 33%,
+    rgba(255, 204, 0, 0.6) 41%,
+    rgba(0, 204, 255, 0.6) 49%,
+    rgba(0, 255, 128, 0.6) 57%,
+    transparent 65%
+  );
+  background-size: 300% 300%;
+  background-position: 50% 50%;
+  animation: card-foil-sweep 3s ease-in-out infinite alternate;
+}
+
+@keyframes card-foil-sweep {
+  from {
+    transform: translate3d(-18%, -10%, 0) rotate(-3deg);
+  }
+
+  to {
+    transform: translate3d(18%, 10%, 0) rotate(3deg);
+  }
+}
+
+/* Reduced motion drops the sweep, never the layer: the band keeps its rest
+   position, so a foil copy still reads as foil while standing still. */
+@media (prefers-reduced-motion: reduce) {
+  .card-foil-band {
+    animation: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .card-slot {
     transition: none;
@@ -1110,6 +1238,9 @@ svg {
 }
 
 .add-card-modal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
   background: var(--color-surface);
   padding: var(--space-6);
   border: 1px solid var(--color-border);
@@ -1119,65 +1250,49 @@ svg {
   width: 90%;
   max-height: 80vh;
   overflow-y: auto;
+  /* Wheel scrolling stops here instead of chaining to the page behind. */
+  overscroll-behavior: contain;
+  /* Thin, themed scrollbar, same treatment as the scrolling lists. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-text-muted) transparent;
 }
 
-.add-card-results {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  margin-top: var(--space-3);
-  max-height: 300px;
-  overflow-y: auto;
+/* The dialog title stays in place while the body scrolls under it. */
+.add-card-modal h2 {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0;
+  padding: var(--space-2) 0;
+  background: var(--color-surface);
 }
 
-.add-card-result-item {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-2) var(--space-3);
-  background: var(--color-bg);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
+/* WebKit pseudo-elements (older Chromium, Safari) for the same thin scroll. */
+.add-card-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.add-card-modal::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.add-card-modal::-webkit-scrollbar-thumb {
+  background: var(--color-text-muted);
+  border: 2px solid var(--color-surface);
   border-radius: var(--radius-sm);
-  cursor: pointer;
-  text-align: left;
-  transition:
-    background-color var(--transition-fast),
-    border-color var(--transition-fast),
-    color var(--transition-fast);
 }
 
-.add-card-result-name {
-  font-weight: 600;
+.add-card-modal::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text);
 }
 
-.add-card-result-meta {
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.add-card-result-item:hover {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-}
-
-.add-card-result-item:hover .add-card-result-name,
-.add-card-result-item:hover .add-card-result-meta {
-  color: var(--color-on-accent);
-}
-
-/* Search status messages */
-.add-card-status {
-  padding: var(--space-2) var(--space-3);
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
-}
-
-.add-card-status--error {
-  color: var(--color-danger);
+/* Live preview of the chosen printing: keeps edition comparison visible
+   while cycling through the select. */
+.add-card-preview {
+  align-self: center;
+  width: min(240px, 65%);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Card detail */
@@ -1201,10 +1316,74 @@ svg {
   align-items: start;
 }
 
+/* Desktop detail: three columns — media, metadata, wanters — using the full
+   content width (below 720px the page stays capped at 420px, which is what
+   left the right-hand space unused). Every child is placed explicitly:
+   implicit auto-flow would drop the fourth child into a new row and leave a
+   hole at the top right. */
 @media (min-width: 720px) {
-  .card-detail-grid {
-    grid-template-columns: minmax(280px, 420px) 1fr;
+  .card-detail-page {
+    max-width: none;
   }
+
+  .card-detail-grid {
+    grid-template-columns: minmax(280px, 420px) 1fr minmax(260px, 340px);
+  }
+
+  .card-detail-media {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .card-detail-meta {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .card-detail-edit,
+  .card-detail-edit-trigger {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .wanters {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
+
+  .wanters-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Rocking wrapper around the enlarged printing (shared useCardRock physics).
+   It is also the zoom trigger, so it takes the affordance and the focus ring. */
+.card-detail-media-card {
+  position: relative;
+  border-radius: var(--radius-lg);
+  transform-style: preserve-3d;
+  will-change: transform;
+  cursor: zoom-in;
+}
+
+.card-detail-media-card:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 4px;
+}
+
+/* Frame around the enlarged printing: the box that clips the foil layer to the
+   image itself, so the deliberately oversized band never paints past the card
+   edge. The shadow lives here because `overflow: hidden` would clip the image's
+   own — same box, so the rendering is unchanged. */
+.card-detail-frame {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
 }
 
 .card-detail-image {
@@ -1213,13 +1392,15 @@ svg {
   max-width: 420px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
 }
 
+/* The placeholder renders outside the frame (there is no image to clip), so it
+   owns the shadow the framed image gets from `.card-detail-frame`. */
 .card-detail-image--placeholder {
   aspect-ratio: var(--card-aspect-ratio);
   background: var(--color-surface);
   border: 1px dashed var(--color-border);
+  box-shadow: var(--shadow-lg);
 }
 
 /* Detail skeleton: mirrors .card-detail-grid's two columns while loading. */
@@ -1281,17 +1462,78 @@ svg {
   min-height: 4.5rem;
 }
 
-.card-detail-edit-actions {
+.card-detail-edit-quantity {
+  max-width: 7rem;
+}
+
+/* Foil toggle in the edit panel: the same decision the add flow makes, so it
+   reads as a checkbox row rather than as one more field in the stack. */
+.card-detail-edit-finish {
   display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: fit-content;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+/* Who wants this card: avatars + names behind the wishers port. On desktop it
+   lives in the detail's third column (see the placement block above). */
+.wanters {
+  display: flex;
+  flex-direction: column;
   gap: var(--space-2);
 }
 
-/* The edit controls sit under the metadata column, not under the image. */
-@media (min-width: 720px) {
-  .card-detail-edit,
-  .card-detail-edit-trigger {
-    grid-column: 2;
-  }
+.wanters-title {
+  margin: 0;
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.wanters-list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+}
+
+.wanters-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.wanters-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wanters-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.wanters-avatar--initial {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-accent-soft);
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.card-detail-edit-actions {
+  display: flex;
+  gap: var(--space-2);
 }
 
 /* Wants list */
@@ -1392,9 +1634,9 @@ svg {
   white-space: nowrap;
 }
 
-/* Confirmation dialog for removing a want: same choreography as the card
-   zoom modal (portal to body, semi-opaque scrim, panel scale + fade). */
-.want-confirm-overlay {
+/* Shared confirmation dialog (destructive actions): same choreography as the
+   card zoom modal (portal to body, semi-opaque scrim, panel scale + fade). */
+.confirm-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.7);
@@ -1404,7 +1646,7 @@ svg {
   z-index: 100;
 }
 
-.want-confirm-panel {
+.confirm-panel {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -1417,13 +1659,13 @@ svg {
   cursor: default;
 }
 
-.want-confirm-text {
+.confirm-text {
   margin: 0;
   font-weight: 600;
   text-align: center;
 }
 
-.want-confirm-actions {
+.confirm-actions {
   display: flex;
   gap: var(--space-3);
   justify-content: center;
@@ -1436,6 +1678,17 @@ svg {
   border-radius: var(--radius-md);
   color: var(--color-text-muted);
   background: var(--color-surface);
+}
+
+.add-card-quantity {
+  max-width: 7rem;
+}
+
+.add-card-finish-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
 }
 
 .add-card-actions {
@@ -1500,4 +1753,49 @@ svg {
 
 .card-flight-img--full[data-loaded='true'] {
   opacity: 1;
+}
+
+/* Notifications (react-toastify): themed through the library's own CSS
+   variables, so a toast is one more surface of the app — same background,
+   border, radius, font and shadow as every panel — keeping the semantic
+   color for the icon and the progress bar only. The container renders with
+   theme="light" because v11 has no "auto" variant (an unknown theme paints
+   nothing); both theme variables point at the same scheme-aware token, so
+   the surface follows the OS preference in either scheme with no extra JS. */
+.Toastify {
+  --toastify-font-family: inherit;
+  --toastify-toast-width: min(92vw, 380px);
+  --toastify-toast-padding: var(--space-3) var(--space-4);
+  --toastify-toast-bd-radius: var(--radius-md);
+  --toastify-toast-shadow: var(--shadow-lg);
+  /* The light/dark theme rules are the only ones that paint the toast, and
+     they read these two; both point at the same scheme-aware token, so the
+     surface follows the OS preference either way. (`--toastify-toast-background`
+     is declared by the library but read by no rule — do not map it.) */
+  --toastify-color-light: var(--color-surface);
+  --toastify-color-dark: var(--color-surface);
+  --toastify-text-color-light: var(--color-text);
+  --toastify-text-color-dark: var(--color-text);
+  /* Icon and progress bar default to these, so mapping them keeps the two
+     systems in sync: the library only ever reads its own variables. */
+  --toastify-color-success: var(--color-success);
+  --toastify-color-error: var(--color-danger);
+  --toastify-color-warning: var(--color-accent);
+  --toastify-color-info: var(--color-accent);
+  --toastify-color-progress-light: var(--color-text-muted);
+  --toastify-color-progress-dark: var(--color-text-muted);
+  --toastify-z-index: 200;
+}
+
+.Toastify__toast {
+  border: 1px solid var(--color-border);
+}
+
+.Toastify__close-button {
+  color: var(--color-text-muted);
+  opacity: 1;
+}
+
+.Toastify__close-button:hover {
+  color: var(--color-text);
 }
