@@ -1,5 +1,11 @@
 /* Tactile Binder design tokens and base reset. */
 
+/* Breakpoint convention (mobile-first). Base rules target a 360-420px phone;
+   min-width queries upgrade upward: 480px for the compaction a large phone
+   can afford, 720px for tablet/desktop layouts (the card-detail step), 1024px
+   only where there is a real desktop gain. Never use max-width queries, and
+   keep each query next to the component block it serves. */
+
 :root {
   color-scheme: dark;
 
@@ -736,6 +742,9 @@ svg {
   position: relative;
   display: block;
   width: fit-content;
+  /* Cap the frame at the panel's content box: the image below sizes against a
+     definite width, so a portrait phone can no longer overflow the panel. */
+  max-width: 100%;
   margin-inline: auto;
   overflow: hidden;
   border-radius: 4.5%;
@@ -744,8 +753,12 @@ svg {
 
 .zoom-img {
   display: block;
-  height: min(78vh, 520px);
+  /* Auto sizes plus both caps: the art shrinks to a small panel (width) or a
+     short viewport (height), keeping the card ratio instead of overflowing. */
+  height: auto;
   width: auto;
+  max-height: min(78vh, 520px);
+  max-width: 100%;
   aspect-ratio: var(--card-aspect-ratio);
   margin-inline: auto;
 }
@@ -776,9 +789,12 @@ svg {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
-  padding-inline: var(--space-5);
-  height: 56px;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  /* min-height, not height: on a narrow phone the row is free to wrap
+     instead of clipping the brand or the links. */
+  min-height: 56px;
+  flex-wrap: wrap;
   /* Leather strap across the top, stitched along its lower edge. */
   background:
     repeating-linear-gradient(
@@ -789,6 +805,13 @@ svg {
     linear-gradient(180deg, #3b2b1e 0%, #2f2116 100%);
   border-bottom: 1.5px dashed rgba(224, 197, 133, 0.45);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+@media (min-width: 720px) {
+  .app-nav {
+    gap: var(--space-4);
+    padding-inline: var(--space-5);
+  }
 }
 
 .app-brand {
@@ -886,7 +909,13 @@ svg {
   width: 100%;
   max-width: 1100px;
   margin-inline: auto;
-  padding: var(--space-5);
+  padding: var(--space-4);
+}
+
+@media (min-width: 720px) {
+  .app-main {
+    padding: var(--space-5);
+  }
 }
 
 /* Pages */
@@ -976,11 +1005,19 @@ svg {
 
 .binder-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  /* Phones hold three pockets across; the five-column page lives at the
+     desktop step below (15 pockets either way). */
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--space-3);
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+@media (min-width: 720px) {
+  .binder-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
 }
 
 .binder-slot {
@@ -1335,13 +1372,16 @@ svg {
   flex-direction: column;
   gap: var(--space-3);
   background: var(--color-surface);
-  padding: var(--space-6);
+  padding: var(--space-4);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   max-width: 520px;
   width: 90%;
+  /* dvh counts what is actually visible under the mobile browser chrome;
+     vh stays as the fallback where dvh is unsupported. */
   max-height: 80vh;
+  max-height: 80dvh;
   overflow-y: auto;
   /* Wheel scrolling stops here instead of chaining to the page behind. */
   overscroll-behavior: contain;
@@ -1354,6 +1394,12 @@ svg {
 .add-card-modal h2 {
   margin: 0;
   padding: var(--space-2) 0;
+}
+
+@media (min-width: 720px) {
+  .add-card-modal {
+    padding: var(--space-6);
+  }
 }
 
 /* WebKit pseudo-elements (older Chromium, Safari) for the same thin scroll. */
@@ -1444,6 +1490,11 @@ svg {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+
+  .card-detail-row {
+    grid-template-columns: 150px 1fr;
+    gap: var(--space-3);
+  }
 }
 
 /* Rocking wrapper around the enlarged printing (shared useCardRock physics).
@@ -1518,8 +1569,10 @@ svg {
 
 .card-detail-row {
   display: grid;
-  grid-template-columns: 150px 1fr;
-  gap: var(--space-3);
+  /* Phone: the label stacks over its value instead of reserving 150px of a
+     420px-wide card; the desktop step restores the two-column row. */
+  grid-template-columns: 1fr;
+  gap: var(--space-1);
   align-items: baseline;
   padding-bottom: var(--space-2);
   border-bottom: 1px solid var(--color-border);
@@ -1646,15 +1699,23 @@ svg {
   box-shadow: var(--shadow-sm);
 }
 
-/* 96x134 keeps the 488x680 Scryfall ratio for the thumbnail. */
+/* 96x134 keeps the 488x680 Scryfall ratio for the thumbnail; 64x89 is the
+   same ratio on a narrow phone, where the text needs the room back. */
 .want-item-thumb {
   flex-shrink: 0;
-  width: 96px;
-  height: 134px;
+  width: 64px;
+  height: 89px;
   object-fit: cover;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-sm);
+}
+
+@media (min-width: 480px) {
+  .want-item-thumb {
+    width: 96px;
+    height: 134px;
+  }
 }
 
 /* Remove button mounted over the card's top-right vertex. */
