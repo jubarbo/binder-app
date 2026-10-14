@@ -4,6 +4,7 @@ import { usePrintings } from '@/features/catalog/catalogQueries'
 import type { Finish, OracleCard, Printing } from '@/shared/types/mtg'
 import { useBinderStore } from '@/features/binder/state/binderStore'
 import CardSearch from '@/shared/components/CardSearch'
+import ImageSelect from '@/shared/components/ImageSelect'
 import { useScrollLock } from '@/shared/hooks/useScrollLock'
 
 interface AddCardProps {
@@ -93,6 +94,31 @@ export default function AddCard({ onClose }: AddCardProps) {
     [sortedPrintings, selectedEdition],
   )
 
+  // The picker rows carry the art that tells printings apart — a native
+  // <select> cannot show images — so every option takes a thumbnail: the
+  // edition is represented by its first printing, the number by itself.
+  const editionOptions = useMemo(
+    () =>
+      editions.map((name) => {
+        const representative = sortedPrintings.find((p) => p.setName === name)
+        return {
+          id: name,
+          label: name,
+          imageSrc: representative?.imageSmall || undefined,
+        }
+      }),
+    [editions, sortedPrintings],
+  )
+  const numberOptions = useMemo(
+    () =>
+      editionPrintings.map((p) => ({
+        id: p.id,
+        label: `#${p.collectorNumber}`,
+        imageSrc: p.imageSmall || undefined,
+      })),
+    [editionPrintings],
+  )
+
   // The catalog answers asynchronously, so the default selection is derived
   // while rendering: the moment the lists land with nothing chosen, the first
   // edition and its first printing — carrying its first known finish, the same
@@ -117,6 +143,16 @@ export default function AddCard({ onClose }: AddCardProps) {
     setSelectedCard(card)
     setSelectedEdition(null)
     setSelectedPrinting(null)
+  }
+
+  const handleSelectPrinting = (id: string) => {
+    const p = editionPrintings.find((pr) => pr.id === id) ?? null
+    setSelectedPrinting(p)
+    // Default to the printing's first modelled finish; printings
+    // with no modelled finish stay undeclared.
+    setSelectedFinish(p ? (knownFinishesOf(p)[0] ?? null) : null)
+    // A fresh printing starts at a quantity of one.
+    setQuantity(1)
   }
   
   const handleAdd = () => {
@@ -169,39 +205,20 @@ export default function AddCard({ onClose }: AddCardProps) {
         ) : (
           <>
             <h3>{selectedCard.name}</h3>
-            <select
-              aria-label="Edición"
-              value={selectedEdition ?? ''}
-              onChange={(e) => setSelectedEdition(e.target.value || null)}
-              className="field"
-            >
-              <option value="">Seleccionar edición</option>
-              {editions.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-            <select
-              aria-label="Número de coleccionista"
-              value={selectedPrinting?.id || ''}
-              onChange={(e) => {
-                const p = editionPrintings.find((pr) => pr.id === e.target.value) ?? null
-                setSelectedPrinting(p)
-                // Default to the printing's first modelled finish; printings
-                // with no modelled finish stay undeclared.
-                setSelectedFinish(p ? (knownFinishesOf(p)[0] ?? null) : null)
-                // A fresh printing starts at a quantity of one.
-                setQuantity(1)
-              }}
-              className="field"
-            >
-              {editionPrintings.map((p) => (
-                <option key={p.id} value={p.id}>
-                  #{p.collectorNumber}
-                </option>
-              ))}
-            </select>
+            <ImageSelect
+              label="Edición"
+              placeholder="Seleccionar edición"
+              value={selectedEdition}
+              options={editionOptions}
+              onChange={(id) => setSelectedEdition(id)}
+            />
+            <ImageSelect
+              label="Número de coleccionista"
+              placeholder="Seleccionar número"
+              value={selectedPrinting?.id ?? null}
+              options={numberOptions}
+              onChange={handleSelectPrinting}
+            />
             {selectedPrinting && (
               <img
                 className="add-card-preview"

@@ -71,6 +71,38 @@ async function typeQuery(value: string) {
   })
 }
 
+/** The trigger button of an ImageSelect picker, by its accessible name. */
+function pickerTrigger(label: string) {
+  return screen.getByRole('button', { name: label })
+}
+
+/** The visible text of every option a picker currently lists. */
+function pickerOptions(label: string): string[] {
+  const panel = pickerTrigger(label).closest('.image-select')
+  return Array.from(panel?.querySelectorAll('.image-select-option') ?? []).map(
+    (option) => option.textContent ?? '',
+  )
+}
+
+/** Open a picker and report its options' visible text, in order. */
+function openPicker(label: string): string[] {
+  fireEvent.click(pickerTrigger(label))
+  return pickerOptions(label)
+}
+
+/** Choose an option by its visible text, opening the picker when needed. */
+function pickOption(label: string, text: string) {
+  const trigger = pickerTrigger(label)
+  if (trigger.getAttribute('aria-expanded') !== 'true') {
+    fireEvent.click(trigger)
+  }
+  const option = Array.from(
+    trigger.closest('.image-select')?.querySelectorAll('.image-select-option') ?? [],
+  ).find((el) => el.textContent === text)
+  if (!option) throw new Error(`No option "${text}" in the "${label}" picker`)
+  fireEvent.click(option)
+}
+
 describe('AddCard dialog accessibility', () => {
   it('exposes a dialog with the accessible name "Agregar carta"', () => {
     renderAddCard()
@@ -156,20 +188,6 @@ describe('AddCard search result states', () => {
 })
 
 describe('AddCard printing picker', () => {
-  function editionOptions() {
-    return Array.from(
-      screen.getByRole('combobox', { name: 'Edición' }).querySelectorAll('option'),
-    ).filter((option) => option.value !== '')
-  }
-
-  function numberOptions() {
-    return Array.from(
-      screen
-        .getByRole('combobox', { name: 'Número de coleccionista' })
-        .querySelectorAll('option'),
-    )
-  }
-
   /** Open the dialog and pick the card, landing on the printing step. */
   function pickCard() {
     renderAddCard()
@@ -177,7 +195,7 @@ describe('AddCard printing picker', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Lightning Bolt' }))
   }
 
-  it('offers every edition in its own select, with no filter and no cap', () => {
+  it('offers every edition in its own picker, with no filter and no cap', () => {
     states.search = { data: [makeCard()], isPending: false, isError: false }
     states.printings = {
       data: Array.from({ length: 40 }, (_, i) =>
@@ -189,8 +207,35 @@ describe('AddCard printing picker', () => {
     pickCard()
 
     expect(screen.queryByLabelText('Buscar edición')).not.toBeInTheDocument()
-    expect(editionOptions()).toHaveLength(40)
-    expect(screen.queryByRole('option', { name: /Mostrando/ })).not.toBeInTheDocument()
+    expect(openPicker('Edición')).toHaveLength(40)
+    expect(screen.queryByText(/Mostrando/)).not.toBeInTheDocument()
+  })
+
+  it('shows the card art in the edition and number options', () => {
+    states.search = { data: [makeCard()], isPending: false, isError: false }
+    states.printings = {
+      data: [
+        makePrinting({ id: 'printing-1', imageSmall: 'alpha-small.jpg' }),
+        makePrinting({ id: 'printing-2', setName: 'Beta', collectorNumber: '2', imageSmall: 'beta-small.jpg' }),
+      ],
+      isPending: false,
+      isError: false,
+    }
+    pickCard()
+
+    // The edition is represented by its first printing; the number by itself.
+    openPicker('Edición')
+    const thumbs = document.querySelectorAll('.image-select-thumb')
+    expect(thumbs).toHaveLength(2)
+    expect(thumbs[0]).toHaveAttribute('src', 'alpha-small.jpg')
+    expect(thumbs[1]).toHaveAttribute('src', 'beta-small.jpg')
+
+    pickOption('Edición', 'Alpha')
+    openPicker('Número de coleccionista')
+    expect(document.querySelector('.image-select-thumb')).toHaveAttribute(
+      'src',
+      'alpha-small.jpg',
+    )
   })
 
   it('lists the collector numbers of the chosen edition, sorted numerically', () => {
@@ -206,7 +251,7 @@ describe('AddCard printing picker', () => {
     }
     pickCard()
 
-    expect(numberOptions().map((option) => option.textContent)).toEqual(['#1', '#2', '#10'])
+    expect(openPicker('Número de coleccionista')).toEqual(['#1', '#2', '#10'])
   })
 
   it('switches the numbers and the preview when another edition is chosen', () => {
@@ -226,12 +271,10 @@ describe('AddCard printing picker', () => {
     }
     pickCard()
 
-    fireEvent.change(screen.getByRole('combobox', { name: 'Edición' }), {
-      target: { value: 'Beta' },
-    })
+    pickOption('Edición', 'Beta')
 
-    expect(numberOptions().map((option) => option.textContent)).toEqual(['#2'])
-    expect(screen.getByRole('combobox', { name: 'Número de coleccionista' })).toHaveValue('printing-2')
+    expect(openPicker('Número de coleccionista')).toEqual(['#2'])
+    expect(pickerTrigger('Número de coleccionista')).toHaveTextContent('#2')
     expect(screen.getByRole('img', { name: 'Beta #2' })).toHaveAttribute('src', 'beta.jpg')
   })
 })
@@ -251,8 +294,8 @@ describe('AddCard default printing selection', () => {
     typeQuery('bolt')
     fireEvent.click(screen.getByRole('button', { name: 'Lightning Bolt' }))
 
-    expect(screen.getByRole('combobox', { name: 'Edición' })).toHaveValue('Alpha')
-    expect(screen.getByRole('combobox', { name: 'Número de coleccionista' })).toHaveValue('printing-1')
+    expect(pickerTrigger('Edición')).toHaveTextContent('Alpha')
+    expect(pickerTrigger('Número de coleccionista')).toHaveTextContent('#1')
     expect(screen.getByRole('img', { name: 'Alpha #1' })).toHaveAttribute('src', 'large.jpg')
     expect(screen.getByRole('button', { name: 'Agregar' })).toBeEnabled()
   })
@@ -270,11 +313,10 @@ describe('AddCard default printing selection', () => {
     typeQuery('bolt')
     fireEvent.click(screen.getByRole('button', { name: 'Lightning Bolt' }))
 
-    const select = screen.getByRole('combobox', { name: 'Número de coleccionista' })
-    expect(select).toHaveValue('printing-1')
-    fireEvent.change(select, { target: { value: 'printing-2' } })
+    expect(pickerTrigger('Número de coleccionista')).toHaveTextContent('#1')
+    pickOption('Número de coleccionista', '#2')
 
-    expect(select).toHaveValue('printing-2')
+    expect(pickerTrigger('Número de coleccionista')).toHaveTextContent('#2')
     expect(screen.getByRole('img', { name: 'Alpha #2' })).toHaveAttribute('src', 'large.jpg')
   })
 })
@@ -298,9 +340,7 @@ describe('AddCard finish', () => {
     renderAddCard()
     typeQuery('bolt')
     fireEvent.click(screen.getByRole('button', { name: 'Lightning Bolt' }))
-    fireEvent.change(screen.getByRole('combobox', { name: 'Número de coleccionista' }), {
-      target: { value: 'printing-1' },
-    })
+    pickOption('Número de coleccionista', '#1')
   }
 
   it('offers a Foil checkbox when the printing has exactly nonfoil and foil', () => {
@@ -380,9 +420,7 @@ describe('AddCard quantity', () => {
     renderAddCard()
     typeQuery('bolt')
     fireEvent.click(screen.getByRole('button', { name: 'Lightning Bolt' }))
-    fireEvent.change(screen.getByRole('combobox', { name: 'Número de coleccionista' }), {
-      target: { value: 'printing-1' },
-    })
+    pickOption('Número de coleccionista', '#1')
     fireEvent.change(screen.getByRole('spinbutton', { name: 'Cantidad' }), {
       target: { value: '3' },
     })
@@ -397,9 +435,7 @@ describe('AddCard quantity', () => {
     renderAddCard()
     typeQuery('bolt')
     fireEvent.click(screen.getByRole('button', { name: 'Lightning Bolt' }))
-    fireEvent.change(screen.getByRole('combobox', { name: 'Número de coleccionista' }), {
-      target: { value: 'printing-1' },
-    })
+    pickOption('Número de coleccionista', '#1')
     fireEvent.click(screen.getByRole('button', { name: 'Agregar' }))
 
     expect(addEntrySpy).toHaveBeenCalledWith(
@@ -422,9 +458,7 @@ describe('AddCard printing preview', () => {
     renderAddCard()
     typeQuery('bolt')
     fireEvent.click(screen.getByRole('button', { name: 'Lightning Bolt' }))
-    fireEvent.change(screen.getByRole('combobox', { name: 'Número de coleccionista' }), {
-      target: { value: 'printing-1' },
-    })
+    pickOption('Número de coleccionista', '#1')
 
     expect(screen.getByRole('img', { name: 'Alpha #1' })).toHaveAttribute(
       'src',
@@ -444,9 +478,7 @@ describe('AddCard printing preview', () => {
     renderAddCard()
     typeQuery('bolt')
     fireEvent.click(screen.getByRole('button', { name: 'Lightning Bolt' }))
-    fireEvent.change(screen.getByRole('combobox', { name: 'Número de coleccionista' }), {
-      target: { value: 'printing-2' },
-    })
+    pickOption('Número de coleccionista', '#2')
 
     expect(screen.getByRole('img', { name: 'Alpha #2' })).toHaveAttribute(
       'src',

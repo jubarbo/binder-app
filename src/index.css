@@ -295,8 +295,9 @@ svg {
 
 .card-search-item {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
   width: 100%;
   padding: var(--space-2) var(--space-3);
   background: transparent;
@@ -311,11 +312,120 @@ svg {
   background: var(--color-accent-soft);
 }
 
+/* Decorative thumbnail of the card behind the suggestion. */
+.card-search-item-thumb {
+  flex: 0 0 auto;
+  width: 36px;
+  aspect-ratio: var(--card-aspect-ratio);
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.card-search-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
 .card-search-item-name {
   font-weight: 600;
 }
 
 .card-search-item-meta {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+/* Select with thumbnails: trigger plus the inline panel of option buttons. */
+.image-select {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.image-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  cursor: pointer;
+}
+
+.image-select-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.image-select-caret {
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+}
+
+.image-select-panel {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-2);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: var(--space-2);
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  /* Wheel scrolling stops here instead of chaining to the page behind. */
+  overscroll-behavior: contain;
+  /* Thin, themed scrollbar: standard properties (Firefox, Chromium). */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-text-muted) transparent;
+}
+
+.image-select-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  padding: var(--space-1);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: center;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.image-select-option:hover {
+  background: var(--color-accent-soft);
+}
+
+.image-select-option--active {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.image-select-thumb {
+  width: 100%;
+  aspect-ratio: var(--card-aspect-ratio);
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.image-select-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.image-select-meta {
   font-size: var(--text-sm);
   color: var(--color-text-muted);
 }

@@ -79,6 +79,27 @@ describe('CardSearch', () => {
     )
   })
 
+  it('renders the card thumbnail in the suggestions that carry art', () => {
+    states.search = {
+      data: [
+        makeCard({ imageNormal: 'bolt.jpg' }),
+        makeCard({ oracleId: 'oracle-ancestral', name: 'Ancestral Recall' }),
+      ],
+      isPending: false,
+      isError: false,
+    }
+    render(<Harness />)
+
+    typeQuery('bol')
+    const thumbs = document.querySelectorAll('.card-search-item-thumb')
+    expect(thumbs).toHaveLength(1)
+    expect(thumbs[0]).toHaveAttribute('src', 'bolt.jpg')
+    // Without art the suggestion renders no <img> at all, and the button keeps
+    // its accessible name: the thumbnail is decorative.
+    const withoutArt = screen.getByRole('button', { name: 'Ancestral Recall' })
+    expect(withoutArt.querySelector('img')).toBeNull()
+  })
+
   it('hides suggestions whose oracle id is excluded', () => {
     states.search = {
       data: [
