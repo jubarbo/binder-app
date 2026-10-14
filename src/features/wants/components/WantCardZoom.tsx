@@ -7,16 +7,15 @@ interface WantCardZoomProps {
 }
 
 /**
- * Zoom over a verified want: the shared card zoom carrying the wants copy
- * (card name as the title, type line as the caption).
+ * Zoom over a verified want: the image only, deliberately. The card's name
+ * already sits in the list item and the type line in the preview, so the
+ * modal carries nothing but the art — Escape or the scrim close it.
  */
 export default function WantCardZoom({ card, onClose }: WantCardZoomProps) {
   return (
     <CardZoom
-      title={card.name}
       src={card.imageNormal ?? ''}
       alt={card.name}
-      caption={card.typeLine}
       onClose={onClose}
     />
   )
