@@ -1369,14 +1369,10 @@ svg {
   scrollbar-color: var(--color-text-muted) transparent;
 }
 
-/* The dialog title stays in place while the body scrolls under it. */
+/* The dialog title scrolls with the body like any other row. */
 .add-card-modal h2 {
-  position: sticky;
-  top: 0;
-  z-index: 1;
   margin: 0;
   padding: var(--space-2) 0;
-  background: var(--color-surface);
 }
 
 /* WebKit pseudo-elements (older Chromium, Safari) for the same thin scroll. */
