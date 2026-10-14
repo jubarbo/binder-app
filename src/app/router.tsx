@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { createBrowserRouter } from 'react-router-dom'
+import { createHashRouter } from 'react-router-dom'
 import BinderPage from '@/features/binder/components/BinderPage'
 import { AppLayout } from '@/app/layout'
 
@@ -18,7 +18,7 @@ const routeFallback = (
   </div>
 )
 
-export const router = createBrowserRouter([
+export const router = createHashRouter([
   {
     path: '/',
     element: <AppLayout />,
