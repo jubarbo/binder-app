@@ -127,14 +127,14 @@ tests keep passing against the extracted component.
 
 | ID | Specs | Route | Status | Commit |
 |----|-------|-------|--------|--------|
-| T1 | S1 | inline | done | — |
-| T2 | S5 | inline | done | — |
-| T3 | S2 | inline | done | — |
-| T4 | S3 | inline | done | — |
-| T5 | S4 | inline | done | — |
-| T6 | S2 | inline | done | — |
-| T7 | S6 | inline | done | — |
-| T8 | S7 | inline | done | — |
+| T1 | S1 | inline | done | 9eef3cb |
+| T2 | S5 | inline | done | a6adadb |
+| T3 | S2 | inline | done | a6adadb |
+| T4 | S3 | inline | done | a6adadb |
+| T5 | S4 | inline | done | a6adadb |
+| T6 | S2 | inline | done | a6adadb |
+| T7 | S6 | inline | done | a6adadb |
+| T8 | S7 | inline | done | a6adadb |
 
 Route note: every task is inline — no writer trigger fired (no parallel disjoint
 units, no context backstop), and T3/T4/T5 share `CardDetail.tsx` so they cannot run
@@ -261,3 +261,9 @@ observed out of band and not caused by this change: `closes the zoom with Escape
 restores focus to the image` failed once at 324ms and passed on re-run — focus
 timing, pre-existing. Gates: 136 tests, `tsc` 0, `oxlint` 1 pre-existing warning,
 `build` ok.
+
+**L14 (2026-10-14)** — Commits: `9eef3cb feat(binder): add-card flow shortcuts
+and finish control` holds T1 (the add-flow finish checkbox shares `AddCard.tsx`
+with the shortcuts) and `a6adadb feat(binder): foil surfaces, detail editing and
+card detail polish` holds T2-T8. Final tree gates: `tsc` 0, 136/136 tests,
+`oxlint` 0 errors / 1 pre-existing warning, `build` ok.

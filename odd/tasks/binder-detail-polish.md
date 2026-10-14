@@ -107,11 +107,11 @@ unaffected.
 
 | ID | Specs | Route | Status | Commit |
 |----|-------|-------|--------|--------|
-| T1 | S5 | inline | done | — |
-| T2 | S1 | inline | done | — |
-| T3 | S2 | inline | done | — |
-| T4 | S4 | inline | done | — |
-| T5 | S3 | inline | done | — |
+| T1 | S5 | inline | done | a6adadb |
+| T2 | S1 | inline | done | a6adadb |
+| T3 | S2 | inline | done | a6adadb |
+| T4 | S4 | inline | done | a6adadb |
+| T5 | S3 | inline | done | a6adadb |
 
 Route note: every task is inline — no writer trigger fired (no parallel
 disjoint units, no context backstop) and T1/T2/T3 all touch
@@ -268,3 +268,7 @@ the unnamed fallback. Evidence: RED observed (1 failed, "Unable to find an
 accessible element with the role heading and name 'Test Card — Test Set'"),
 GREEN after. Gates: 128 tests, `tsc` 0, `oxlint` 0 (pre-existing warning),
 `build` ok.
+
+**L13 (2026-10-14)** — Committed in `a6adadb feat(binder): foil surfaces,
+detail editing and card detail polish` (T1-T5). Final tree gates: `tsc` 0,
+136/136 tests, `oxlint` 0 errors / 1 pre-existing warning, `build` ok.

@@ -51,10 +51,10 @@ fuera de este alcance.
 
 | ID  | Specs | Ruta    | Estado   | Commit |
 | --- | ----- | ------- | -------- | ------ |
-| T1  | S1    | inline  | hecho    | RED→GREEN, sin commit |
-| T2  | S2    | inline  | hecho    | RED→GREEN, sin commit |
-| T3  | S3    | inline  | hecho    | RED→GREEN, sin commit |
-| T4  | S4    | inline  | hecho    | RED→GREEN, sin commit |
+| T1  | S1    | inline  | hecho    | RED→GREEN, 9eef3cb |
+| T2  | S2    | inline  | hecho    | RED→GREEN, 9eef3cb |
+| T3  | S3    | inline  | hecho    | RED→GREEN, 9eef3cb |
+| T4  | S4    | inline  | hecho    | RED→GREEN, 9eef3cb |
 
 ## Log
 
@@ -158,3 +158,10 @@ pasaron a `{ name: 'Número de coleccionista' }`.
 Evidencia: RED observado (fallaban los 3 nuevos y seguían en pie los del tope),
 GREEN después. Gates: 128 tests, `tsc` 0, `oxlint` 1 warning preexistente,
 `build` ok. Nada commiteado.
+
+**L6 (2026-10-14)** — Commits: `9eef3cb feat(binder): add-card flow shortcuts
+and finish control` (T1-T4). Ese commit también lleva el checkbox de acabado
+del alta (`binder-foil-detail` S1) y `src/index.css` completo, porque comparten
+`AddCard.tsx` y la hoja de estilos es un único archivo. Verificado en un
+worktree limpio en `9eef3cb`: `tsc` 0, 110/110 tests, `oxlint` 0 errores / 1
+warning preexistente.
