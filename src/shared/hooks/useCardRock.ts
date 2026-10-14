@@ -22,7 +22,9 @@ const POINTER_GAIN = 0.85
  * Shared rocking-card physics (binder grid + wants preview): cursor-chasing
  * 3D tilt on damped springs, lift-off scale and a pointer-following glare.
  * The consumer owns its DOM (classes, children, activation semantics) and
- * spreads the returned handlers plus `style` onto a `motion.div`.
+ * spreads the returned handlers plus `style` onto a `motion.div`. The raw
+ * `rockX`/`rockY` offsets and `prefersReducedMotion` are exposed so a consumer
+ * can attach its own pointer-linked overlay (the foil band) to the same truth.
  *
  * Under `prefers-reduced-motion` the style and glare are absent and the
  * handlers no-op, so the card stays fully static.
@@ -96,5 +98,11 @@ export function useCardRock() {
       onMouseLeave: handleMouseLeave,
     },
     glareStyle,
+    // Raw pointer offsets, plus the motion preference, so a consumer can drive
+    // its own pointer-linked layers (e.g. the foil band) from the same truth
+    // instead of adding a second listener and a second rect measurement.
+    rockX,
+    rockY,
+    prefersReducedMotion,
   }
 }

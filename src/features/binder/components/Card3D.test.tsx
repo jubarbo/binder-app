@@ -3,11 +3,19 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import Card3D from '@/features/binder/components/Card3D'
 import type { BinderEntry, Printing } from '@/shared/types/mtg'
 
+const motionState = vi.hoisted(() => ({ reducedMotion: false }))
+
+vi.mock('motion/react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('motion/react')>()
+  return { ...actual, useReducedMotion: () => motionState.reducedMotion }
+})
+
 const entry: BinderEntry = { id: 'e1', printingId: 'p1', quantity: 1, condition: 'NM', language: 'en', forTrade: true }
 
 const printing: Printing = {
   id: 'p1',
   oracleId: 'o1',
+  name: 'Test Card',
   setCode: 'TST',
   setName: 'Test Set',
   collectorNumber: '123',
@@ -149,5 +157,65 @@ describe('Card3D', () => {
     fireEvent.click(button)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(button).not.toHaveClass('card-slot--zoomed')
+  })
+})
+
+describe('Card3D foil layer', () => {
+  const baseProps = {
+    printing,
+    alt: 'Test Card',
+    hasSmall: false,
+    hasNormal: true,
+    normalLoaded: true,
+    setNormalLoaded: vi.fn(),
+  }
+
+  it('renders the holographic layer when the entry is declared foil', () => {
+    const { container } = render(
+      <Card3D entry={{ ...entry, finish: 'foil' }} {...baseProps} />,
+    )
+
+    const foil = container.querySelector('.card-foil')
+    expect(foil).not.toBeNull()
+    // The layer must never eat pointer events: the card still opens on click.
+    expect(foil).toHaveAttribute('aria-hidden', 'true')
+  })
+
+  it('keeps non-foil and undeclared entries flat', () => {
+    const { container } = render(<Card3D entry={entry} {...baseProps} />)
+    expect(container.querySelector('.card-foil')).toBeNull()
+
+    const { container: foilless } = render(
+      <Card3D entry={{ ...entry, finish: 'nonfoil' }} {...baseProps} />,
+    )
+    expect(foilless.querySelector('.card-foil')).toBeNull()
+  })
+
+  it('mounts the layer under reduced motion too, so the finish stays readable', () => {
+    motionState.reducedMotion = true
+    try {
+      const { container } = render(
+        <Card3D entry={{ ...entry, finish: 'foil' }} {...baseProps} />,
+      )
+
+      // Reduced motion drops the sweep, never the information: a foil copy
+      // must still look different from a non-foil one at rest.
+      expect(container.querySelector('.card-foil')).not.toBeNull()
+      expect(container.querySelector('.card-foil-band')).not.toBeNull()
+    } finally {
+      motionState.reducedMotion = false
+    }
+  })
+
+  it('carries a separate band inside the foil layer for the continuous sweep', () => {
+    const { container } = render(
+      <Card3D entry={{ ...entry, finish: 'foil' }} {...baseProps} />,
+    )
+
+    // The band owns the gradient and its own animation, so the sweep never
+    // overrides the pointer transform motion writes on the parent.
+    const band = container.querySelector('.card-foil-band')
+    expect(band).not.toBeNull()
+    expect(band?.parentElement).toHaveClass('card-foil')
   })
 })

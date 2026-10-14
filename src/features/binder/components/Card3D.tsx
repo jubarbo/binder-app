@@ -1,6 +1,7 @@
-import { motion } from 'motion/react'
+import { motion, useTransform } from 'motion/react'
 import type { BinderEntry, Printing } from '@/shared/types/mtg'
 import { useCardRock } from '@/shared/hooks/useCardRock'
+import FoilLayer from '@/shared/components/FoilLayer'
 
 interface Card3DProps {
   entry: BinderEntry
@@ -26,7 +27,21 @@ export default function Card3D({
   quantityBadge,
   onOpenDetail,
 }: Card3DProps) {
-  const { ref, style, handlers, glareStyle } = useCardRock()
+  const {
+    ref,
+    style,
+    handlers,
+    glareStyle,
+    rockX,
+    rockY,
+  } = useCardRock()
+  // Holographic band: an oversized rainbow gradient the pointer slides under,
+  // only for copies declared foil. Translating the layer (a composited
+  // transform) instead of animating background-position keeps it off the
+  // paint path, which matters with a full grid of cards.
+  const foilX = useTransform(rockX, [-100, 100], ['14%', '-14%'])
+  const foilY = useTransform(rockY, [-100, 100], ['14%', '-14%'])
+  const isFoil = entry.finish === 'foil'
 
   const openDetail = () => {
     if (ref.current) onOpenDetail?.(ref.current)
@@ -76,6 +91,7 @@ export default function Card3D({
               data-loaded={normalLoaded || !hasSmall}
               onLoad={() => setNormalLoaded(true)}
             />
+            {isFoil && <FoilLayer x={foilX} y={foilY} />}
             {glareStyle && (
               <motion.div
                 className="card-glare"

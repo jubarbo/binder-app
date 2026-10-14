@@ -1,11 +1,24 @@
 import { useState } from 'react'
+import { motion, AnimatePresence, useTransform } from 'motion/react'
+import { useCardRock } from '@/shared/hooks/useCardRock'
+import CardZoom from '@/shared/components/CardZoom'
+import FoilLayer from '@/shared/components/FoilLayer'
+import WhoWants from '@/features/binder/components/WhoWants'
 import type { BinderEntry, Finish, Printing } from '@/shared/types/mtg'
 
 interface CardDetailProps {
   entry: BinderEntry
   printing?: Printing
-  /** Patches the entry's editable details (wired to the store by the page). */
-  onSaveDetails?: (patch: { finish?: Finish; notes?: string }) => void
+  /**
+   * Persists the copy's own details (wired to the store by the page). The
+   * finish is carried only when the checkbox actually changed it, so an edit
+   * that never touches it cannot rewrite — or invent — a declaration.
+   */
+  onSaveDetails?: (patch: { notes: string; finish?: Finish }) => void
+  /** Persists the copy's new quantity. Never called with 0. */
+  onSaveQuantity?: (quantity: number) => void
+  /** Asked when the edit would leave the quantity at 0: the copy is removed. */
+  onRequestRemoval?: () => void
 }
 
 const FINISH_LABELS: Record<Finish, string> = {
@@ -13,28 +26,132 @@ const FINISH_LABELS: Record<Finish, string> = {
   foil: 'Foil',
   etched: 'Etched',
 }
-const KNOWN_FINISHES = Object.keys(FINISH_LABELS) as Finish[]
+
+interface CardDetailMediaProps {
+  printing?: Printing
+  /** The copy is declared foil: the surface carries the holographic layer. */
+  isFoil?: boolean
+}
+
+/**
+ * The enlarged printing laid on the table: the same rocking physics as the
+ * binder grid and the wants preview, at detail scale. Reduced motion keeps
+ * it fully static, like every other card surface in the app.
+ */
+function CardDetailMedia({ printing, isFoil }: CardDetailMediaProps) {
+  const { ref, style, handlers, glareStyle, rockX, rockY } = useCardRock()
+  // Same pointer-linked slide the grid uses, so the band travels under the
+  // cursor while the card rocks. Declared above the early return: hooks never
+  // run conditionally.
+  const foilX = useTransform(rockX, [-100, 100], ['14%', '-14%'])
+  const foilY = useTransform(rockY, [-100, 100], ['14%', '-14%'])
+  const [zoomOpen, setZoomOpen] = useState(false)
+
+  if (!printing) {
+    return (
+      <span
+        className="card-detail-image card-detail-image--placeholder"
+        role="img"
+        aria-label="Sin imagen disponible"
+      />
+    )
+  }
+
+  const src = printing.imageLarge || printing.imageNormal || printing.imageSmall
+  const label = `${printing.setName} #${printing.collectorNumber}`
+
+  return (
+    <>
+      <motion.div
+        ref={ref}
+        className="card-detail-media-card"
+        style={style}
+        {...handlers}
+        role="button"
+        tabIndex={0}
+        aria-label={`Ampliar ${label}`}
+        onClick={(e) => {
+          // Browsers focus a focusable element on click and jsdom does not,
+          // and the zoom restores focus to this element when it closes.
+          e.currentTarget.focus()
+          setZoomOpen(true)
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            setZoomOpen(true)
+          }
+        }}
+      >
+        <div className="card-detail-frame">
+          <img className="card-detail-image" src={src} alt={label} draggable={false} />
+          {isFoil && <FoilLayer x={foilX} y={foilY} />}
+        </div>
+        {glareStyle && (
+          <div className="card-glare" style={{ background: glareStyle }} />
+        )}
+      </motion.div>
+      <AnimatePresence>
+        {zoomOpen && (
+          <CardZoom
+            src={src}
+            alt={label}
+            foil={isFoil}
+            onClose={() => setZoomOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+    </>
+  )
+}
 
 /**
  * Pure presentation for a binder entry's detail: the enlarged printing image
  * plus its metadata, and inline editing of the copy's own details (finish and
  * notes). Data resolution and routing live in `CardDetailPage`.
  */
-export default function CardDetail({ entry, printing, onSaveDetails }: CardDetailProps) {
+export default function CardDetail({
+  entry,
+  printing,
+  onSaveDetails,
+  onSaveQuantity,
+  onRequestRemoval,
+}: CardDetailProps) {
   const [isEditing, setIsEditing] = useState(false)
-  const [draftFinish, setDraftFinish] = useState<Finish | ''>('')
   const [draftNotes, setDraftNotes] = useState('')
-
-  // Only finishes the printing actually has are offered: the copy cannot
-  // declare a finish that does not exist for this physical card.
-  const availableFinishes = (printing?.finishes ?? []).filter(
-    (f): f is Finish => (KNOWN_FINISHES as string[]).includes(f),
-  )
+  const [draftQuantity, setDraftQuantity] = useState(1)
+  const [draftFoil, setDraftFoil] = useState(false)
 
   const startEdit = () => {
-    setDraftFinish(entry.finish ?? '')
     setDraftNotes(entry.notes ?? '')
+    setDraftQuantity(entry.quantity)
+    setDraftFoil(entry.finish === 'foil')
     setIsEditing(true)
+  }
+
+  // A cleared input reads NaN: saving is blocked rather than silently
+  // guessing a quantity, and 0 only exists as "I no longer own this copy".
+  const clampedQuantity = Number.isFinite(draftQuantity)
+    ? Math.min(99, Math.max(0, Math.round(draftQuantity)))
+    : null
+
+  const save = () => {
+    if (clampedQuantity === null) return
+    // Quantity zero is not a quantity: it asks for a confirmed removal
+    // instead of persisting a zero the binder would render forever.
+    if (clampedQuantity === 0) {
+      onRequestRemoval?.()
+      return
+    }
+    // The finish rides along only when the checkbox actually changed it: a
+    // patch that carried it unconditionally would turn an undeclared copy
+    // into `nonfoil` the first time anyone edits its notes.
+    const patch: { notes: string; finish?: Finish } = { notes: draftNotes }
+    const isFoil = entry.finish === 'foil'
+    if (draftFoil !== isFoil) patch.finish = draftFoil ? 'foil' : 'nonfoil'
+    onSaveDetails?.(patch)
+    onSaveQuantity?.(clampedQuantity)
+    setIsEditing(false)
   }
 
   // A foil copy is priced with the foil market value when Scryfall has one.
@@ -47,20 +164,7 @@ export default function CardDetail({ entry, printing, onSaveDetails }: CardDetai
   return (
     <div className="card-detail-grid">
       <div className="card-detail-media">
-        {printing ? (
-          <img
-            className="card-detail-image"
-            src={printing.imageLarge || printing.imageNormal || printing.imageSmall}
-            alt={`${printing.setName} #${printing.collectorNumber}`}
-            draggable={false}
-          />
-        ) : (
-          <span
-            className="card-detail-image card-detail-image--placeholder"
-            role="img"
-            aria-label="Sin imagen disponible"
-          />
-        )}
+        <CardDetailMedia printing={printing} isFoil={entry.finish === 'foil'} />
       </div>
       <dl className="card-detail-meta">
         {printing && (
@@ -110,19 +214,6 @@ export default function CardDetail({ entry, printing, onSaveDetails }: CardDetai
       </dl>
       {isEditing ? (
         <div className="card-detail-edit">
-          <select
-            className="field"
-            aria-label="Acabado"
-            value={draftFinish}
-            onChange={(e) => setDraftFinish(e.target.value as Finish | '')}
-          >
-            <option value="">No declarado</option>
-            {availableFinishes.map((f) => (
-              <option key={f} value={f}>
-                {FINISH_LABELS[f]}
-              </option>
-            ))}
-          </select>
           <textarea
             className="field"
             aria-label="Notas"
@@ -130,16 +221,32 @@ export default function CardDetail({ entry, printing, onSaveDetails }: CardDetai
             value={draftNotes}
             onChange={(e) => setDraftNotes(e.target.value)}
           />
+          <input
+            type="number"
+            aria-label="Cantidad"
+            min={0}
+            max={99}
+            value={Number.isFinite(draftQuantity) ? draftQuantity : ''}
+            onChange={(e) =>
+              // An empty field is not a zero: it must block the save, not ask
+              // for a removal the user never requested.
+              setDraftQuantity(e.target.value === '' ? Number.NaN : Number(e.target.value))
+            }
+            className="field card-detail-edit-quantity"
+          />
+          <label className="card-detail-edit-finish">
+            <input
+              type="checkbox"
+              checked={draftFoil}
+              onChange={(e) => setDraftFoil(e.target.checked)}
+            />
+            Foil
+          </label>
           <div className="card-detail-edit-actions">
             <button
               className="btn btn--primary"
-              onClick={() => {
-                onSaveDetails?.({
-                  finish: draftFinish || undefined,
-                  notes: draftNotes,
-                })
-                setIsEditing(false)
-              }}
+              onClick={save}
+              disabled={clampedQuantity === null}
             >
               Guardar
             </button>
@@ -156,6 +263,7 @@ export default function CardDetail({ entry, printing, onSaveDetails }: CardDetai
           Editar
         </button>
       )}
+      {printing && <WhoWants oracleId={printing.oracleId} />}
     </div>
   )
 }

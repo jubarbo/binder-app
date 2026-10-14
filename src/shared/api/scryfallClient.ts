@@ -79,6 +79,7 @@ function toPrinting(card: ScryfallCard): Printing {
   return {
     id: card.id,
     oracleId: card.oracle_id ?? card.id,
+    name: card.name ?? '',
     setCode: card.set ?? '',
     setName: card.set_name ?? '',
     collectorNumber: card.collector_number ?? '',

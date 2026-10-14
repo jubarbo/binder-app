@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 import CardFlightOverlay from '@/features/binder/components/CardFlightOverlay'
 
 /** App shell: top navigation plus the routed page outlet. */
@@ -98,6 +100,14 @@ export function AppLayout() {
         <Outlet />
       </main>
       <CardFlightOverlay />
+      {/* App-wide notifications. `role="status"` keeps them polite for screen
+          readers; `theme="auto"` follows the same OS preference as the app. */}
+      {/* react-toastify v11 has no "auto" theme (the type accepts any string,
+          which is what let "auto" compile): an unknown theme adds no class and
+          the toast gets no background at all. Both light and dark therefore
+          point at the same scheme-aware token, so the OS preference is honored
+          through our tokens instead of through the library. */}
+      <ToastContainer position="bottom-center" theme="light" role="status" />
     </div>
   )
 }

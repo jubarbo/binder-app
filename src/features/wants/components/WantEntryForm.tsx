@@ -4,9 +4,9 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { motion, AnimatePresence } from 'motion/react'
 import { useBinderStore } from '@/features/binder/state/binderStore'
-import { useSearchCards, useNamed } from '@/features/catalog/catalogQueries'
-import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
+import { useNamed } from '@/features/catalog/catalogQueries'
 import { useCardRock } from '@/shared/hooks/useCardRock'
+import CardSearch from '@/shared/components/CardSearch'
 import WantCardZoom from '@/features/wants/components/WantCardZoom'
 import PrintingPicker from '@/features/wants/components/PrintingPicker'
 import type { OracleCard, Printing } from '@/shared/types/mtg'
@@ -74,7 +74,6 @@ export default function WantEntryForm({ onSubmit }: Props) {
   const addWant = useBinderStore((s) => s.addWant)
   const wants = useBinderStore((s) => s.wants)
   const [query, setQuery] = useState('')
-  const debouncedQuery = useDebouncedValue(query)
   const [selected, setSelected] = useState<OracleCard | null>(null)
   const [verifyName, setVerifyName] = useState('')
   const [preview, setPreview] = useState<OracleCard | null>(null)
@@ -93,11 +92,6 @@ export default function WantEntryForm({ onSubmit }: Props) {
     defaultValues: { quantity: 1 },
   })
 
-  const {
-    data: searchResults,
-    isPending: isSearchPending,
-    isError: isSearchError,
-  } = useSearchCards(debouncedQuery)
   const {
     data: verifiedCard,
     isPending: isVerifyPending,
@@ -144,14 +138,11 @@ export default function WantEntryForm({ onSubmit }: Props) {
     preview !== null && hasQuery && matchesName(preview, query)
   // The card already selected (picked or previewed) never reappears in the
   // suggestion list for a new query.
-  const suggestions = searchResults?.filter(
-    (card) =>
-      card.oracleId !== preview?.oracleId &&
-      card.oracleId !== selected?.oracleId,
+  const excludedOracleIds = new Set(
+    [preview?.oracleId, selected?.oracleId].filter(
+      (id): id is string => id !== undefined,
+    ),
   )
-  const showSuggestions =
-    hasQuery && !suggestionPicked && !previewIsCurrent &&
-    (suggestions?.length ?? 0) > 0
 
   // Clicking a suggestion's full name verifies it right away: the card is
   // already in memory, so no extra request is needed.
@@ -206,60 +197,14 @@ export default function WantEntryForm({ onSubmit }: Props) {
   return (
     <>
       <form onSubmit={handleSubmit(submit)} className="want-form">
-        <div className="want-search-row">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                handleVerify()
-              }
-            }}
-            placeholder="Buscar carta..."
-            aria-label="Buscar carta"
-            className="field"
-          />
-        </div>
-
-        {hasQuery && isSearchPending && !searchResults && (
-          <div className="want-loader" role="status" aria-label="Buscando…">
-            <span className="want-loader-dot" aria-hidden="true" />
-            <span className="want-loader-dot" aria-hidden="true" />
-            <span className="want-loader-dot" aria-hidden="true" />
-          </div>
-        )}
-        {hasQuery && isSearchError && (
-          <p className="want-form-status want-form-status--error" role="alert">
-            No se pudo buscar. Intenta de nuevo.
-          </p>
-        )}
-        {hasQuery &&
-          !isSearchPending &&
-          !isSearchError &&
-          searchResults?.length === 0 && (
-            <p className="want-form-status">Sin resultados para tu búsqueda.</p>
-          )}
-        {showSuggestions && (
-          <ul className="want-search-list">
-            {suggestions?.map((card) => (
-              <li key={card.oracleId}>
-                <button
-                  type="button"
-                  className="want-search-item"
-                  onClick={() => handlePick(card)}
-                  aria-label={card.name}
-                >
-                  <span className="want-search-item-name">{card.name}</span>
-                  {card.typeLine && (
-                    <span className="want-search-item-meta">{card.typeLine}</span>
-                  )}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+        <CardSearch
+          query={query}
+          onQueryChange={setQuery}
+          onSelect={handlePick}
+          onEnter={handleVerify}
+          excludeOracleIds={excludedOracleIds}
+          hideSuggestions={suggestionPicked || previewIsCurrent}
+        />
 
         {verifyName.length > 0 && isVerifyError && (
           <p className="want-form-status want-form-status--error" role="alert">

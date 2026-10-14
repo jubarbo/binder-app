@@ -70,6 +70,7 @@ function makePrinting(overrides: Partial<Printing> = {}): Printing {
   return {
     id: 'printing-1',
     oracleId: 'oracle-bolt',
+    name: 'Lightning Bolt',
     setCode: 'LEB',
     setName: 'Limited Edition Alpha',
     collectorNumber: '161',
@@ -155,7 +156,7 @@ describe('WantEntryForm search flow', () => {
 
     const loader = screen.getByRole('status', { name: 'Buscando…' })
     expect(loader).toBeInTheDocument()
-    expect(loader.querySelectorAll('.want-loader-dot')).toHaveLength(3)
+    expect(loader.querySelectorAll('.card-search-loader-dot')).toHaveLength(3)
     expect(screen.queryByText('Buscando…')).not.toBeInTheDocument()
   })
 

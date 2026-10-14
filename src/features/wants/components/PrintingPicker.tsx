@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { usePrintings } from '@/features/catalog/catalogQueries'
+import { normalizeText } from '@/shared/utils/normalizeText'
 import type { Printing } from '@/shared/types/mtg'
 
 interface PrintingPickerProps {
@@ -11,13 +12,6 @@ interface PrintingPickerProps {
   /** Called when the panel closes: a closed panel cancels the selection. */
   onClear: () => void
 }
-
-/** Lowercase, accent-free text for forgiving edition-name matching. */
-const normalizeText = (text: string) =>
-  text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
 
 /**
  * The optional refinement under the preview: pick one concrete printing of

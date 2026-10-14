@@ -47,6 +47,7 @@ function makePrinting(overrides: Partial<Printing> = {}): Printing {
   return {
     id: 'printing-1',
     oracleId: 'oracle-bolt',
+    name: 'Lightning Bolt',
     setCode: 'ALP',
     setName: 'Alpha',
     collectorNumber: '1',

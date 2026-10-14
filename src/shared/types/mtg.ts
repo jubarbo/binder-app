@@ -26,6 +26,8 @@ export interface Printing {
   id: string
   /** Logical card this printing belongs to. */
   oracleId: string
+  /** Card title, e.g. `Lightning Bolt`. */
+  name: string
   setCode: string
   setName: string
   collectorNumber: string

@@ -32,6 +32,7 @@ const entry: BinderEntry = { id: 'e1', printingId: 'p1', quantity: 1, condition:
 const printing: Printing = {
   id: 'p1',
   oracleId: 'o1',
+  name: 'Test Card',
   setCode: 'TST',
   setName: 'Test Set',
   collectorNumber: '123',
