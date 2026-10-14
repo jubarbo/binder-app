@@ -729,18 +729,6 @@ svg {
   outline: none;
 }
 
-.zoom-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
-
-.zoom-header h2 {
-  margin: 0;
-  font-size: var(--text-lg);
-}
-
 /* Clipping box around the zoomed image: it hugs the centered card (the panel
    is wider) so the foil band lands exactly on the artwork, and it owns the
    radius and shadow because `overflow: hidden` would clip the image's own. */
@@ -760,13 +748,6 @@ svg {
   width: auto;
   aspect-ratio: var(--card-aspect-ratio);
   margin-inline: auto;
-}
-
-.zoom-type {
-  margin: 0;
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-  text-align: center;
 }
 
 /* App shell */
