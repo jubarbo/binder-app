@@ -38,10 +38,8 @@ jobs:
 
       - name: Build
         run: npm run build
-        env:
-          # GitHub Pages serves this project at /binder-app/, so the build's
-          # asset URLs must resolve under that subpath.
-          BASE_PATH: /binder-app/
+        # No BASE_PATH override: the site is served at the custom domain root
+        # (binder.mantisuy.com), so Vite's default base of '/' is correct.
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
