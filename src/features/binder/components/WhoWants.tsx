@@ -9,7 +9,7 @@ interface WhoWantsProps {
 }
 
 /** Avatar: the user's photo when they have one, their initial otherwise. The
- *  name is rendered next to it by the caller, so both stay decorative here. */
+ *  name is rendered under it by the caller, so both stay decorative here. */
 function WisherAvatar({ wisher }: { wisher: Wisher }) {
   if (wisher.avatarUrl) {
     return (
@@ -47,7 +47,7 @@ export default function WhoWants({ oracleId }: WhoWantsProps) {
   return (
     <section className="wanters" aria-labelledby={titleId}>
       <h2 id={titleId} className="wanters-title">
-        Deseantes
+        La buscan
       </h2>
       {isPending ? (
         <p className="card-search-status" role="status">
@@ -59,7 +59,17 @@ export default function WhoWants({ oracleId }: WhoWantsProps) {
         <ul className="wanters-list">
           {wishers.map((wisher) => (
             <li key={wisher.id} className="wanters-item">
-              <WisherAvatar wisher={wisher} />
+              {/* The backend resolves and orders the matches; the UI only
+                  projects the resolved want, so no re-sorting happens here. */}
+              <span className="wanters-avatar-wrap">
+                <WisherAvatar wisher={wisher} />
+                <span
+                  className="wanters-badge"
+                  aria-label={`${wisher.wantsCopies} ${wisher.wantsCopies === 1 ? 'copia' : 'copias'}`}
+                >
+                  {wisher.wantsCopies}
+                </span>
+              </span>
               <span className="wanters-name">{wisher.displayName}</span>
             </li>
           ))}

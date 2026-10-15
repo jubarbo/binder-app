@@ -1,11 +1,14 @@
 /**
- * A user who wants a card. Identity only: the app has no user model, auth or
- * backend today, so the name is a display snapshot and the photo optional.
+ * A user who wants a card. Identity plus the shape of their want: how many
+ * copies they seek. Matching and ordering are the backend's job, so this is
+ * the data the API already resolved — the UI only projects it.
  */
 export interface Wisher {
   id: string
   displayName: string
   avatarUrl?: string
+  /** How many copies of this card the user is looking for. */
+  wantsCopies: number
 }
 
 /**
@@ -26,5 +29,45 @@ export const localWishersPort: WishersPort = {
   wishersOf: async () => [],
 }
 
-/** Active wishers adapter. Consumers go through this binding only. */
-export const wishersPort: WishersPort = localWishersPort
+/**
+ * Dev-only mock so the "La buscan" section can be previewed before the API
+ * exists. It is selected only in dev and only when VITE_MOCK_WISHERS=1, so the
+ * honest empty port stays the default and production never ships invented
+ * users. The list is deliberately ordered so a client-side re-sort would
+ * visibly reorder it, keeping the UI's "no client re-sort" contract obvious.
+ */
+export const mockWishersPort: WishersPort = {
+  wishersOf: async () => [
+    {
+      id: 'm-low',
+      displayName: 'Zeta',
+      wantsCopies: 1,
+    },
+    {
+      id: 'm-normal',
+      displayName: 'Bruno',
+      avatarUrl: 'https://i.pravatar.cc/64?img=12',
+      wantsCopies: 2,
+    },
+    {
+      id: 'm-high',
+      displayName: 'Ana',
+      wantsCopies: 4,
+    },
+    {
+      id: 'm-high-2',
+      displayName: 'Carla',
+      wantsCopies: 1,
+    },
+  ],
+}
+
+/**
+ * Active wishers adapter. Consumers go through this binding only. The mock is
+ * gated behind both DEV and an explicit opt-in flag: a production build always
+ * resolves to the honest empty port regardless of the flag.
+ */
+export const wishersPort: WishersPort =
+  import.meta.env.DEV && import.meta.env.VITE_MOCK_WISHERS === '1'
+    ? mockWishersPort
+    : localWishersPort
