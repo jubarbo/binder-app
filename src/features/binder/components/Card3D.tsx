@@ -1,6 +1,7 @@
-import { motion, useMotionValue, useTransform, useReducedMotion } from 'motion/react'
-import { useState, useRef } from 'react'
-import type { BinderEntry, Printing } from '../../../shared/types/mtg'
+import { motion, useTransform } from 'motion/react'
+import type { BinderEntry, Printing } from '@/shared/types/mtg'
+import { useCardRock } from '@/shared/hooks/useCardRock'
+import FoilLayer from '@/shared/components/FoilLayer'
 
 interface Card3DProps {
   entry: BinderEntry
@@ -11,6 +12,8 @@ interface Card3DProps {
   normalLoaded: boolean
   setNormalLoaded: (loaded: boolean) => void
   quantityBadge?: React.ReactNode
+  /** Opens the detail for this card; receives the card element for geometry. */
+  onOpenDetail?: (element: HTMLDivElement) => void
 }
 
 export default function Card3D({
@@ -22,35 +25,33 @@ export default function Card3D({
   normalLoaded,
   setNormalLoaded,
   quantityBadge,
+  onOpenDetail,
 }: Card3DProps) {
-  const prefersReducedMotion = useReducedMotion()
-  const ref = useRef<HTMLDivElement>(null)
-  const [isZoomed, setIsZoomed] = useState(false)
+  const {
+    ref,
+    style,
+    handlers,
+    glareStyle,
+    rockX,
+    rockY,
+  } = useCardRock()
+  // Holographic band: an oversized rainbow gradient the pointer slides under,
+  // only for copies declared foil. Translating the layer (a composited
+  // transform) instead of animating background-position keeps it off the
+  // paint path, which matters with a full grid of cards.
+  const foilX = useTransform(rockX, [-100, 100], ['14%', '-14%'])
+  const foilY = useTransform(rockY, [-100, 100], ['14%', '-14%'])
+  const isFoil = entry.finish === 'foil'
 
-  const x = useMotionValue(0)
-  const y = useMotionValue(0)
-
-  const rotateX = useTransform(y, [-100, 100], [8, -8])
-  const rotateY = useTransform(x, [-100, 100], [-8, 8])
-  const glareX = useTransform(x, [-100, 100], [100, 0])
-  const glareY = useTransform(y, [-100, 100], [100, 0])
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (prefersReducedMotion) return
-    const rect = ref.current?.getBoundingClientRect()
-    if (!rect) return
-    const centerX = rect.left + rect.width / 2
-    const centerY = rect.top + rect.height / 2
-    const px = e.clientX - centerX
-    const py = e.clientY - centerY
-    x.set(px * 0.5)
-    y.set(py * 0.5)
+  const openDetail = () => {
+    if (ref.current) onOpenDetail?.(ref.current)
   }
 
-  const handleMouseLeave = () => {
-    if (prefersReducedMotion) return
-    x.set(0)
-    y.set(0)
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      openDetail()
+    }
   }
 
   const imageProps = {
@@ -62,24 +63,14 @@ export default function Card3D({
   return (
     <motion.div
       ref={ref}
-      className={`card-slot card-slot--ready${entry.quantity > 1 ? ' card-slot--stacked' : ''} ${isZoomed ? 'card-slot--zoomed' : ''}`}
-      style={
-        prefersReducedMotion
-          ? undefined
-          : {
-              rotateX,
-              rotateY,
-              transformStyle: 'preserve-3d',
-              perspective: 1000,
-            }
-      }
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      onClick={() => setIsZoomed((z) => !z)}
+      className={`card-slot card-slot--ready${entry.quantity > 1 ? ' card-slot--stacked' : ''}`}
+      style={style}
+      {...handlers}
+      onClick={openDetail}
+      onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
-      aria-pressed={isZoomed}
-      aria-label={`Card ${alt}${isZoomed ? ', zoomed' : ', click to zoom'}`}
+      aria-label={`Carta ${alt}, ver detalle`}
     >
       <span className="card-image-frame">
         {hasSmall && (
@@ -100,25 +91,19 @@ export default function Card3D({
               data-loaded={normalLoaded || !hasSmall}
               onLoad={() => setNormalLoaded(true)}
             />
-            {!prefersReducedMotion && (
+            {isFoil && <FoilLayer x={foilX} y={foilY} />}
+            {glareStyle && (
               <motion.div
                 className="card-glare"
-                style={{
-                  background: `radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 60%)`,
-                }}
+                style={{ background: glareStyle }}
               />
             )}
           </>
         ) : (
-          !hasSmall && <span className="card-slot-error-mark">No image</span>
+          !hasSmall && <span className="card-slot-error-mark">Sin imagen</span>
         )}
       </span>
       {quantityBadge}
-      {isZoomed && (
-        <div className="card-zoom-overlay" onClick={(e) => { e.stopPropagation(); setIsZoomed(false); }} role="dialog" aria-label="Card zoom">
-          <img src={printing.imageNormal || printing.imageSmall} alt={alt} />
-        </div>
-      )}
     </motion.div>
   )
 }

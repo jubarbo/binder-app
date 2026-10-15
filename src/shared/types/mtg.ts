@@ -26,6 +26,8 @@ export interface Printing {
   id: string
   /** Logical card this printing belongs to. */
   oracleId: string
+  /** Card title, e.g. `Lightning Bolt`. */
+  name: string
   setCode: string
   setName: string
   collectorNumber: string
@@ -44,15 +46,26 @@ export interface Printing {
 /** Physical condition grading for a held card. */
 export type Condition = 'NM' | 'LP' | 'MP' | 'HP' | 'DMG'
 
+/** Physical finish of a held copy (foil variants change both price and play). */
+export type Finish = 'nonfoil' | 'foil' | 'etched'
+
 /** A physical card the user owns and keeps in their binder. */
 export interface BinderEntry {
   id: string
   /** References the physical printing (see `Printing.id`). */
   printingId: string
+  /**
+   * Finish of THIS copy. Optional: entries added before it existed cannot
+   * declare an honest value, so the UI shows "No declarado" for them instead
+   * of guessing.
+   */
+  finish?: Finish
   quantity: number
   condition: Condition
   language: string
   forTrade: boolean
+  /** Free-text notes for the owner (defects, signatures, provenance). */
+  notes?: string
 }
 
 /** Priority ranking for a wanted card. */
@@ -63,13 +76,23 @@ export interface WantEntry {
   id: string
   /** References the logical card (see `OracleCard.oracleId`). */
   oracleId: string
+  /**
+   * Oracle-level display snapshot taken when the want was added. Optional:
+   * wants stored before the snapshot existed render from `oracleId` alone.
+   * There is no "card by oracle id" endpoint, so the list cannot resolve
+   * these fields later.
+   */
+  name?: string
+  typeLine?: string
+  /** Representative image of the default printing (see `OracleCard`). */
+  imageNormal?: string
   preferredPrintingId?: string
+  /**
+   * Human-readable snapshot of the preferred printing (set and collector
+   * number), taken at add time: the list labels the want without resolving
+   * the printing id.
+   */
+  printingLabel?: string
   quantity: number
   priority: WantPriority
 }
-
-/** Canonical ordering of condition grades, worst to best. */
-export const CONDITIONS: readonly Condition[] = ['NM', 'LP', 'MP', 'HP', 'DMG']
-
-/** Canonical priority ordering, lowest to highest. */
-export const WANT_PRIORITIES: readonly WantPriority[] = ['low', 'normal', 'high']
