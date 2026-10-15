@@ -1646,20 +1646,33 @@ svg {
 
 .wanters-item {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: var(--space-2);
+  padding: var(--space-3);
   min-width: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Positions the quantity badge relative to the avatar, not the whole card. */
+.wanters-avatar-wrap {
+  position: relative;
+  display: inline-flex;
 }
 
 .wanters-name {
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .wanters-avatar {
-  width: 32px;
-  height: 32px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   object-fit: cover;
 }
@@ -1670,7 +1683,28 @@ svg {
   justify-content: center;
   background: var(--color-accent-soft);
   color: var(--color-text);
+  font-size: var(--text-lg);
   font-weight: 600;
+}
+
+/* Quantity badge pinned to the avatar's top-right corner. */
+.wanters-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .card-detail-edit-actions {
