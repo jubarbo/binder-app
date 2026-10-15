@@ -1,31 +1,52 @@
 /* Tactile Binder design tokens and base reset. */
 
+/* Breakpoint convention (mobile-first). Base rules target a 360-420px phone;
+   min-width queries upgrade upward: 480px for the compaction a large phone
+   can afford, 720px for tablet/desktop layouts (the card-detail step), 1024px
+   only where there is a real desktop gain. Never use max-width queries, and
+   keep each query next to the component block it serves. */
+
 :root {
-  color-scheme: light dark;
+  color-scheme: dark;
 
   /* Fonts */
   --font-sans:
     system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Consolas, monospace;
 
-  /* Colors */
-  --color-bg: #f4f3f6;
-  --color-surface: #ffffff;
-  --color-text: #1b1a21;
-  --color-text-muted: #6b6375;
-  --color-border: #e2e1e6;
-  --color-accent: #6d28d9;
-  --color-accent-soft: rgba(109, 40, 217, 0.12);
-  --color-on-accent: #ffffff;
-  --color-danger: #b91c1c;
+  /* Colors — game-table theme: walnut, leather, parchment, antique gold. */
+  --color-bg: #241a12;
+  --color-surface: #33241a;
+  --color-text: #ece0c8;
+  --color-text-muted: #ab9878;
+  --color-border: #55402c;
+  --color-accent: #d4a444;
+  --color-accent-soft: rgba(212, 164, 68, 0.16);
+  --color-on-accent: #2a1c0d;
+  --color-danger: #d4574a;
 
-  /* Shadows */
+  /* Shadows — warm, deep enough for a dark table. */
   --shadow-sm:
-    0 1px 2px rgba(27, 26, 33, 0.08);
+    0 1px 2px rgba(10, 6, 3, 0.4);
   --shadow-md:
-    0 4px 10px -2px rgba(27, 26, 33, 0.14), 0 2px 4px -2px rgba(27, 26, 33, 0.1);
+    0 4px 10px -2px rgba(10, 6, 3, 0.5), 0 2px 4px -2px rgba(10, 6, 3, 0.4);
   --shadow-lg:
-    0 12px 28px -6px rgba(27, 26, 33, 0.22), 0 4px 10px -4px rgba(27, 26, 33, 0.16);
+    0 12px 28px -6px rgba(10, 6, 3, 0.6), 0 4px 10px -4px rgba(10, 6, 3, 0.5);
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  /* Focus ring (follows the accent in both themes) */
+  --color-focus: var(--color-accent);
+
+  /* Motion */
+  --transition-fast: 150ms ease;
+  --transition-base: 240ms ease;
+
+  /* Feedback */
+  --color-success: #4d9a52;
 
   /* Card geometry: MTG frame proportions (w / h). */
   --card-aspect-ratio: 63 / 88;
@@ -57,15 +78,16 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #16171d;
-    --color-surface: #1f2028;
-    --color-text: #f3f4f6;
-    --color-text-muted: #9ca3af;
-    --color-border: #383a45;
-    --color-accent: #a78bfa;
-    --color-accent-soft: rgba(167, 139, 250, 0.16);
-    --color-on-accent: #14121a;
-    --color-danger: #f87171;
+    --color-bg: #1c140d;
+    --color-surface: #2a1d14;
+    --color-text: #f0e6d0;
+    --color-text-muted: #9c8a6c;
+    --color-border: #4a3726;
+    --color-accent: #e0b45c;
+    --color-accent-soft: rgba(224, 180, 92, 0.18);
+    --color-on-accent: #241708;
+    --color-danger: #e0705f;
+    --color-success: #6cb873;
 
     --shadow-sm:
       0 1px 2px rgba(0, 0, 0, 0.4);
@@ -103,9 +125,17 @@ a {
   color: var(--color-accent);
 }
 
-button {
+button,
+input,
+select,
+textarea {
   font: inherit;
   color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }
 
 img,
@@ -120,22 +150,668 @@ svg {
   flex-direction: column;
 }
 
+/* Shared controls */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.btn:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.btn--primary:hover:not(:disabled) {
+  filter: brightness(1.06);
+  box-shadow: var(--shadow-sm);
+  border-color: var(--color-accent);
+}
+
+.btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--color-text-muted);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  color: var(--color-text);
+  background: var(--color-accent-soft);
+}
+
+.field {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.field:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
+}
+
+.field-error {
+  color: var(--color-danger);
+  font-size: var(--text-sm);
+}
+
+.want-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 480px;
+  margin-bottom: var(--space-5);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Search input + verify button share one row. */
+.card-search-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: stretch;
+}
+
+.card-search-row .field {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Autocomplete dropdown. */
+.card-search-list {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-1);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-height: 260px;
+  overflow-y: auto;
+  /* Wheel scrolling stops here instead of chaining to the page behind. */
+  overscroll-behavior: contain;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  /* Thin, themed scrollbar: standard properties (Firefox, Chromium) ... */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-text-muted) transparent;
+}
+
+/* ... and the WebKit pseudo-elements (older Chromium, Safari); the printing
+   picker list shares the same themed scroll. */
+.card-search-list::-webkit-scrollbar,
+.want-printing-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.card-search-list::-webkit-scrollbar-track,
+.want-printing-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.card-search-list::-webkit-scrollbar-thumb,
+.want-printing-list::-webkit-scrollbar-thumb {
+  background: var(--color-text-muted);
+  border: 2px solid var(--color-bg);
+  border-radius: var(--radius-sm);
+}
+
+.card-search-list::-webkit-scrollbar-thumb:hover,
+.want-printing-list::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text);
+}
+
+.card-search-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  color: var(--color-text);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color var(--transition-fast);
+}
+
+.card-search-item:hover {
+  background: var(--color-accent-soft);
+}
+
+/* Decorative thumbnail of the card behind the suggestion, pinned to the
+   right of the row: the name and type line come first. */
+.card-search-item-thumb {
+  flex: 0 0 auto;
+  width: 81px;
+  aspect-ratio: var(--card-aspect-ratio);
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.card-search-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.card-search-item-name {
+  font-weight: 600;
+}
+
+.card-search-item-meta {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+/* Select with thumbnails: trigger plus the inline panel of option buttons. */
+.image-select {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.image-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  cursor: pointer;
+}
+
+.image-select-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.image-select-caret {
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+}
+
+.image-select-panel {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-2);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: var(--space-2);
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  /* Wheel scrolling stops here instead of chaining to the page behind. */
+  overscroll-behavior: contain;
+  /* Thin, themed scrollbar: standard properties (Firefox, Chromium). */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-text-muted) transparent;
+}
+
+.image-select-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  padding: var(--space-1);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: center;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.image-select-option:hover {
+  background: var(--color-accent-soft);
+}
+
+.image-select-option--active {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.image-select-thumb {
+  width: 100%;
+  aspect-ratio: var(--card-aspect-ratio);
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.image-select-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.image-select-meta {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.want-form-status {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+/* Three-dot search loader: replaces the "Buscando…" text while the
+   autocomplete query is in flight. */
+.card-search-loader {
+  display: flex;
+  justify-content: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+}
+
+.card-search-loader-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+  animation: card-search-loader-bounce 1.2s ease-in-out infinite;
+}
+
+.card-search-loader-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.card-search-loader-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes card-search-loader-bounce {
+  0%,
+  80%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+
+  40% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+/* Shared search status messages (empty / error). */
+.card-search-status {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.card-search-status--error {
+  color: var(--color-danger);
+}
+
+.want-form-status--error {
+  color: var(--color-danger);
+}
+
+/* Verified card preview: the card laid out on the table. */
+.want-preview {
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  box-shadow: var(--shadow-sm);
+  perspective: 800px;
+}
+
+/* Rocking card: the binder grid's physical hover, shared via useCardRock. */
+.want-preview-card {
+  position: relative;
+  flex: none;
+  /* The panel below can outgrow the card: the card must not stretch. */
+  align-self: flex-start;
+  cursor: zoom-in;
+  border-radius: 4.5%;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.want-preview-card:hover {
+  box-shadow:
+    0 14px 22px rgba(0, 0, 0, 0.4),
+    0 4px 6px rgba(0, 0, 0, 0.25);
+}
+
+.want-preview-img {
+  width: 210px;
+  aspect-ratio: var(--card-aspect-ratio);
+  object-fit: cover;
+  border-radius: 4.5%;
+  background: #1b1209;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
+}
+
+.want-preview-img--fallback {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.want-preview-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+}
+
+.want-preview-name {
+  font-weight: 700;
+}
+
+.want-preview-type {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+/* Card effect text; pre-line keeps Scryfall's line breaks. */
+.want-preview-text {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+/* Preferred-printing picker: the optional refinement under the preview. */
+.want-printing {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.want-printing-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.want-printing-panel {
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+}
+
+.want-printing-filter {
+  width: 100%;
+  margin-bottom: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.want-printing-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: var(--space-2);
+  max-height: 280px;
+  overflow-y: auto;
+  /* Wheel scrolling stops here instead of chaining to the page behind. */
+  overscroll-behavior: contain;
+  /* Thin, themed scrollbar: standard properties (Firefox, Chromium). */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-text-muted) transparent;
+}
+
+.want-printing-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  padding: var(--space-1);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: center;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.want-printing-item:hover {
+  background: var(--color-accent-soft);
+}
+
+.want-printing-item--active {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.want-printing-img {
+  width: 100%;
+  aspect-ratio: var(--card-aspect-ratio);
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.want-printing-set {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.want-printing-meta {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  text-transform: capitalize;
+}
+
+.want-preview-actions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  margin-top: auto;
+  flex-wrap: wrap;
+}
+
+.want-preview-quantity {
+  width: 5rem;
+}
+
+/* Preview skeleton: sizes only; the shimmer comes from `.skeleton`. */
+.want-skeleton--card {
+  width: 210px;
+  aspect-ratio: var(--card-aspect-ratio);
+  flex: none;
+  border-radius: 4.5%;
+}
+
+.want-skeleton--name {
+  width: 55%;
+  height: 1.2em;
+  border-radius: var(--radius-sm);
+}
+
+.want-skeleton--type {
+  width: 35%;
+  height: 0.9em;
+  border-radius: var(--radius-sm);
+}
+
+.want-skeleton--actions {
+  width: 210px;
+  max-width: 100%;
+  height: 2.4em;
+  border-radius: var(--radius-sm);
+}
+
+/* Card zoom modal: the still, large card over the table (no rocking). */
+.zoom-overlay {
+  position: fixed;
+  inset: 0;
+  /* Semi-opaque scrim: partially hides the page behind while the modal is
+     open; any click on the overlay (outside the panel) closes it. */
+  background: rgba(0, 0, 0, 0.7);
+  cursor: zoom-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.zoom-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: min(92vw, 420px);
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  cursor: default;
+}
+
+.zoom-panel:focus {
+  outline: none;
+}
+
+/* Clipping box around the zoomed image: it hugs the centered card (the panel
+   is wider) so the foil band lands exactly on the artwork, and it owns the
+   radius and shadow because `overflow: hidden` would clip the image's own. */
+.zoom-frame {
+  position: relative;
+  display: block;
+  width: fit-content;
+  /* Cap the frame at the panel's content box: the image below sizes against a
+     definite width, so a portrait phone can no longer overflow the panel. */
+  max-width: 100%;
+  margin-inline: auto;
+  overflow: hidden;
+  border-radius: 4.5%;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+}
+
+.zoom-img {
+  display: block;
+  /* Auto sizes plus both caps: the art shrinks to a small panel (width) or a
+     short viewport (height), keeping the card ratio instead of overflowing. */
+  height: auto;
+  width: auto;
+  max-height: min(78vh, 520px);
+  max-width: 100%;
+  aspect-ratio: var(--card-aspect-ratio);
+  margin-inline: auto;
+}
+
 /* App shell */
 .app-shell {
   display: flex;
   flex-direction: column;
   min-height: 100svh;
+  background-color: var(--color-bg);
+  /* Walnut grain + a warm lamp glow over the table. */
+  background-image:
+    radial-gradient(
+      150% 80% at 50% -20%,
+      rgba(212, 164, 68, 0.08),
+      transparent 60%
+    ),
+    repeating-linear-gradient(
+      6deg,
+      rgba(255, 226, 178, 0.02) 0 3px,
+      rgba(0, 0, 0, 0.045) 3px 8px,
+      rgba(255, 226, 178, 0.012) 8px 14px,
+      rgba(0, 0, 0, 0.03) 14px 21px
+    );
 }
 
 .app-nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
-  padding-inline: var(--space-5);
-  height: 56px;
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  /* min-height, not height: on a narrow phone the row is free to wrap
+     instead of clipping the brand or the links. */
+  min-height: 56px;
+  flex-wrap: wrap;
+  /* Leather strap across the top, stitched along its lower edge. */
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 220, 170, 0.025) 0 2px,
+      rgba(0, 0, 0, 0.04) 2px 4px
+    ),
+    linear-gradient(180deg, #3b2b1e 0%, #2f2116 100%);
+  border-bottom: 1.5px dashed rgba(224, 197, 133, 0.45);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+@media (min-width: 720px) {
+  .app-nav {
+    gap: var(--space-4);
+    padding-inline: var(--space-5);
+  }
 }
 
 .app-brand {
@@ -163,12 +839,83 @@ svg {
   border-bottom-color: var(--color-accent);
 }
 
+/* User account dropdown menu */
+.app-user-menu {
+  position: relative;
+}
+
+.app-user-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.app-user-menu-trigger svg {
+  display: block;
+}
+
+.app-user-menu-trigger:hover,
+.app-user-menu-trigger[aria-expanded='true'] {
+  border-color: var(--color-accent);
+}
+
+.app-user-menu-list {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  padding: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+  z-index: 20;
+}
+
+.app-user-menu-item {
+  display: block;
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.app-user-menu-item:hover {
+  background: var(--color-accent-soft);
+  color: var(--color-text);
+}
+
+.app-user-menu-item.active {
+  color: var(--color-accent);
+}
+
 .app-main {
   flex: 1;
   width: 100%;
   max-width: 1100px;
   margin-inline: auto;
-  padding: var(--space-5);
+  padding: var(--space-4);
+}
+
+@media (min-width: 720px) {
+  .app-main {
+    padding: var(--space-5);
+  }
 }
 
 /* Pages */
@@ -179,6 +926,12 @@ svg {
 }
 
 .page p {
+  color: var(--color-text-muted);
+}
+
+/* Lazy route fallback */
+.route-fallback {
+  padding: var(--space-5);
   color: var(--color-text-muted);
 }
 
@@ -194,6 +947,12 @@ svg {
 
 .binder-header h1 {
   margin-bottom: 0;
+}
+
+.binder-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
 }
 
 .binder-nav {
@@ -228,34 +987,100 @@ svg {
 /* The physical binder page: a dark, slightly recessed board that holds pockets. */
 .binder-page-frame {
   padding: var(--space-4);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 220, 170, 0.1);
   border-radius: 14px;
-  background: #1b1d26;
+  background:
+    repeating-linear-gradient(
+      4deg,
+      rgba(255, 214, 160, 0.035) 0 4px,
+      rgba(0, 0, 0, 0.06) 4px 10px,
+      rgba(255, 214, 160, 0.02) 10px 17px
+    ),
+    radial-gradient(120% 100% at 50% 0%, #4a3520 0%, #352617 58%, #241a10 100%);
   box-shadow:
     var(--shadow-lg),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    inset 0 1px 0 rgba(255, 226, 180, 0.06),
+    inset 0 -10px 18px rgba(0, 0, 0, 0.35);
 }
 
 .binder-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  /* Phones hold three pockets across; the five-column page lives at the
+     desktop step below (15 pockets either way). */
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--space-3);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+@media (min-width: 720px) {
+  .binder-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
 .binder-slot {
   position: relative;
+  /* Perspective lives on the pocket (the parent), so the tilting card inside
+     gets real depth instead of a flat orthographic rotation. A shorter
+     perspective length makes each degree of tilt read deeper. */
+  perspective: 800px;
 }
 
 .binder-empty-pocket {
   display: block;
   width: 100%;
   aspect-ratio: var(--card-aspect-ratio);
-  border: 1.5px dashed rgba(255, 255, 255, 0.18);
+  border: 1.5px dashed rgba(224, 197, 133, 0.38);
   border-radius: 4.5%;
-  background: rgba(255, 255, 255, 0.03);
+  background: linear-gradient(
+    160deg,
+    rgba(74, 52, 34, 0.75),
+    rgba(45, 31, 20, 0.85)
+  );
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.5),
+    inset 0 -1px 0 rgba(255, 220, 170, 0.07);
+}
+
+/* The first free pocket doubles as the add shortcut: the same pocket, with a
+   muted plus that lights up on hover and keyboard focus. */
+.binder-add-pocket {
+  display: flex;
+  width: 100%;
+  aspect-ratio: var(--card-aspect-ratio);
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1.5px dashed rgba(224, 197, 133, 0.38);
+  border-radius: 4.5%;
+  background: linear-gradient(
+    160deg,
+    rgba(74, 52, 34, 0.75),
+    rgba(45, 31, 20, 0.85)
+  );
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.5),
+    inset 0 -1px 0 rgba(255, 220, 170, 0.07);
+  color: rgba(224, 197, 133, 0.55);
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  font-weight: 300;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.binder-add-pocket:hover {
+  color: var(--color-accent);
+  border-color: rgba(224, 197, 133, 0.65);
+}
+
+.binder-add-pocket:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 /* Empty binder state */
@@ -270,36 +1095,6 @@ svg {
   background: var(--color-surface);
 }
 
-.binder-dev-action {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.binder-dev-action button {
-  padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--color-accent);
-  border-radius: 8px;
-  background: var(--color-accent);
-  color: var(--color-on-accent);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.binder-dev-action button:hover:not(:disabled) {
-  filter: brightness(1.05);
-}
-
-.binder-dev-action button:disabled {
-  opacity: 0.6;
-  cursor: progress;
-}
-
-.binder-dev-note {
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
-}
-
 /* Card slot: self-contained loading / error / ready states. */
 .card-slot {
   position: relative;
@@ -312,7 +1107,27 @@ svg {
 }
 
 .card-slot--ready {
-  background: #0f1015;
+  background: #1b1209;
+  transition: filter var(--transition-fast);
+}
+
+/* Hover lift-off via box-shadow only. A `filter` here would force the card
+   into its own raster surface and flatten the 3D context, so the spring's
+   composited transforms would scale a stale raster and leave the card soft.
+   box-shadow paints in local space and transforms with the card instead. */
+.card-slot--ready:hover {
+  box-shadow:
+    0 14px 22px rgba(0, 0, 0, 0.4),
+    0 4px 6px rgba(0, 0, 0, 0.25);
+}
+
+/* Stacked shadows must survive the hover rule: same specificity, later wins. */
+.card-slot--stacked:hover {
+  box-shadow:
+    2px 2px 0 0 rgba(255, 255, 255, 0.1),
+    4px 4px 0 0 rgba(255, 255, 255, 0.05),
+    0 14px 22px rgba(0, 0, 0, 0.4),
+    0 4px 6px rgba(0, 0, 0, 0.25);
 }
 
 /* Stacked-cards look for quantity > 1: offset card edges behind the top card. */
@@ -354,35 +1169,45 @@ svg {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.25rem;
-  height: 1.25rem;
-  padding: 0 0.3rem;
-  border-radius: 999px;
-  background: var(--color-accent);
-  color: var(--color-on-accent);
-  font-size: 0.75rem;
+  min-width: 1.875rem;
+  height: 1.875rem;
+  padding: 0 0.6rem;
+  /* Leather tag: rectangular, tooled stitch inside the edge. */
+  border-radius: 6px;
+  background: linear-gradient(160deg, #4a3524 0%, #34251a 100%);
+  color: var(--color-text);
+  border: 1px solid rgba(224, 197, 133, 0.5);
+  outline: 1px dashed rgba(224, 197, 133, 0.35);
+  outline-offset: -4.5px;
+  font-size: 1.08rem;
+  letter-spacing: 0.03em;
   font-weight: 700;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
-/* Loading skeleton */
+/* Loading skeleton: shared shimmer reused by the binder slots, the card
+   detail page and the wants preview. Sizes live on each modifier. */
 .card-slot--loading {
-  background: #1f2028;
+  background: #2c2016;
 }
 
-.card-skeleton {
+.card-skeleton,
+.skeleton {
   display: block;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(255, 255, 255, 0.06);
+  background-color: rgba(255, 226, 178, 0.06);
   background-image: linear-gradient(
     100deg,
     transparent 25%,
-    rgba(255, 255, 255, 0.16) 50%,
+    rgba(255, 226, 178, 0.16) 50%,
     transparent 75%
   );
   background-size: 200% 100%;
   animation: binder-shimmer 1.4s ease-in-out infinite;
+}
+
+.card-skeleton {
+  width: 100%;
+  height: 100%;
 }
 
 @keyframes binder-shimmer {
@@ -435,13 +1260,11 @@ svg {
 /* Card3D effects */
 .card-slot {
   transform-style: preserve-3d;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  /* No transform transition: motion owns the transform (springs + tilt), and
+     a CSS transition on top would lag the rocking at fractional values,
+     causing resampling blur. Only the shadow eases in CSS. */
+  transition: box-shadow 0.2s ease;
   cursor: pointer;
-}
-
-.card-slot--zoomed {
-  z-index: 10;
-  transform: scale(1.5) !important;
 }
 
 .card-glare {
@@ -451,27 +1274,86 @@ svg {
   mix-blend-mode: screen;
 }
 
-.card-zoom-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.85);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  cursor: zoom-out;
+/* Holographic foil band: an oversized rainbow gradient screened over the art,
+   split into two layers on purpose. The outer layer takes motion's inline
+   pointer transform; a keyframe on that same element would override it. The
+   inner band owns the gradient and the continuous sweep, and both transforms
+   are composited, so the animation never repaints the card (animating
+   background-position would repaint every frame). Rendered for every copy
+   declared foil; under reduced motion the sweep is dropped (media query
+   below) and the band stays as a static stripe, so the finish is still
+   readable without motion.
+
+   `screen`, not `color-dodge`: dodge divides the backdrop by (1 - source), so
+   over mid-dark art it does almost nothing and over light art it blows the
+   highlights out — the band was invisible on most cards. Screen only ever adds
+   light, which reads as a holo sheen on any artwork, and 0.55 keeps it present
+   without going garish. */
+.card-foil {
+  position: absolute;
+  inset: -35%;
+  z-index: 2;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0.55;
+  will-change: transform;
 }
 
-.card-zoom-overlay img {
-  max-width: 90vw;
-  max-height: 90vh;
-  border-radius: 12px;
+.card-foil-band {
+  position: absolute;
+  inset: -25%;
+  will-change: transform;
+  background: linear-gradient(
+    115deg,
+    transparent 25%,
+    rgba(255, 0, 128, 0.6) 33%,
+    rgba(255, 204, 0, 0.6) 41%,
+    rgba(0, 204, 255, 0.6) 49%,
+    rgba(0, 255, 128, 0.6) 57%,
+    transparent 65%
+  );
+  background-size: 300% 300%;
+  background-position: 50% 50%;
+  animation: card-foil-sweep 3s ease-in-out infinite alternate;
+}
+
+@keyframes card-foil-sweep {
+  from {
+    transform: translate3d(-18%, -10%, 0) rotate(-3deg);
+  }
+
+  to {
+    transform: translate3d(18%, 10%, 0) rotate(3deg);
+  }
+}
+
+/* Reduced motion drops the sweep, never the layer: the band keeps its rest
+   position, so a foil copy still reads as foil while standing still. */
+@media (prefers-reduced-motion: reduce) {
+  .card-foil-band {
+    animation: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .card-slot {
     transition: none;
   }
+}
+
+/* Card detail page */
+.card-detail-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 420px;
+}
+
+.card-detail-image {
+  display: block;
+  width: 100%;
+  border-radius: 12px;
+  margin-bottom: var(--space-4);
 }
 
 /* Add card flow */
@@ -486,46 +1368,477 @@ svg {
 }
 
 .add-card-modal {
-  background: var(--color-surface);
-  padding: var(--space-6);
-  border-radius: 8px;
-  max-width: 500px;
-  width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
-.add-card-input {
-  width: 100%;
-  padding: var(--space-2);
-  margin-bottom: var(--space-4);
-  background: var(--color-bg);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-}
-
-.add-card-results {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.add-card-result-item {
-  padding: var(--space-2);
-  background: var(--color-bg);
-  color: var(--color-text);
+  gap: var(--space-3);
+  background: var(--color-surface);
+  padding: var(--space-4);
   border: 1px solid var(--color-border);
-  border-radius: 4px;
-  cursor: pointer;
-  text-align: left;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  max-width: 520px;
+  width: 90%;
+  /* dvh counts what is actually visible under the mobile browser chrome;
+     vh stays as the fallback where dvh is unsupported. */
+  max-height: 80vh;
+  max-height: 80dvh;
+  overflow-y: auto;
+  /* Wheel scrolling stops here instead of chaining to the page behind. */
+  overscroll-behavior: contain;
+  /* Thin, themed scrollbar, same treatment as the scrolling lists. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-text-muted) transparent;
 }
 
-.add-card-result-item:hover {
-  background: var(--color-accent);
-  color: var(--color-on-accent);
+/* The dialog title scrolls with the body like any other row. */
+.add-card-modal h2 {
+  margin: 0;
+  padding: var(--space-2) 0;
+}
+
+@media (min-width: 720px) {
+  .add-card-modal {
+    padding: var(--space-6);
+  }
+}
+
+/* WebKit pseudo-elements (older Chromium, Safari) for the same thin scroll. */
+.add-card-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.add-card-modal::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.add-card-modal::-webkit-scrollbar-thumb {
+  background: var(--color-text-muted);
+  border: 2px solid var(--color-surface);
+  border-radius: var(--radius-sm);
+}
+
+.add-card-modal::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text);
+}
+
+/* Live preview of the chosen printing: keeps edition comparison visible
+   while cycling through the select. */
+.add-card-preview {
+  align-self: center;
+  width: min(240px, 65%);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Card detail */
+.card-detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.card-detail-back:hover {
+  color: var(--color-text);
+}
+
+.card-detail-grid {
+  display: grid;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+/* Desktop detail: three columns — media, metadata, wanters — using the full
+   content width (below 720px the page stays capped at 420px, which is what
+   left the right-hand space unused). Every child is placed explicitly:
+   implicit auto-flow would drop the fourth child into a new row and leave a
+   hole at the top right. */
+@media (min-width: 720px) {
+  .card-detail-page {
+    max-width: none;
+  }
+
+  .card-detail-grid {
+    grid-template-columns: minmax(280px, 420px) 1fr minmax(260px, 340px);
+  }
+
+  .card-detail-media {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .card-detail-meta {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .card-detail-edit,
+  .card-detail-edit-trigger {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .wanters {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
+
+  .wanters-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .card-detail-row {
+    grid-template-columns: 150px 1fr;
+    gap: var(--space-3);
+  }
+}
+
+/* Rocking wrapper around the enlarged printing (shared useCardRock physics).
+   It is also the zoom trigger, so it takes the affordance and the focus ring. */
+.card-detail-media-card {
+  position: relative;
+  border-radius: var(--radius-lg);
+  transform-style: preserve-3d;
+  will-change: transform;
+  cursor: zoom-in;
+}
+
+.card-detail-media-card:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 4px;
+}
+
+/* Frame around the enlarged printing: the box that clips the foil layer to the
+   image itself, so the deliberately oversized band never paints past the card
+   edge. The shadow lives here because `overflow: hidden` would clip the image's
+   own — same box, so the rendering is unchanged. */
+.card-detail-frame {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.card-detail-image {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+/* The placeholder renders outside the frame (there is no image to clip), so it
+   owns the shadow the framed image gets from `.card-detail-frame`. */
+.card-detail-image--placeholder {
+  aspect-ratio: var(--card-aspect-ratio);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Detail skeleton: mirrors .card-detail-grid's two columns while loading. */
+.card-detail-skeleton-media {
+  width: 100%;
+  max-width: 420px;
+  aspect-ratio: var(--card-aspect-ratio);
+  border-radius: var(--radius-lg);
+}
+
+.card-detail-skeleton-meta {
+  min-height: 240px;
+  border-radius: var(--radius-lg);
+}
+
+.card-detail-meta {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.card-detail-row {
+  display: grid;
+  /* Phone: the label stacks over its value instead of reserving 150px of a
+     420px-wide card; the desktop step restores the two-column row. */
+  grid-template-columns: 1fr;
+  gap: var(--space-1);
+  align-items: baseline;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.card-detail-row:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.card-detail-row dt {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.card-detail-row dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.card-detail-edit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.card-detail-edit textarea.field {
+  resize: vertical;
+  min-height: 4.5rem;
+}
+
+.card-detail-edit-quantity {
+  max-width: 7rem;
+}
+
+/* Foil toggle in the edit panel: the same decision the add flow makes, so it
+   reads as a checkbox row rather than as one more field in the stack. */
+.card-detail-edit-finish {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: fit-content;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+/* Who wants this card: avatars + names behind the wishers port. On desktop it
+   lives in the detail's third column (see the placement block above). */
+.wanters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.wanters-title {
+  margin: 0;
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.wanters-list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+}
+
+.wanters-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.wanters-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wanters-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.wanters-avatar--initial {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-accent-soft);
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.card-detail-edit-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Wants list */
+.wants-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.want-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+/* 96x134 keeps the 488x680 Scryfall ratio for the thumbnail; 64x89 is the
+   same ratio on a narrow phone, where the text needs the room back. */
+.want-item-thumb {
+  flex-shrink: 0;
+  width: 64px;
+  height: 89px;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (min-width: 480px) {
+  .want-item-thumb {
+    width: 96px;
+    height: 134px;
+  }
+}
+
+/* Remove button mounted over the card's top-right vertex. */
+.want-item-remove {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.want-item-remove:hover,
+.want-item-remove:focus-visible {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.want-item-info {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.want-item-name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.want-item-type {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.want-item-printing {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+
+.want-item-printing--oracle {
+  font-style: italic;
+}
+
+.want-item-qty {
+  flex-shrink: 0;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Shared confirmation dialog (destructive actions): same choreography as the
+   card zoom modal (portal to body, semi-opaque scrim, panel scale + fade). */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.confirm-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: min(92vw, 420px);
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  cursor: default;
+}
+
+.confirm-text {
+  margin: 0;
+  font-weight: 600;
+  text-align: center;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+}
+
+.wants-empty {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+}
+
+.add-card-quantity {
+  max-width: 7rem;
+}
+
+.add-card-finish-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
 }
 
 .add-card-actions {
@@ -540,4 +1853,99 @@ svg {
   .add-card-modal {
     animation: none;
   }
+}
+
+/* Card flight transition overlay (feature: card-3d-transition). Purely
+   decorative layer: always pointer-events none and aria-hidden. */
+.card-flight-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+}
+
+.card-flight-perspective {
+  position: absolute;
+  inset: 0;
+  perspective: 1100px;
+}
+
+.card-flight-dim {
+  position: absolute;
+  inset: 0;
+  /* Near-black (not pure black) so the sink reads soft, never a harsh cut. */
+  background: #0a0a0c;
+}
+
+.card-flight-card {
+  position: fixed;
+  overflow: hidden;
+  border-radius: 4.5%;
+  background: #1b1209;
+  transform-origin: center center;
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+}
+
+.card-flight-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* High-resolution image stands in over the small one once it has painted. */
+.card-flight-img--full {
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.card-flight-img--full[data-loaded='true'] {
+  opacity: 1;
+}
+
+/* Notifications (react-toastify): themed through the library's own CSS
+   variables, so a toast is one more surface of the app — same background,
+   border, radius, font and shadow as every panel — keeping the semantic
+   color for the icon and the progress bar only. The container renders with
+   theme="light" because v11 has no "auto" variant (an unknown theme paints
+   nothing); both theme variables point at the same scheme-aware token, so
+   the surface follows the OS preference in either scheme with no extra JS. */
+.Toastify {
+  --toastify-font-family: inherit;
+  --toastify-toast-width: min(92vw, 380px);
+  --toastify-toast-padding: var(--space-3) var(--space-4);
+  --toastify-toast-bd-radius: var(--radius-md);
+  --toastify-toast-shadow: var(--shadow-lg);
+  /* The light/dark theme rules are the only ones that paint the toast, and
+     they read these two; both point at the same scheme-aware token, so the
+     surface follows the OS preference either way. (`--toastify-toast-background`
+     is declared by the library but read by no rule — do not map it.) */
+  --toastify-color-light: var(--color-surface);
+  --toastify-color-dark: var(--color-surface);
+  --toastify-text-color-light: var(--color-text);
+  --toastify-text-color-dark: var(--color-text);
+  /* Icon and progress bar default to these, so mapping them keeps the two
+     systems in sync: the library only ever reads its own variables. */
+  --toastify-color-success: var(--color-success);
+  --toastify-color-error: var(--color-danger);
+  --toastify-color-warning: var(--color-accent);
+  --toastify-color-info: var(--color-accent);
+  --toastify-color-progress-light: var(--color-text-muted);
+  --toastify-color-progress-dark: var(--color-text-muted);
+  --toastify-z-index: 200;
+}
+
+.Toastify__toast {
+  border: 1px solid var(--color-border);
+}
+
+.Toastify__close-button {
+  color: var(--color-text-muted);
+  opacity: 1;
+}
+
+.Toastify__close-button:hover {
+  color: var(--color-text);
 }

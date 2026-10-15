@@ -1,6 +1,6 @@
 import { RouterProvider } from 'react-router-dom'
-import { AppProviders } from './providers'
-import { router } from './router'
+import { AppProviders } from '@/app/providers'
+import { router } from '@/app/router'
 
 /** Root component: providers wrapped around the router. */
 export default function App() {

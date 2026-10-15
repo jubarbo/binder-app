@@ -1,7 +1,10 @@
 import { useState } from 'react'
-import type { BinderEntry } from '../../../shared/types/mtg'
-import { usePrinting } from '../../catalog/catalogQueries'
-import Card3D from './Card3D'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { useReducedMotion } from 'motion/react'
+import type { BinderEntry } from '@/shared/types/mtg'
+import { usePrinting } from '@/features/catalog/catalogQueries'
+import Card3D from '@/features/binder/components/Card3D'
+import { isFlightActive, useFlightStore } from '@/features/binder/transition/flightStore'
 
 interface CardSlotProps {
   /** The physical printing the user owns in this pocket. */
@@ -10,7 +13,7 @@ interface CardSlotProps {
 
 function cardAltText(entry: BinderEntry, setName: string, collectorNumber: string): string {
   if (setName && collectorNumber) return `${setName} #${collectorNumber}`
-  return `Card printing ${entry.printingId}`
+  return `Impresión ${entry.printingId}`
 }
 
 /**
@@ -20,13 +23,16 @@ function cardAltText(entry: BinderEntry, setName: string, collectorNumber: strin
  */
 export default function CardSlot({ entry }: CardSlotProps) {
   const { data: printing, isPending, isError } = usePrinting(entry.printingId)
+  const navigate = useNavigate()
+  const location = useLocation()
+  const prefersReducedMotion = useReducedMotion()
   // Tracks whether the high-resolution image has painted yet, so the small
   // image can stand in while it loads.
   const [normalLoaded, setNormalLoaded] = useState(false)
 
   if (isPending) {
     return (
-      <div className="card-slot card-slot--loading" aria-busy="true" aria-label="Loading card">
+      <div className="card-slot card-slot--loading" aria-busy="true" aria-label="Cargando carta">
         <span className="card-skeleton" />
       </div>
     )
@@ -34,7 +40,7 @@ export default function CardSlot({ entry }: CardSlotProps) {
 
   if (isError || !printing) {
     return (
-      <div className="card-slot card-slot--error" role="img" aria-label="Card failed to load">
+      <div className="card-slot card-slot--error" role="img" aria-label="No se pudo cargar la carta">
         <span className="card-slot-error-mark">?</span>
         <span className="card-slot-error-id">{entry.printingId}</span>
       </div>
@@ -46,10 +52,34 @@ export default function CardSlot({ entry }: CardSlotProps) {
   const alt = cardAltText(entry, printing.setName, printing.collectorNumber)
 
   const quantityBadge = entry.quantity > 1 ? (
-    <span className="card-quantity-badge" aria-label={`Quantity ${entry.quantity}`}>
+    <span className="card-quantity-badge" aria-label={`Cantidad ${entry.quantity}`}>
       {entry.quantity}
     </span>
   ) : null
+
+  const openDetail = (element: HTMLDivElement) => {
+    // Fresh store read: rapid repeat clicks must not start a second flight,
+    // even before React re-renders.
+    const { flight, beginFlight } = useFlightStore.getState()
+    if (isFlightActive(flight, performance.now())) return
+    if (prefersReducedMotion) {
+      navigate(`/card/${entry.id}`)
+      return
+    }
+    const rect = element.getBoundingClientRect()
+    beginFlight({
+      entryId: entry.id,
+      imageSmall: printing.imageSmall,
+      // Fly with exactly what the user was already seeing: the sharp layer is
+      // only carried over once the grid has hydrated it, so it can never pop
+      // in mid-flight with a visible crossfade.
+      imageNormal: normalLoaded ? printing.imageNormal : '',
+      alt,
+      start: { top: rect.top, left: rect.left, width: rect.width, height: rect.height },
+      locationKey: location.key,
+    })
+    // The route swap is scheduled by the overlay, hidden under full black.
+  }
 
   return (
     <Card3D
@@ -61,6 +91,7 @@ export default function CardSlot({ entry }: CardSlotProps) {
       normalLoaded={normalLoaded}
       setNormalLoaded={setNormalLoaded}
       quantityBadge={quantityBadge}
+      onOpenDetail={openDetail}
     />
   )
 }

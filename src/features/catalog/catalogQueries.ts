@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { scryfallClient } from '../../shared/api/scryfallClient'
+import { scryfallClient } from '@/shared/api/scryfallClient'
 
 /** Scoped query-key factory for catalog data. */
 export const catalogKeys = {
@@ -29,6 +29,18 @@ export function usePrinting(id: string) {
     queryKey: catalogKeys.printing(normalizedId),
     queryFn: ({ signal }) => scryfallClient.fetchPrinting(normalizedId, signal),
     enabled: normalizedId.length > 0,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  })
+}
+
+/** Resolve one logical card by (fuzzy) name — the "view card" step. */
+export function useNamed(name: string) {
+  const normalizedName = name.trim()
+  return useQuery({
+    queryKey: catalogKeys.named(normalizedName),
+    queryFn: ({ signal }) => scryfallClient.fetchNamed(normalizedName, signal),
+    enabled: normalizedName.length > 0,
     staleTime: 5 * 60 * 1000,
     retry: 1,
   })
