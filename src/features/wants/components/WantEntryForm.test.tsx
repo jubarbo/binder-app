@@ -320,7 +320,18 @@ describe('WantEntryForm card zoom', () => {
     expect(within(dialog).getByRole('img', { name: 'Lightning Bolt' })).toBeInTheDocument()
   })
 
-  it('closes the zoom dialog on Escape, overlay click and the close button', async () => {
+  it('shows only the card image in the zoom: no title, close button or type line', async () => {
+    const card = await openPreview()
+    fireEvent.click(card)
+
+    const dialog = await screen.findByRole('dialog', { name: 'Lightning Bolt' })
+    expect(within(dialog).getByRole('img', { name: 'Lightning Bolt' })).toBeInTheDocument()
+    expect(within(dialog).queryByRole('button')).not.toBeInTheDocument()
+    expect(within(dialog).queryByRole('heading')).not.toBeInTheDocument()
+    expect(within(dialog).queryByText('Instant')).not.toBeInTheDocument()
+  })
+
+  it('closes the zoom dialog on Escape and on an overlay click', async () => {
     const card = await openPreview()
     fireEvent.click(card)
     const dialog = await screen.findByRole('dialog', {
@@ -339,15 +350,6 @@ describe('WantEntryForm card zoom', () => {
       name: 'Lightning Bolt',
     })
     fireEvent.click(viaOverlay.parentElement as HTMLElement)
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
-    )
-
-    fireEvent.click(card)
-    const reopened = await screen.findByRole('dialog', {
-      name: 'Lightning Bolt',
-    })
-    fireEvent.click(within(reopened).getByRole('button', { name: 'Cerrar' }))
     await waitFor(() =>
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     )
