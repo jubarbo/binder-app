@@ -35,10 +35,15 @@ describe('WhoWants', () => {
     ).toBeInTheDocument()
   })
 
-  it('lists an avatar plus the name per wisher, falling back to an initial', async () => {
+  it('lists a card per wisher with an avatar falling back to an initial', async () => {
     wishersOf.mockResolvedValue([
-      { id: 'u1', displayName: 'Ana', avatarUrl: 'http://example.com/ana.png' },
-      { id: 'u2', displayName: 'Bruno' },
+      {
+        id: 'u1',
+        displayName: 'Ana',
+        avatarUrl: 'http://example.com/ana.png',
+        wantsCopies: 2,
+      },
+      { id: 'u2', displayName: 'Bruno', wantsCopies: 1 },
     ])
     const { container } = renderWhoWants()
 
@@ -51,6 +56,48 @@ describe('WhoWants', () => {
     expect(container.querySelector('.wanters-avatar--initial')).toHaveTextContent(
       'B',
     )
+  })
+
+  it('shows a quantity badge with the number of copies each wants', async () => {
+    wishersOf.mockResolvedValue([
+      { id: 'u1', displayName: 'Ana', wantsCopies: 3 },
+      { id: 'u2', displayName: 'Bruno', wantsCopies: 1 },
+    ])
+    renderWhoWants()
+
+    expect(await screen.findByText('Ana')).toBeInTheDocument()
+    expect(screen.getByLabelText('3 copias')).toBeInTheDocument()
+    expect(screen.getByText('3')).toBeInTheDocument()
+    expect(screen.getByLabelText('1 copia')).toBeInTheDocument()
+  })
+
+  it('does not render a priority label', async () => {
+    wishersOf.mockResolvedValue([
+      { id: 'u1', displayName: 'Ana', wantsCopies: 3 },
+    ])
+    const { container } = renderWhoWants()
+
+    expect(await screen.findByText('Ana')).toBeInTheDocument()
+    expect(container.querySelector('.wanters-priority')).toBeNull()
+    expect(screen.queryByText('Alta')).toBeNull()
+    expect(screen.queryByText('Baja')).toBeNull()
+    expect(screen.queryByText('Normal')).toBeNull()
+  })
+
+  it('keeps the port order instead of re-sorting in the client', async () => {
+    // Deliberately ordered so a client-side sort would reorder them. Ordering
+    // is the backend's job, so the rendered order must match the port's order.
+    wishersOf.mockResolvedValue([
+      { id: 'u-first', displayName: 'Zeta', wantsCopies: 9 },
+      { id: 'u-second', displayName: 'Alta', wantsCopies: 1 },
+    ])
+    const { container } = renderWhoWants()
+
+    expect(await screen.findByText('Zeta')).toBeInTheDocument()
+    const names = [...container.querySelectorAll('.wanters-name')].map(
+      (n) => n.textContent,
+    )
+    expect(names).toEqual(['Zeta', 'Alta'])
   })
 
   it('asks the port for the card identity', async () => {
