@@ -7,9 +7,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // https://vite.dev/config/
 export default defineConfig({
-  // Base path for the deployed site. Defaults to '/' for local dev; the
-  // GitHub Pages workflow overrides it to '/binder-app/' via the BASE_PATH env
-  // var so the build's asset URLs resolve under the project-page subpath.
+  // Base path for the deployed site. The default '/' is correct for both
+  // local dev and production: GitHub Pages serves this project at the custom
+  // domain root (binder.mantisuy.com). A deployment under a subpath (e.g. a
+  // plain username.github.io/repo/ page) would set the BASE_PATH env var.
   base: process.env.BASE_PATH || '/',
   plugins: [react()],
   resolve: {
