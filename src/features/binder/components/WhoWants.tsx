@@ -47,7 +47,7 @@ export default function WhoWants({ oracleId }: WhoWantsProps) {
   return (
     <section className="wanters" aria-labelledby={titleId}>
       <h2 id={titleId} className="wanters-title">
-        Deseantes
+        La buscan
       </h2>
       {isPending ? (
         <p className="card-search-status" role="status">

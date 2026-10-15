@@ -90,7 +90,7 @@ describe('CardDetailPage', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Test Card — Test Set' })).toBeInTheDocument()
     expect(screen.getByAltText('Test Set #123')).toBeInTheDocument()
     expect(screen.getByText(/Cantidad:/)).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Deseantes' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'La buscan' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Volver/ })).toHaveAttribute('href', '/')
   })
 

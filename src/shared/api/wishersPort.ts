@@ -30,7 +30,7 @@ export const localWishersPort: WishersPort = {
 }
 
 /**
- * Dev-only mock so the Deseantes section can be previewed before the API
+ * Dev-only mock so the "La buscan" section can be previewed before the API
  * exists. It is selected only in dev and only when VITE_MOCK_WISHERS=1, so the
  * honest empty port stays the default and production never ships invented
  * users. The list is deliberately ordered so a client-side re-sort would
