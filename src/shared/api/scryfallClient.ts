@@ -11,8 +11,11 @@ interface ScryfallImageUris {
   large?: string
 }
 
-/** Card faces carry the images for double-faced / modal cards. */
+/** Card faces carry the name and images for double-faced / modal cards. */
 interface ScryfallCardFace {
+  name: string
+  /** Localized face name on a non-English record (absent on English ones). */
+  printed_name?: string
   image_uris?: ScryfallImageUris
 }
 
@@ -51,22 +54,49 @@ interface ScryfallList {
  * Resolve the image URIs for a card. Double-faced / modal cards omit the
  * top-level `image_uris`; their front face holds the images instead.
  */
+/** Front-face image URIs: top-level for single/split, first face otherwise. */
 function resolveImageUris(card: ScryfallCard): ScryfallImageUris {
   return card.image_uris ?? card.card_faces?.[0]?.image_uris ?? {}
+}
+
+/** Back-face URIs: only the second face of a double-faced card that renders
+ *  two images (transform/MDFC). Split cards have no per-face URIs, so this is
+ *  empty and no flip is offered. */
+function resolveBackImageUris(card: ScryfallCard): ScryfallImageUris {
+  return card.card_faces?.[1]?.image_uris ?? {}
+}
+
+/**
+ * Resolve a card's display name for the active locale.
+ *
+ * Single-face cards localize at the top level (`printed_name`). Multi-face
+ * cards (transform, MDFC, split) keep an English top-level name and localize
+ * each face instead, so when any face is localized the faces are rejoined with
+ * the same " // " separator Scryfall uses — a per-face fallback that keeps the
+ * translated and untranslated halves consistent with Strategy A. A record with
+ * no localized face returns the top-level name verbatim, which keeps English
+ * output byte-identical to the previous behaviour.
+ */
+function resolveDisplayName(card: ScryfallCard): string {
+  const faces = card.card_faces
+  if (faces?.some((face) => face.printed_name != null)) {
+    return faces.map((face) => face.printed_name ?? face.name).join(' // ')
+  }
+  return card.printed_name ?? card.name
 }
 
 function toOracleCard(card: ScryfallCard): OracleCard {
   return {
     oracleId: card.oracle_id ?? card.id,
-    // Localized display name: the Spanish (or other) printing carries
-    // `printed_name`; English records fall back to the canonical `name`.
-    name: card.printed_name ?? card.name,
+    // Localized display name; see resolveDisplayName for the multi-face case.
+    name: resolveDisplayName(card),
     manaCost: card.mana_cost,
     cmc: card.cmc ?? 0,
     colors: card.colors ?? [],
     typeLine: card.type_line ?? '',
     oracleText: card.oracle_text,
     imageNormal: resolveImageUris(card).normal,
+    imageNormalBack: resolveBackImageUris(card).normal,
   }
 }
 
@@ -81,6 +111,7 @@ function toPrices(prices: ScryfallPrices | undefined): Printing['prices'] {
 
 function toPrinting(card: ScryfallCard): Printing {
   const images = resolveImageUris(card)
+  const backImages = resolveBackImageUris(card)
   return {
     id: card.id,
     oracleId: card.oracle_id ?? card.id,
@@ -98,6 +129,8 @@ function toPrinting(card: ScryfallCard): Printing {
     imageSmall: images.small ?? '',
     imageNormal: images.normal ?? '',
     imageLarge: images.large ?? '',
+    imageNormalBack: backImages.normal,
+    imageLargeBack: backImages.large,
     prices: toPrices(card.prices),
   }
 }

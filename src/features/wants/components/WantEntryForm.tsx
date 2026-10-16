@@ -7,6 +7,7 @@ import { useBinderStore } from '@/features/binder/state/binderStore'
 import { useNamed } from '@/features/catalog/catalogQueries'
 import { useCardRock } from '@/shared/hooks/useCardRock'
 import CardSearch from '@/shared/components/CardSearch'
+import CardFlip from '@/shared/components/CardFlip'
 import WantCardZoom from '@/features/wants/components/WantCardZoom'
 import PrintingPicker from '@/features/wants/components/PrintingPicker'
 import type { OracleCard, Printing } from '@/shared/types/mtg'
@@ -33,7 +34,9 @@ interface WantPreviewCardProps {
 
 /**
  * The verified card laid on the table: same rocking hover as the binder
- * grid (shared `useCardRock` physics), acting as the zoom trigger.
+ * grid (shared `useCardRock` physics), acting as the zoom trigger. A
+ * double-faced card also turns to reveal its back, pausing while hovered so
+ * it can be read — the same flip the binder grid and detail use.
  */
 function WantPreviewCard({ card, onZoom }: WantPreviewCardProps) {
   const { ref, style, handlers, glareStyle } = useCardRock()
@@ -57,15 +60,31 @@ function WantPreviewCard({ card, onZoom }: WantPreviewCardProps) {
       tabIndex={0}
       aria-label={`Ampliar ${card.name}`}
     >
-      <img
-        className="want-preview-img"
-        src={card.imageNormal}
-        alt={card.name}
-        draggable={false}
-      />
-      {glareStyle && (
-        <div className="card-glare" style={{ background: glareStyle }} />
-      )}
+      <CardFlip
+        back={
+          card.imageNormalBack ? (
+            <img
+              className="want-preview-img"
+              src={card.imageNormalBack}
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+            />
+          ) : undefined
+        }
+      >
+        <>
+          <img
+            className="want-preview-img"
+            src={card.imageNormal}
+            alt={card.name}
+            draggable={false}
+          />
+          {glareStyle && (
+            <div className="card-glare" style={{ background: glareStyle }} />
+          )}
+        </>
+      </CardFlip>
     </motion.div>
   )
 }
