@@ -1,28 +1,12 @@
 import { motion, useReducedMotion } from 'motion/react'
-import type { Transition } from 'motion/react'
+import { useState } from 'react'
 import type { ReactNode } from 'react'
+import { useFlipFace } from '../hooks/useFlipFace'
 
-/* Double-faced auto-flip cadence: rest on one face, turn, rest on the other.
-   The turn eases in (slow start, fast finish) so the card winds up and snaps
-   over, and each face is held ~1.4s for a turn roughly every 2s. The keyframes
-   run 0 -> 0 -> 180 -> 180 -> 0 so the repeat lands back on the front with no
-   visible jump. */
-const FLIP_DURATION = 0.6
-const FLIP_HOLD = 1.4
-const FLIP_CYCLE = (FLIP_DURATION + FLIP_HOLD) * 2
-const FLIP_KEYFRAMES = [0, 0, 180, 180, 0]
-const FLIP_TRANSITION: Transition = {
-  duration: FLIP_CYCLE,
-  times: [
-    0,
-    FLIP_HOLD / FLIP_CYCLE,
-    (FLIP_HOLD + FLIP_DURATION) / FLIP_CYCLE,
-    (2 * FLIP_HOLD + FLIP_DURATION) / FLIP_CYCLE,
-    1,
-  ],
-  repeat: Infinity,
-  ease: 'easeIn',
-}
+/* The turn itself: eases in (slow start, fast finish) so the card winds up and
+   snaps over, like the rocking card's handled feel. The rest between turns
+   lives in useFlipFace (one turn every ~4s), which hovering can pause. */
+const FLIP_TURN_DURATION = 0.6
 
 interface CardFlipProps {
   /**
@@ -37,22 +21,27 @@ interface CardFlipProps {
 
 /**
  * Wraps a card's faces and, when back content is present, turns them in 3D to
- * reveal the back every couple of seconds. Reduced motion renders the front
- * only, like every other card surface in the app. The wrapper needs
+ * reveal the back every few seconds. Hovering holds the current face still so
+ * the card can be read; leaving resumes the flip. Reduced motion renders the
+ * front only, like every other card surface in the app. The wrapper needs
  * `perspective` from its container; each context scopes its own sizing (the
  * grid is absolute-fill, the detail is content-sized).
  */
 export default function CardFlip({ back, children }: CardFlipProps) {
   const prefersReducedMotion = useReducedMotion()
   const flipEnabled = back != null && !prefersReducedMotion
+  const [paused, setPaused] = useState(false)
+  const face = useFlipFace(flipEnabled, paused)
 
   if (!flipEnabled) return <>{children}</>
 
   return (
     <motion.div
       className="card-flip"
-      animate={{ rotateY: FLIP_KEYFRAMES }}
-      transition={FLIP_TRANSITION}
+      animate={{ rotateY: face }}
+      transition={{ duration: FLIP_TURN_DURATION, ease: 'easeIn' }}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
     >
       <span className="card-face card-face--front">{children}</span>
       <span className="card-face card-face--back">{back}</span>
