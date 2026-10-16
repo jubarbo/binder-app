@@ -18,6 +18,8 @@ export interface OracleCard {
   oracleText?: string
   /** Representative image of the latest / default printing. */
   imageNormal?: string
+  /** Back-face art for double-faced cards; absent on single-faced ones. */
+  imageNormalBack?: string
 }
 
 /** A physical, purchasable card printing (mirrors a Scryfall card object). */

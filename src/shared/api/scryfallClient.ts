@@ -96,6 +96,7 @@ function toOracleCard(card: ScryfallCard): OracleCard {
     typeLine: card.type_line ?? '',
     oracleText: card.oracle_text,
     imageNormal: resolveImageUris(card).normal,
+    imageNormalBack: resolveBackImageUris(card).normal,
   }
 }
 

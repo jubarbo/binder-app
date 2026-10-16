@@ -529,6 +529,9 @@ svg {
   cursor: zoom-in;
   border-radius: 4.5%;
   transform-style: preserve-3d;
+  /* Vanishing point for the flip's rotateY (the rock tilt keeps preserve-3d
+     above so the turn composes with it). */
+  perspective: 800px;
   will-change: transform;
 }
 
@@ -536,6 +539,21 @@ svg {
   box-shadow:
     0 14px 22px rgba(0, 0, 0, 0.4),
     0 4px 6px rgba(0, 0, 0, 0.25);
+}
+
+/* Double-faced flip, content-sized like the detail: the flip is a block sized
+   by the front image and only the back face overlays it absolutely. */
+.want-preview-card .card-flip {
+  position: relative;
+}
+
+.want-preview-card .card-face {
+  position: relative;
+}
+
+.want-preview-card .card-face--back {
+  position: absolute;
+  inset: 0;
 }
 
 .want-preview-img {

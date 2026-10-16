@@ -332,3 +332,46 @@ describe('scryfallClient.fetchPrinting back face', () => {
     expect(printing.imageNormalBack).toBeUndefined()
   })
 })
+
+describe('scryfallClient.fetchNamed back face', () => {
+  it('captures the back-face image of a double-faced oracle card', async () => {
+    fetchMock.mockResolvedValue(
+      json({
+        id: 'c-dfc',
+        oracle_id: 'orb-dfc',
+        name: 'Bala Ged Recovery // Bala Ged Sanctuary',
+        card_faces: [
+          {
+            name: 'Bala Ged Recovery',
+            image_uris: { normal: 'http://img.test/front.png' },
+          },
+          {
+            name: 'Bala Ged Sanctuary',
+            image_uris: { normal: 'http://img.test/back.png' },
+          },
+        ],
+      }),
+    )
+
+    const card = await scryfallClient.fetchNamed('Bala Ged Recovery')
+
+    expect(card.imageNormalBack).toBe('http://img.test/back.png')
+    expect(card.imageNormal).toBe('http://img.test/front.png')
+  })
+
+  it('leaves the back empty for a single-faced oracle card', async () => {
+    fetchMock.mockResolvedValue(
+      json({
+        id: 'c-single',
+        oracle_id: 'orb-single',
+        name: 'Lightning Bolt',
+        image_uris: { normal: 'http://img.test/single.png' },
+      }),
+    )
+
+    const card = await scryfallClient.fetchNamed('Lightning Bolt')
+
+    expect(card.imageNormalBack).toBeUndefined()
+    expect(card.imageNormal).toBe('http://img.test/single.png')
+  })
+})
