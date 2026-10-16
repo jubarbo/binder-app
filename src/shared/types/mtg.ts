@@ -37,6 +37,10 @@ export interface Printing {
   imageSmall: string
   imageNormal: string
   imageLarge: string
+  /** Back-face image, present only for double-faced cards that render two
+   *  faces (transform/MDFC). Split cards share one image and leave this unset. */
+  imageNormalBack?: string
+  imageLargeBack?: string
   prices?: {
     usd?: string
     usdFoil?: string

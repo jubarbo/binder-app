@@ -773,6 +773,24 @@ svg {
   margin-inline: auto;
 }
 
+/* Double-faced card: both faces laid out side by side, static. The panel
+   widens so each face stays readable at zoom scale instead of being squeezed   into the single-image column. */
+.zoom-panel--double {
+  max-width: min(94vw, 860px);
+}
+
+.zoom-frame--double {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.zoom-frame--double .zoom-img {
+  max-width: min(44vw, 380px);
+  max-height: min(74vh, 500px);
+}
+
 /* App shell */
 .app-shell {
   display: flex;
@@ -1305,6 +1323,36 @@ svg {
   cursor: pointer;
 }
 
+/* Double-faced flip: the wrapper turns in 3D and each face hides its back so
+   only the outward one paints. The wrapper takes `perspective` from its   container, and each context scopes its own sizing below, so the flip   composes with the rock tilt instead of fighting it over rotateY. */
+.card-flip {
+  transform-style: preserve-3d;
+}
+
+.card-face {
+  /* Faces must be blocks: `overflow` does not clip a non-replaced inline
+     element, so an inline face would let the oversized foil band (inset: -35%)
+     spill past the card instead of being cut to its shape. */
+  display: block;
+  backface-visibility: hidden;
+}
+
+.card-face--back {
+  transform: rotateY(180deg);
+}
+
+/* Grid context: the frame is an absolute-fill box, so the flip and both faces
+   fill it and the back image (`.card-image`) fills the back face. */
+.card-image-frame {
+  perspective: 800px;
+}
+
+.card-image-frame .card-flip,
+.card-image-frame .card-face {
+  position: absolute;
+  inset: 0;
+}
+
 .card-glare {
   position: absolute;
   inset: 0;
@@ -1562,12 +1610,56 @@ svg {
   overflow: hidden;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
+  perspective: 800px;
+}
+
+/* When the card flips, the static frame must stop casting its own shadow and
+   clipping: the shadow moves onto the flipping assembly so it turns with the
+   card, and each face clips its own content (image plus foil). Left on the
+   frame, the shadow stays a fixed rectangle while the card turns inside it. */
+.card-detail-frame:has(.card-flip) {
+  box-shadow: none;
+  overflow: visible;
 }
 
 .card-detail-image {
   display: block;
   width: 100%;
   max-width: 420px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+/* Detail context: the frame is content-sized (the front image defines its   height), so the flip is a block and only the back face overlays it. */
+.card-detail-frame .card-flip {
+  position: relative;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-lg);
+}
+
+/* Each face clips its own content to the rounded card shape — the front also
+   hosts the oversized foil band, which must never paint past the edge. The
+   front sizes to its content; only the back overlays absolutely. */
+.card-detail-frame .card-face {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.card-detail-frame .card-face--back {
+  position: absolute;
+  inset: 0;
+}
+
+/* The back face is absolutely sized to the front's box, so it mirrors the
+   front exactly (same border and radius) rather than relying on natural   image height. */
+.card-detail-image--back {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
 }

@@ -94,6 +94,56 @@ describe('CardDetailPage', () => {
     expect(screen.getByRole('link', { name: /Volver/ })).toHaveAttribute('href', '/')
   })
 
+  it('renders a flip with the back face for a double-faced printing', () => {
+    stateMock.entries = [entry]
+    mockUsePrinting.mockReturnValue({
+      data: {
+        ...printing,
+        name: 'Bala Ged Recovery // Bala Ged Sanctuary',
+        imageLargeBack: 'http://example.com/l-back.png',
+      },
+      isPending: false,
+      isError: false,
+    })
+    renderPage('e1')
+
+    expect(document.querySelector('.card-flip')).toBeInTheDocument()
+    const backImg = document.querySelector<HTMLImageElement>('.card-face--back img')
+    expect(backImg).not.toBeNull()
+    expect(backImg).toHaveAttribute('src', 'http://example.com/l-back.png')
+  })
+
+  it('renders no flip for a single-faced printing', () => {
+    stateMock.entries = [entry]
+    mockUsePrinting.mockReturnValue({ data: printing, isPending: false, isError: false })
+    renderPage('e1')
+
+    expect(document.querySelector('.card-flip')).not.toBeInTheDocument()
+    // The front image is still rendered directly.
+    expect(screen.getByAltText('Test Set #123')).toBeInTheDocument()
+  })
+
+  it('applies the foil to both faces of a double-faced foil card', () => {
+    stateMock.entries = [{ ...entry, finish: 'foil' }]
+    mockUsePrinting.mockReturnValue({
+      data: { ...printing, imageLargeBack: 'http://example.com/l-back.png' },
+      isPending: false,
+      isError: false,
+    })
+    renderPage('e1')
+
+    // One band per face: the finish rides along when the card turns.
+    expect(document.querySelectorAll('.card-foil')).toHaveLength(2)
+  })
+
+  it('keeps a single foil band for a single-faced foil card', () => {
+    stateMock.entries = [{ ...entry, finish: 'foil' }]
+    mockUsePrinting.mockReturnValue({ data: printing, isPending: false, isError: false })
+    renderPage('e1')
+
+    expect(document.querySelectorAll('.card-foil')).toHaveLength(1)
+  })
+
   it('falls back to the printing label when the card has no name', () => {
     stateMock.entries = [entry]
     mockUsePrinting.mockReturnValue({

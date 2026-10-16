@@ -2,6 +2,7 @@ import { motion, useTransform } from 'motion/react'
 import type { BinderEntry, Printing } from '@/shared/types/mtg'
 import { useCardRock } from '@/shared/hooks/useCardRock'
 import FoilLayer from '@/shared/components/FoilLayer'
+import CardFlip from '@/shared/components/CardFlip'
 
 interface Card3DProps {
   entry: BinderEntry
@@ -60,6 +61,40 @@ export default function Card3D({
     draggable: false,
   }
 
+  const frontLayers = (
+    <>
+      {hasSmall && (
+        <img
+          className="card-image card-image--placeholder"
+          src={printing.imageSmall}
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+        />
+      )}
+      {hasNormal ? (
+        <>
+          <img
+            className="card-image card-image--full"
+            src={printing.imageNormal}
+            {...imageProps}
+            data-loaded={normalLoaded || !hasSmall}
+            onLoad={() => setNormalLoaded(true)}
+          />
+          {isFoil && <FoilLayer x={foilX} y={foilY} />}
+          {glareStyle && (
+            <motion.div
+              className="card-glare"
+              style={{ background: glareStyle }}
+            />
+          )}
+        </>
+      ) : (
+        !hasSmall && <span className="card-slot-error-mark">Sin imagen</span>
+      )}
+    </>
+  )
+
   return (
     <motion.div
       ref={ref}
@@ -73,35 +108,24 @@ export default function Card3D({
       aria-label={`Carta ${alt}, ver detalle`}
     >
       <span className="card-image-frame">
-        {hasSmall && (
-          <img
-            className="card-image card-image--placeholder"
-            src={printing.imageSmall}
-            alt=""
-            aria-hidden="true"
-            draggable={false}
-          />
-        )}
-        {hasNormal ? (
-          <>
-            <img
-              className="card-image card-image--full"
-              src={printing.imageNormal}
-              {...imageProps}
-              data-loaded={normalLoaded || !hasSmall}
-              onLoad={() => setNormalLoaded(true)}
-            />
-            {isFoil && <FoilLayer x={foilX} y={foilY} />}
-            {glareStyle && (
-              <motion.div
-                className="card-glare"
-                style={{ background: glareStyle }}
-              />
-            )}
-          </>
-        ) : (
-          !hasSmall && <span className="card-slot-error-mark">Sin imagen</span>
-        )}
+        <CardFlip
+          back={
+            printing.imageNormalBack ? (
+              <>
+                <img
+                  className="card-image"
+                  src={printing.imageNormalBack}
+                  alt=""
+                  aria-hidden="true"
+                  draggable={false}
+                />
+                {isFoil && <FoilLayer x={foilX} y={foilY} />}
+              </>
+            ) : undefined
+          }
+        >
+          {frontLayers}
+        </CardFlip>
       </span>
       {quantityBadge}
     </motion.div>

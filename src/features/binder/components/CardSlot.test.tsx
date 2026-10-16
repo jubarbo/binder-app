@@ -30,10 +30,10 @@ const printing: Printing = {
   prices: undefined,
 }
 
-function renderSlot() {
+function renderSlot(target: BinderEntry = entry) {
   return render(
     <MemoryRouter initialEntries={['/']}>
-      <CardSlot entry={entry} />
+      <CardSlot entry={target} />
     </MemoryRouter>,
   )
 }
@@ -61,5 +61,53 @@ describe('CardSlot', () => {
     renderSlot()
     fireEvent.click(screen.getByRole('button'))
     expect(useFlightStore.getState().flight?.entryId).toBe('e1')
+  })
+})
+
+describe('CardSlot double-faced flip', () => {
+  const doublePrinting: Printing = {
+    ...printing,
+    name: 'Bala Ged Recovery // Bala Ged Sanctuary',
+    imageNormalBack: 'http://example.com/back.png',
+  }
+
+  it('renders a flip face with the back image for a double-faced card', () => {
+    mockUsePrinting.mockReturnValue({ data: doublePrinting, isPending: false, isError: false })
+    renderSlot()
+
+    expect(document.querySelector('.card-flip')).toBeInTheDocument()
+    const backImg = document.querySelector<HTMLImageElement>('.card-face--back img')
+    expect(backImg).not.toBeNull()
+    expect(backImg).toHaveAttribute('src', 'http://example.com/back.png')
+    // The front is still the normal image.
+    const frontImg = document.querySelector<HTMLImageElement>('.card-face--front img.card-image--full')
+    expect(frontImg).toHaveAttribute('src', 'http://example.com/n.png')
+  })
+
+  it('renders no flip for a single-faced card', () => {
+    mockUsePrinting.mockReturnValue({ data: printing, isPending: false, isError: false })
+    renderSlot()
+
+    expect(document.querySelector('.card-flip')).not.toBeInTheDocument()
+    // The normal (non-flip) full image is still rendered directly.
+    expect(document.querySelector('img.card-image--full')).toHaveAttribute(
+      'src',
+      'http://example.com/n.png',
+    )
+  })
+
+  it('applies the foil to both faces of a double-faced foil card', () => {
+    mockUsePrinting.mockReturnValue({ data: doublePrinting, isPending: false, isError: false })
+    renderSlot({ ...entry, finish: 'foil' })
+
+    // One band per face: the finish rides along when the card turns.
+    expect(document.querySelectorAll('.card-foil')).toHaveLength(2)
+  })
+
+  it('keeps a single foil band for a single-faced foil card', () => {
+    mockUsePrinting.mockReturnValue({ data: printing, isPending: false, isError: false })
+    renderSlot({ ...entry, finish: 'foil' })
+
+    expect(document.querySelectorAll('.card-foil')).toHaveLength(1)
   })
 })
