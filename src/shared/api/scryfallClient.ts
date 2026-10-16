@@ -1,5 +1,6 @@
 import type { OracleCard, Printing } from '@/shared/types/mtg'
 import { CatalogError, type CatalogPort } from '@/shared/api/catalogPort'
+import { getActiveLocale } from '@/shared/locale/localeStore'
 
 const SCRYFALL_BASE_URL = 'https://api.scryfall.com'
 
@@ -25,6 +26,8 @@ interface ScryfallCard {
   id: string
   oracle_id?: string
   name: string
+  /** Localized name on a non-English printing (absent on English records). */
+  printed_name?: string
   mana_cost?: string
   cmc?: number
   colors?: string[]
@@ -55,7 +58,9 @@ function resolveImageUris(card: ScryfallCard): ScryfallImageUris {
 function toOracleCard(card: ScryfallCard): OracleCard {
   return {
     oracleId: card.oracle_id ?? card.id,
-    name: card.name,
+    // Localized display name: the Spanish (or other) printing carries
+    // `printed_name`; English records fall back to the canonical `name`.
+    name: card.printed_name ?? card.name,
     manaCost: card.mana_cost,
     cmc: card.cmc ?? 0,
     colors: card.colors ?? [],
@@ -79,6 +84,11 @@ function toPrinting(card: ScryfallCard): Printing {
   return {
     id: card.id,
     oracleId: card.oracle_id ?? card.id,
+    // Keep the canonical (English) name here. Printings are fetched without a
+    // `lang` scope so coverage stays complete, and `unique=prints` returns one
+    // record per language (fr, ja, es…) — resolving `printed_name` here would
+    // leak foreign names into the list. The active locale resolves the search
+    // results instead (see `toOracleCard`), which are fetched in that locale.
     name: card.name ?? '',
     setCode: card.set ?? '',
     setName: card.set_name ?? '',
@@ -128,6 +138,38 @@ async function requestJson<T>(url: string, signal?: AbortSignal): Promise<T> {
   }
 }
 
+/** Oracle id used to deduplicate the two language result sets. */
+function oracleKey(card: ScryfallCard): string {
+  return card.oracle_id ?? card.id
+}
+
+/**
+ * Fetch one page of search results. `lang` scopes Scryfall's matching to a
+ * single language's printings. The scope must live *inside* `q` as search
+ * syntax — Scryfall ignores a `&lang=` URL param on /cards/search — and it is
+ * a hard filter: it drops cards that have no printing in that language.
+ */
+async function searchPage(
+  query: string,
+  lang: string | undefined,
+  signal?: AbortSignal,
+): Promise<ScryfallCard[]> {
+  const scoped = lang ? `lang:${lang} ${query}` : query
+  const url = `${SCRYFALL_BASE_URL}/cards/search?q=${encodeURIComponent(scoped)}`
+  try {
+    const body = await requestJson<ScryfallList>(url, signal)
+    return body.data ?? []
+  } catch (error) {
+    // Scryfall answers 404 when a query matches no cards. Within a language
+    // leg that is a valid empty result — the term simply has no match in this
+    // language — not a failure. Without this, a purely Spanish term (no
+    // English match) would reject the whole bilingual Promise.all and discard
+    // the Spanish hits. Rate limits, network and server errors still throw.
+    if (error instanceof CatalogError && error.status === 404) return []
+    throw error
+  }
+}
+
 /**
  * Live `CatalogPort` implementation backed by the public Scryfall API.
  * Runs in the browser only (uses `fetch`) and never imports Node modules.
@@ -136,9 +178,32 @@ export const scryfallClient: CatalogPort = {
   async fetchSearch(query, signal) {
     const trimmed = query.trim()
     if (!trimmed) return []
-    const url = `${SCRYFALL_BASE_URL}/cards/search?q=${encodeURIComponent(trimmed)}`
-    const body = await requestJson<ScryfallList>(url, signal)
-    return (body.data ?? []).map(toOracleCard)
+    const locale = getActiveLocale()
+
+    // English is Scryfall's default: a single request, exactly as before.
+    if (locale === 'en') {
+      return (await searchPage(trimmed, undefined, signal)).map(toOracleCard)
+    }
+
+    // Strategy A, client-side: match the default (English, full coverage) and
+    // the localized printings, then merge by oracle id so a Spanish name finds
+    // its card while English-only cards never drop out of the results.
+    const [defaultCards, localizedCards] = await Promise.all([
+      searchPage(trimmed, undefined, signal),
+      searchPage(trimmed, locale, signal),
+    ])
+
+    const merged = new Map<string, ScryfallCard>()
+    // Localized printings first: they carry `printed_name` for display and
+    // follow Scryfall's relevance for the requested language.
+    for (const card of localizedCards) merged.set(oracleKey(card), card)
+    // Then every card the localized pass missed (no translation in that
+    // language), so coverage stays complete.
+    for (const card of defaultCards) {
+      const key = oracleKey(card)
+      if (!merged.has(key)) merged.set(key, card)
+    }
+    return [...merged.values()].map(toOracleCard)
   },
 
   async fetchNamed(name, signal) {
