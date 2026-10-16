@@ -4,6 +4,7 @@ import { usePrintings } from '@/features/catalog/catalogQueries'
 import type { Finish, OracleCard, Printing } from '@/shared/types/mtg'
 import { useBinderStore } from '@/features/binder/state/binderStore'
 import CardSearch from '@/shared/components/CardSearch'
+import CardFlip from '@/shared/components/CardFlip'
 import ImageSelect from '@/shared/components/ImageSelect'
 import { useScrollLock } from '@/shared/hooks/useScrollLock'
 
@@ -220,16 +221,36 @@ export default function AddCard({ onClose }: AddCardProps) {
               onChange={handleSelectPrinting}
             />
             {selectedPrinting && (
-              <img
-                className="add-card-preview"
-                src={
-                  selectedPrinting.imageLarge ||
-                  selectedPrinting.imageNormal ||
-                  selectedPrinting.imageSmall
-                }
-                alt={`${selectedPrinting.setName} #${selectedPrinting.collectorNumber}`}
-                draggable={false}
-              />
+              <span className="add-card-preview-frame">
+                <CardFlip
+                  back={
+                    selectedPrinting.imageLargeBack ||
+                    selectedPrinting.imageNormalBack ? (
+                      <img
+                        className="add-card-preview"
+                        src={
+                          selectedPrinting.imageLargeBack ||
+                          selectedPrinting.imageNormalBack
+                        }
+                        alt=""
+                        aria-hidden="true"
+                        draggable={false}
+                      />
+                    ) : undefined
+                  }
+                >
+                  <img
+                    className="add-card-preview"
+                    src={
+                      selectedPrinting.imageLarge ||
+                      selectedPrinting.imageNormal ||
+                      selectedPrinting.imageSmall
+                    }
+                    alt={`${selectedPrinting.setName} #${selectedPrinting.collectorNumber}`}
+                    draggable={false}
+                  />
+                </CardFlip>
+              </span>
             )}
             {selectedPrinting && isFoilToggle(selectedPrinting) ? (
               <label className="add-card-finish-toggle">

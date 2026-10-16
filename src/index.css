@@ -1371,6 +1371,14 @@ svg {
   inset: 0;
 }
 
+/* Each face flattens its own content — the blended foil and glare especially —
+   into its plane before the flip turns it in 3D. Left inside the flip's
+   preserve-3d context, a mix-blend-mode layer stays screen-aligned and flickers
+   as the card rotates instead of turning with it. */
+.card-image-frame .card-face {
+  overflow: hidden;
+}
+
 .card-glare {
   position: absolute;
   inset: 0;
@@ -1527,9 +1535,33 @@ svg {
 
 /* Live preview of the chosen printing: keeps edition comparison visible
    while cycling through the select. */
-.add-card-preview {
+/* Add-card preview flip: the modal is a flex column, so a frame carries the
+   preview's width, centering and the perspective for the turn; the flip is
+   content-sized by the front image and the back overlays it absolutely. */
+.add-card-preview-frame {
   align-self: center;
   width: min(240px, 65%);
+  perspective: 800px;
+}
+
+.add-card-preview-frame .card-flip,
+.add-card-preview-frame .card-face {
+  position: relative;
+}
+
+.add-card-preview-frame .card-face--back {
+  position: absolute;
+  inset: 0;
+}
+
+/* The back art fills the front's box exactly, mirroring the detail. */
+.add-card-preview-frame .card-face--back .add-card-preview {
+  position: absolute;
+  inset: 0;
+}
+
+.add-card-preview {
+  width: 100%;
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
 }
