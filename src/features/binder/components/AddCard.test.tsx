@@ -485,6 +485,39 @@ describe('AddCard printing preview', () => {
       'beta.jpg',
     )
   })
+
+  it('flips the preview to the back for a double-faced printing', () => {
+    states.printings = {
+      data: [
+        makePrinting({
+          imageLarge: 'large.jpg',
+          imageLargeBack: 'large-back.jpg',
+          imageNormalBack: 'normal-back.jpg',
+        }),
+      ],
+      isPending: false,
+      isError: false,
+    }
+    renderAddCard()
+    typeQuery('bolt')
+    fireEvent.click(screen.getByRole('button', { name: 'Lightning Bolt' }))
+    pickOption('Número de coleccionista', '#1')
+
+    expect(document.querySelector('.card-flip')).toBeInTheDocument()
+    expect(document.querySelector('.card-face--back img')).toHaveAttribute(
+      'src',
+      'large-back.jpg',
+    )
+  })
+
+  it('does not flip a single-faced preview', () => {
+    renderAddCard()
+    typeQuery('bolt')
+    fireEvent.click(screen.getByRole('button', { name: 'Lightning Bolt' }))
+    pickOption('Número de coleccionista', '#1')
+
+    expect(document.querySelector('.card-flip')).not.toBeInTheDocument()
+  })
 })
 
 describe('AddCard background scroll', () => {
