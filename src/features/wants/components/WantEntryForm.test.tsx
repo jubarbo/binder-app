@@ -180,6 +180,41 @@ describe('WantEntryForm search flow', () => {
     ).toBeInTheDocument()
   })
 
+  it('flips the preview to the back for a double-faced card', async () => {
+    states.named = {
+      data: makeCard({ imageNormalBack: 'https://img.example/bolt-back.jpg' }),
+      isPending: false,
+      isError: false,
+    }
+    renderForm()
+    typeQuery('lightning bolt')
+    fireEvent.keyDown(screen.getByPlaceholderText('Buscar carta...'), {
+      key: 'Enter',
+    })
+
+    await screen.findByRole('img', { name: 'Lightning Bolt' })
+
+    // The preview turns: a flip wrapper whose back face carries the back art.
+    expect(document.querySelector('.card-flip')).toBeInTheDocument()
+    expect(document.querySelector('.card-face--back img')).toHaveAttribute(
+      'src',
+      'https://img.example/bolt-back.jpg',
+    )
+  })
+
+  it('does not flip a single-faced preview', async () => {
+    states.named = { data: makeCard(), isPending: false, isError: false }
+    renderForm()
+    typeQuery('lightning bolt')
+    fireEvent.keyDown(screen.getByPlaceholderText('Buscar carta...'), {
+      key: 'Enter',
+    })
+
+    await screen.findByRole('img', { name: 'Lightning Bolt' })
+
+    expect(document.querySelector('.card-flip')).not.toBeInTheDocument()
+  })
+
   it('hides the preview when the search input is emptied', async () => {
     states.named = { data: makeCard(), isPending: false, isError: false }
     renderForm()
@@ -329,6 +364,28 @@ describe('WantEntryForm card zoom', () => {
     expect(within(dialog).queryByRole('button')).not.toBeInTheDocument()
     expect(within(dialog).queryByRole('heading')).not.toBeInTheDocument()
     expect(within(dialog).queryByText('Instant')).not.toBeInTheDocument()
+  })
+
+  it('shows both faces in the zoom for a double-faced card', async () => {
+    states.named = {
+      data: makeCard({ imageNormalBack: 'https://img.example/bolt-back.jpg' }),
+      isPending: false,
+      isError: false,
+    }
+    renderForm()
+    typeQuery('lightning bolt')
+    fireEvent.keyDown(screen.getByPlaceholderText('Buscar carta...'), {
+      key: 'Enter',
+    })
+    const card = await screen.findByRole('button', {
+      name: 'Ampliar Lightning Bolt',
+    })
+    fireEvent.click(card)
+
+    const dialog = await screen.findByRole('dialog', { name: 'Lightning Bolt' })
+    expect(
+      within(dialog).getByRole('img', { name: 'Lightning Bolt (dorso)' }),
+    ).toHaveAttribute('src', 'https://img.example/bolt-back.jpg')
   })
 
   it('closes the zoom dialog on Escape and on an overlay click', async () => {

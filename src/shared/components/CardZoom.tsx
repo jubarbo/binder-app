@@ -6,6 +6,11 @@ import FoilLayer from '@/shared/components/FoilLayer'
 interface CardZoomProps {
   /** Large image source. */
   src: string
+  /**
+   * Optional large back-face source. When present the modal lays both faces
+   * side by side, static — the zoom is for close inspection, not the flip.
+   */
+  srcBack?: string
   /** Alt text for the enlarged image, and the dialog's accessible name. */
   alt: string
   /**
@@ -29,7 +34,7 @@ interface CardZoomProps {
  * Shared by the wants list and the binder card detail; only the binder copy
  * can carry `foil`, because a want has no declared finish.
  */
-export default function CardZoom({ src, alt, foil, onClose }: CardZoomProps) {
+export default function CardZoom({ src, srcBack, alt, foil, onClose }: CardZoomProps) {
   const dialogRef = useRef<HTMLDivElement>(null)
 
   // Move focus into the dialog on mount and restore it on unmount.
@@ -49,7 +54,7 @@ export default function CardZoom({ src, alt, foil, onClose }: CardZoomProps) {
     >
       <motion.div
         ref={dialogRef}
-        className="zoom-panel"
+        className={`zoom-panel${srcBack ? ' zoom-panel--double' : ''}`}
         initial={{ scale: 0.95 }}
         animate={{ scale: 1 }}
         exit={{ scale: 0.95 }}
@@ -62,8 +67,16 @@ export default function CardZoom({ src, alt, foil, onClose }: CardZoomProps) {
           if (e.key === 'Escape') onClose()
         }}
       >
-        <div className="zoom-frame">
+        <div className={`zoom-frame${srcBack ? ' zoom-frame--double' : ''}`}>
           <img className="zoom-img" src={src} alt={alt} draggable={false} />
+          {srcBack && (
+            <img
+              className="zoom-img"
+              src={srcBack}
+              alt={`${alt} (dorso)`}
+              draggable={false}
+            />
+          )}
           {foil && <FoilLayer />}
         </div>
       </motion.div>
