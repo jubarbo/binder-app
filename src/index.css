@@ -1371,6 +1371,14 @@ svg {
   inset: 0;
 }
 
+/* Each face flattens its own content — the blended foil and glare especially —
+   into its plane before the flip turns it in 3D. Left inside the flip's
+   preserve-3d context, a mix-blend-mode layer stays screen-aligned and flickers
+   as the card rotates instead of turning with it. */
+.card-image-frame .card-face {
+  overflow: hidden;
+}
+
 .card-glare {
   position: absolute;
   inset: 0;
