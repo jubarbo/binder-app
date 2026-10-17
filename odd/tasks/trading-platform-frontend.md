@@ -51,7 +51,7 @@ Scope: an action from each wisher/offerer in `WhoWants`/`WhoHas` ("proponer trad
 
 Dependencies: Stage 2 (who is proposing) + Stage 1 (what is tradeable).
 
-Open decision (product, important): trade composition UX — bidirectional selection ("give this / ask this") vs a trade cart. Resolve before deep Stage 4 work.
+Resolved (2026-10-17, user choice): bidirectional inline selection ("give this / ask this") — no cart; a cart's value depends on the Stage 5 public binder. Spec: `odd/tasks/trade-proposal.md`.
 
 ## Stage 4 — Trade workflow
 
@@ -77,3 +77,4 @@ Dependency: real backend + users. This is the one stage that cannot be built aga
 ## Log
 
 - L1 (2026-10-16): plan registered from the chat discussion; user chose httpOnly-cookie auth (recorded in `binder-api` plan) and asked to begin with Stage 2.
+- L2 (2026-10-17): Stage 1 delivered (for-trade toggle, commit f97e47c) and the Stage 3 composition-UX decision resolved to inline bidirectional selection; Stage 3 moved into `odd/tasks/trade-proposal.md`.

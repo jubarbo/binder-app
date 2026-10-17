@@ -51,7 +51,7 @@ Alcance: una acción desde cada wisher/offerer en `WhoWants`/`WhoHas` ("proponer
 
 Dependencias: Etapa 2 (quién propone) + Etapa 1 (qué es comerciable).
 
-Decisión abierta (producto, importante): UX de composición del trade — selección bidireccional ("doy esto / pido esto") vs un carrito de trade. Resolverla antes de profundizar en la Etapa 4.
+Resuelta (2026-10-17, elección del usuario): selección bidireccional inline ("doy esto / pido esto") — sin carrito; el valor de un carrito depende del binder público de la Etapa 5. Spec: `odd/tasks/trade-proposal.es.md`.
 
 ## Etapa 4 — Workflow de trades
 
@@ -77,3 +77,4 @@ Dependencia: backend real + usuarios. Es la única etapa que no se puede constru
 ## Log
 
 - L1 (2026-10-16): plan registrado desde la discusión en chat; el usuario eligió auth con cookie `httpOnly` (registrado en el plan de `binder-api`) y pidió comenzar por la Etapa 2.
+- L2 (2026-10-17): Etapa 1 entregada (toggle para intercambio, commit f97e47c) y la decisión de UX de composición de la Etapa 3 resuelta a selección bidireccional inline; la Etapa 3 pasa a `odd/tasks/trade-proposal.es.md`.
