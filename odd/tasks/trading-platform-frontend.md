@@ -6,7 +6,7 @@ Governing principle: every stage builds against **ports with local/mock implemen
 
 The `binder-api` backend has its own phased plan (`binder-api/docs/api-plan.md` §8). It appears here only as a **dependency**, not re-planned.
 
-Status: planning. Written: 2026-10-16.
+Status: stages 1 and 2 delivered on feature/trading-identity (2026-10-17); stages 3–5 pending. Written: 2026-10-16.
 
 ## Stages and dependency chain
 
@@ -33,7 +33,7 @@ Deliverable: users can curate tradeable cards; `WhoWants`/`WhoHas` start to mean
 
 Mock/real: 100% real, pure client state, no backend dependency.
 
-Open decision: toggle only in detail edit, or also as a grid-slot quick action (recommend detail-only for now).
+Delivered: 2026-10-17 on feature/trading-identity. The control is a "Para intercambio" checkbox in `CardDetail` edit mode that rides the `onSaveDetails` patch (store action `updateEntryDetails` widened to `forTrade?: boolean`); the scope's conditional-carry mechanism supersedes wiring `toggleForTrade` directly, which stays in the store as the lever for the future grid quick action. Open decision resolved: detail-only for now. Tests: 4 new in `CardDetailPage.test.tsx` (seeded checkbox, mark, unmark, and the notes-only regression pinning that the patch omits `forTrade` when untouched).
 
 ## Stage 2 — Identity seam + login
 

@@ -20,10 +20,10 @@ interface BinderState extends BinderPersistedState {
   removeEntry: (id: string) => void
   updateQuantity: (id: string, quantity: number) => void
   toggleForTrade: (id: string) => void
-  /** Patch the editable details (finish, notes) of one entry. */
+  /** Patch the editable details (finish, notes, for-trade) of one entry. */
   updateEntryDetails: (
     id: string,
-    patch: { finish?: Finish; notes?: string },
+    patch: { finish?: Finish; notes?: string; forTrade?: boolean },
   ) => void
   addWant: (want: WantEntry) => void
   removeWant: (id: string) => void

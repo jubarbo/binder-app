@@ -6,7 +6,7 @@ Principio rector: cada etapa se construye contra **puertos con implementaciones 
 
 El backend `binder-api` tiene su propio plan por fases (`binder-api/docs/api-plan.md` §8). Aparece acá solo como **dependencia**, no se replanifica.
 
-Estado: planificación. Escrito: 2026-10-16.
+Estado: etapas 1 y 2 entregadas en feature/trading-identity (2026-10-17); etapas 3–5 pendientes. Escrito: 2026-10-16.
 
 ## Etapas y cadena de dependencias
 
@@ -33,7 +33,7 @@ Entregable: el usuario puede curar sus cartas comerciables; `WhoWants`/`WhoHas` 
 
 Mock/real: 100% real, estado cliente puro, sin dependencia de backend.
 
-Decisión abierta: el toggle solo en la edición del detalle, o también como acceso rápido desde un slot del grid (recomiendo solo detalle por ahora).
+Entregado: 2026-10-17 en feature/trading-identity. El control es un checkbox "Para intercambio" en el modo edición de `CardDetail` que viaja en el patch de `onSaveDetails` (la acción del store `updateEntryDetails` se amplió a `forTrade?: boolean`); el mecanismo de "solo viaja si cambió" del alcance reemplaza conectar `toggleForTrade` directamente, que permanece en el store como la palanca para el acceso rápido del grid futuro. Decisión abierta resuelta: solo detalle por ahora. Tests: 4 nuevos en `CardDetailPage.test.tsx` (checkbox sembrado con el estado, marcar, desmarcar, y la regresión de solo-notas que asegura que el patch omite `forTrade` si no cambió).
 
 ## Etapa 2 — Seam de identidad + login
 

@@ -1788,9 +1788,10 @@ svg {
   max-width: 7rem;
 }
 
-/* Foil toggle in the edit panel: the same decision the add flow makes, so it
-   reads as a checkbox row rather than as one more field in the stack. */
-.card-detail-edit-finish {
+/* Checkbox rows in the edit panel (foil, for-trade): the same decision the
+   add flow makes, so they read as checkbox rows rather than as one more
+   field in the stack. */
+.card-detail-edit-check {
   display: flex;
   align-items: center;
   gap: var(--space-2);
