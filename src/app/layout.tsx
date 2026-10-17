@@ -3,11 +3,30 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import CardFlightOverlay from '@/features/binder/components/CardFlightOverlay'
+import { useSessionStore } from '@/features/auth/state/sessionStore'
+import {
+  LOCALE_LABELS,
+  SUPPORTED_LOCALES,
+  useLocaleStore,
+} from '@/shared/locale/localeStore'
 
 /** App shell: top navigation plus the routed page outlet. */
 export function AppLayout() {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  const bootstrap = useSessionStore((state) => state.bootstrap)
+
+  // One session read per app load; the guard and the menu read the result.
+  useEffect(() => {
+    void bootstrap()
+  }, [bootstrap])
+
+  const locale = useLocaleStore((state) => state.locale)
+  const setLocale = useLocaleStore((state) => state.setLocale)
+  // One control cycles the supported locales; with es/en it flips between them.
+  const nextLocale =
+    SUPPORTED_LOCALES[(SUPPORTED_LOCALES.indexOf(locale) + 1) % SUPPORTED_LOCALES.length]
 
   useEffect(() => {
     if (!userMenuOpen) return
@@ -39,61 +58,71 @@ export function AppLayout() {
           </NavLink>
           <NavLink to="/wants">Deseos</NavLink>
         </nav>
-        <div className="app-user-menu" ref={menuRef}>
+        <div className="app-nav-actions">
           <button
             type="button"
-            className="app-user-menu-trigger"
-            aria-haspopup="menu"
-            aria-expanded={userMenuOpen}
-            aria-label="Menú"
-            onClick={() => setUserMenuOpen((open) => !open)}
+            className="app-locale-toggle"
+            aria-label={`Cambiar idioma a ${LOCALE_LABELS[nextLocale]}`}
+            onClick={() => setLocale(nextLocale)}
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              aria-hidden="true"
-              focusable="false"
-            >
-              <path d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+            {locale.toUpperCase()}
           </button>
-          {userMenuOpen && (
-            <div className="app-user-menu-list" role="menu">
-              <span role="menuitem" className="app-user-menu-item">
-                Mi cuenta
-              </span>
-              <NavLink
-                to="/"
-                end
-                role="menuitem"
-                className="app-user-menu-item"
-                onClick={closeUserMenu}
+          <div className="app-user-menu" ref={menuRef}>
+            <button
+              type="button"
+              className="app-user-menu-trigger"
+              aria-haspopup="menu"
+              aria-expanded={userMenuOpen}
+              aria-label="Menú"
+              onClick={() => setUserMenuOpen((open) => !open)}
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                aria-hidden="true"
+                focusable="false"
               >
-                Binder
-              </NavLink>
-              <NavLink
-                to="/wants"
-                role="menuitem"
-                className="app-user-menu-item"
-                onClick={closeUserMenu}
-              >
-                Deseos
-              </NavLink>
-              <button
-                type="button"
-                role="menuitem"
-                className="app-user-menu-item"
-                onClick={closeUserMenu}
-              >
-                Cerrar sesión
-              </button>
-            </div>
-          )}
+                <path d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            {userMenuOpen && (
+              <div className="app-user-menu-list" role="menu">
+                <span role="menuitem" className="app-user-menu-item">
+                  Mi cuenta
+                </span>
+                <NavLink
+                  to="/"
+                  end
+                  role="menuitem"
+                  className="app-user-menu-item"
+                  onClick={closeUserMenu}
+                >
+                  Binder
+                </NavLink>
+                <NavLink
+                  to="/wants"
+                  role="menuitem"
+                  className="app-user-menu-item"
+                  onClick={closeUserMenu}
+                >
+                  Deseos
+                </NavLink>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="app-user-menu-item"
+                  onClick={closeUserMenu}
+                >
+                  Cerrar sesión
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
       <main className="app-main">

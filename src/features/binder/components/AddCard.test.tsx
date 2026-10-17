@@ -149,6 +149,46 @@ describe('AddCard dialog accessibility', () => {
     )
     expect(trigger).toHaveFocus()
   })
+
+  it('wraps Tab from the last focusable back to the first', () => {
+    states.search = { data: [makeCard()], isPending: false, isError: false }
+    renderAddCard()
+    typeQuery('bolt')
+    const input = screen.getByPlaceholderText('Buscar carta...')
+    const result = screen.getByRole('button', { name: 'Lightning Bolt' })
+
+    result.focus()
+    fireEvent.keyDown(result, { key: 'Tab' })
+
+    expect(input).toHaveFocus()
+  })
+
+  it('wraps Shift+Tab from the first focusable to the last', () => {
+    states.search = { data: [makeCard()], isPending: false, isError: false }
+    renderAddCard()
+    typeQuery('bolt')
+    const input = screen.getByPlaceholderText('Buscar carta...')
+    const result = screen.getByRole('button', { name: 'Lightning Bolt' })
+
+    input.focus()
+    fireEvent.keyDown(input, { key: 'Tab', shiftKey: true })
+
+    expect(result).toHaveFocus()
+  })
+
+  it('leaves a Tab that is not at a boundary to the browser', () => {
+    states.search = { data: [makeCard()], isPending: false, isError: false }
+    renderAddCard()
+    typeQuery('bolt')
+    const input = screen.getByPlaceholderText('Buscar carta...')
+
+    input.focus()
+    fireEvent.keyDown(input, { key: 'Tab' })
+
+    // The trap only acts at the two wrap points; a mid-dialog Tab must not be
+    // hijacked or the whole dialog would become unnavigable.
+    expect(input).toHaveFocus()
+  })
 })
 
 describe('AddCard search result states', () => {
@@ -484,6 +524,39 @@ describe('AddCard printing preview', () => {
       'src',
       'beta.jpg',
     )
+  })
+
+  it('flips the preview to the back for a double-faced printing', () => {
+    states.printings = {
+      data: [
+        makePrinting({
+          imageLarge: 'large.jpg',
+          imageLargeBack: 'large-back.jpg',
+          imageNormalBack: 'normal-back.jpg',
+        }),
+      ],
+      isPending: false,
+      isError: false,
+    }
+    renderAddCard()
+    typeQuery('bolt')
+    fireEvent.click(screen.getByRole('button', { name: 'Lightning Bolt' }))
+    pickOption('Número de coleccionista', '#1')
+
+    expect(document.querySelector('.card-flip')).toBeInTheDocument()
+    expect(document.querySelector('.card-face--back img')).toHaveAttribute(
+      'src',
+      'large-back.jpg',
+    )
+  })
+
+  it('does not flip a single-faced preview', () => {
+    renderAddCard()
+    typeQuery('bolt')
+    fireEvent.click(screen.getByRole('button', { name: 'Lightning Bolt' }))
+    pickOption('Número de coleccionista', '#1')
+
+    expect(document.querySelector('.card-flip')).not.toBeInTheDocument()
   })
 })
 

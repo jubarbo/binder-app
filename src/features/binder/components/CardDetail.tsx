@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence, useTransform } from 'motion/react'
 import { useCardRock } from '@/shared/hooks/useCardRock'
 import CardZoom from '@/shared/components/CardZoom'
+import CardFlip from '@/shared/components/CardFlip'
 import FoilLayer from '@/shared/components/FoilLayer'
 import WhoWants from '@/features/binder/components/WhoWants'
 import type { BinderEntry, Finish, Printing } from '@/shared/types/mtg'
@@ -58,7 +59,24 @@ function CardDetailMedia({ printing, isFoil }: CardDetailMediaProps) {
   }
 
   const src = printing.imageLarge || printing.imageNormal || printing.imageSmall
+  // Mirror the front's fallback chain so the back matches its resolution.
+  const backSrc = printing.imageLargeBack || printing.imageNormalBack
   const label = `${printing.setName} #${printing.collectorNumber}`
+
+  // The back face mirrors the front: the card image plus the same foil, so the
+  // finish rides along when the card turns instead of floating fixed on top.
+  const backFace = backSrc ? (
+    <>
+      <img
+        className="card-detail-image card-detail-image--back"
+        src={backSrc}
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+      />
+      {isFoil && <FoilLayer x={foilX} y={foilY} />}
+    </>
+  ) : undefined
 
   return (
     <>
@@ -84,8 +102,12 @@ function CardDetailMedia({ printing, isFoil }: CardDetailMediaProps) {
         }}
       >
         <div className="card-detail-frame">
-          <img className="card-detail-image" src={src} alt={label} draggable={false} />
-          {isFoil && <FoilLayer x={foilX} y={foilY} />}
+          <CardFlip back={backFace}>
+            <>
+              <img className="card-detail-image" src={src} alt={label} draggable={false} />
+              {isFoil && <FoilLayer x={foilX} y={foilY} />}
+            </>
+          </CardFlip>
         </div>
         {glareStyle && (
           <div className="card-glare" style={{ background: glareStyle }} />
@@ -95,6 +117,7 @@ function CardDetailMedia({ printing, isFoil }: CardDetailMediaProps) {
         {zoomOpen && (
           <CardZoom
             src={src}
+            srcBack={backSrc}
             alt={label}
             foil={isFoil}
             onClose={() => setZoomOpen(false)}

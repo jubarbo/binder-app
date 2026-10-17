@@ -1,5 +1,6 @@
 import type { OracleCard, Printing } from '@/shared/types/mtg'
 import { CatalogError, type CatalogPort } from '@/shared/api/catalogPort'
+import { getActiveLocale } from '@/shared/locale/localeStore'
 
 const SCRYFALL_BASE_URL = 'https://api.scryfall.com'
 
@@ -10,8 +11,11 @@ interface ScryfallImageUris {
   large?: string
 }
 
-/** Card faces carry the images for double-faced / modal cards. */
+/** Card faces carry the name and images for double-faced / modal cards. */
 interface ScryfallCardFace {
+  name: string
+  /** Localized face name on a non-English record (absent on English ones). */
+  printed_name?: string
   image_uris?: ScryfallImageUris
 }
 
@@ -25,6 +29,8 @@ interface ScryfallCard {
   id: string
   oracle_id?: string
   name: string
+  /** Localized name on a non-English printing (absent on English records). */
+  printed_name?: string
   mana_cost?: string
   cmc?: number
   colors?: string[]
@@ -48,20 +54,49 @@ interface ScryfallList {
  * Resolve the image URIs for a card. Double-faced / modal cards omit the
  * top-level `image_uris`; their front face holds the images instead.
  */
+/** Front-face image URIs: top-level for single/split, first face otherwise. */
 function resolveImageUris(card: ScryfallCard): ScryfallImageUris {
   return card.image_uris ?? card.card_faces?.[0]?.image_uris ?? {}
+}
+
+/** Back-face URIs: only the second face of a double-faced card that renders
+ *  two images (transform/MDFC). Split cards have no per-face URIs, so this is
+ *  empty and no flip is offered. */
+function resolveBackImageUris(card: ScryfallCard): ScryfallImageUris {
+  return card.card_faces?.[1]?.image_uris ?? {}
+}
+
+/**
+ * Resolve a card's display name for the active locale.
+ *
+ * Single-face cards localize at the top level (`printed_name`). Multi-face
+ * cards (transform, MDFC, split) keep an English top-level name and localize
+ * each face instead, so when any face is localized the faces are rejoined with
+ * the same " // " separator Scryfall uses — a per-face fallback that keeps the
+ * translated and untranslated halves consistent with Strategy A. A record with
+ * no localized face returns the top-level name verbatim, which keeps English
+ * output byte-identical to the previous behaviour.
+ */
+function resolveDisplayName(card: ScryfallCard): string {
+  const faces = card.card_faces
+  if (faces?.some((face) => face.printed_name != null)) {
+    return faces.map((face) => face.printed_name ?? face.name).join(' // ')
+  }
+  return card.printed_name ?? card.name
 }
 
 function toOracleCard(card: ScryfallCard): OracleCard {
   return {
     oracleId: card.oracle_id ?? card.id,
-    name: card.name,
+    // Localized display name; see resolveDisplayName for the multi-face case.
+    name: resolveDisplayName(card),
     manaCost: card.mana_cost,
     cmc: card.cmc ?? 0,
     colors: card.colors ?? [],
     typeLine: card.type_line ?? '',
     oracleText: card.oracle_text,
     imageNormal: resolveImageUris(card).normal,
+    imageNormalBack: resolveBackImageUris(card).normal,
   }
 }
 
@@ -76,9 +111,15 @@ function toPrices(prices: ScryfallPrices | undefined): Printing['prices'] {
 
 function toPrinting(card: ScryfallCard): Printing {
   const images = resolveImageUris(card)
+  const backImages = resolveBackImageUris(card)
   return {
     id: card.id,
     oracleId: card.oracle_id ?? card.id,
+    // Keep the canonical (English) name here. Printings are fetched without a
+    // `lang` scope so coverage stays complete, and `unique=prints` returns one
+    // record per language (fr, ja, es…) — resolving `printed_name` here would
+    // leak foreign names into the list. The active locale resolves the search
+    // results instead (see `toOracleCard`), which are fetched in that locale.
     name: card.name ?? '',
     setCode: card.set ?? '',
     setName: card.set_name ?? '',
@@ -88,6 +129,8 @@ function toPrinting(card: ScryfallCard): Printing {
     imageSmall: images.small ?? '',
     imageNormal: images.normal ?? '',
     imageLarge: images.large ?? '',
+    imageNormalBack: backImages.normal,
+    imageLargeBack: backImages.large,
     prices: toPrices(card.prices),
   }
 }
@@ -128,6 +171,38 @@ async function requestJson<T>(url: string, signal?: AbortSignal): Promise<T> {
   }
 }
 
+/** Oracle id used to deduplicate the two language result sets. */
+function oracleKey(card: ScryfallCard): string {
+  return card.oracle_id ?? card.id
+}
+
+/**
+ * Fetch one page of search results. `lang` scopes Scryfall's matching to a
+ * single language's printings. The scope must live *inside* `q` as search
+ * syntax — Scryfall ignores a `&lang=` URL param on /cards/search — and it is
+ * a hard filter: it drops cards that have no printing in that language.
+ */
+async function searchPage(
+  query: string,
+  lang: string | undefined,
+  signal?: AbortSignal,
+): Promise<ScryfallCard[]> {
+  const scoped = lang ? `lang:${lang} ${query}` : query
+  const url = `${SCRYFALL_BASE_URL}/cards/search?q=${encodeURIComponent(scoped)}`
+  try {
+    const body = await requestJson<ScryfallList>(url, signal)
+    return body.data ?? []
+  } catch (error) {
+    // Scryfall answers 404 when a query matches no cards. Within a language
+    // leg that is a valid empty result — the term simply has no match in this
+    // language — not a failure. Without this, a purely Spanish term (no
+    // English match) would reject the whole bilingual Promise.all and discard
+    // the Spanish hits. Rate limits, network and server errors still throw.
+    if (error instanceof CatalogError && error.status === 404) return []
+    throw error
+  }
+}
+
 /**
  * Live `CatalogPort` implementation backed by the public Scryfall API.
  * Runs in the browser only (uses `fetch`) and never imports Node modules.
@@ -136,9 +211,32 @@ export const scryfallClient: CatalogPort = {
   async fetchSearch(query, signal) {
     const trimmed = query.trim()
     if (!trimmed) return []
-    const url = `${SCRYFALL_BASE_URL}/cards/search?q=${encodeURIComponent(trimmed)}`
-    const body = await requestJson<ScryfallList>(url, signal)
-    return (body.data ?? []).map(toOracleCard)
+    const locale = getActiveLocale()
+
+    // English is Scryfall's default: a single request, exactly as before.
+    if (locale === 'en') {
+      return (await searchPage(trimmed, undefined, signal)).map(toOracleCard)
+    }
+
+    // Strategy A, client-side: match the default (English, full coverage) and
+    // the localized printings, then merge by oracle id so a Spanish name finds
+    // its card while English-only cards never drop out of the results.
+    const [defaultCards, localizedCards] = await Promise.all([
+      searchPage(trimmed, undefined, signal),
+      searchPage(trimmed, locale, signal),
+    ])
+
+    const merged = new Map<string, ScryfallCard>()
+    // Localized printings first: they carry `printed_name` for display and
+    // follow Scryfall's relevance for the requested language.
+    for (const card of localizedCards) merged.set(oracleKey(card), card)
+    // Then every card the localized pass missed (no translation in that
+    // language), so coverage stays complete.
+    for (const card of defaultCards) {
+      const key = oracleKey(card)
+      if (!merged.has(key)) merged.set(key, card)
+    }
+    return [...merged.values()].map(toOracleCard)
   },
 
   async fetchNamed(name, signal) {
