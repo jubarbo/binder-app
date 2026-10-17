@@ -10,6 +10,8 @@ import { AppLayout } from '@/app/layout'
 const lazyRoutes = {
   cardDetail: lazy(() => import('@/features/binder/components/CardDetailPage')),
   wants: lazy(() => import('@/features/wants/components/WantsPage')),
+  login: lazy(() => import('@/features/auth/components/LoginPage')),
+  register: lazy(() => import('@/features/auth/components/RegisterPage')),
 }
 
 const routeFallback = (
@@ -37,6 +39,22 @@ export const router = createHashRouter([
         element: (
           <Suspense fallback={routeFallback}>
             <lazyRoutes.wants />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'login',
+        element: (
+          <Suspense fallback={routeFallback}>
+            <lazyRoutes.login />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'register',
+        element: (
+          <Suspense fallback={routeFallback}>
+            <lazyRoutes.register />
           </Suspense>
         ),
       },
