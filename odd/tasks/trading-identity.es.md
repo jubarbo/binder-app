@@ -23,7 +23,7 @@ S6 — Conectar el menú. "Mi cuenta" navega al perfil; "Cerrar sesión" llama `
 ## Tareas
 
 T1 (S1) Seam AuthPort — inline — hecho (RED→GREEN 8/8), commit e5b99e8
-T2 (S2) Store de sesión — inline — TODO
+T2 (S2) Store de sesión — inline — hecho (RED→GREEN 6/6), commit e640fec
 T3 (S3) Pantallas de login y registro — inline — TODO
 T4 (S4) Guard de rutas — inline — TODO
 T5 (S5) Pantalla de perfil — inline — TODO
@@ -34,3 +34,5 @@ T6 (S6) Conectar el menú de usuario — inline — TODO
 L1 (2026-10-16) Usuario: "Registra el plan en un md y luego comencemos con la etapa 2" — roadmap registrado como `odd/tasks/trading-platform-frontend.md`; comenzando la Etapa 2 (seam de identidad + login).
 
 L2 (2026-10-16) T1 implementado. `src/shared/api/authPort.ts` + `authPort.test.ts`. Nota de diseño: a diferencia de `wishersPort`/`offersPort` (que devuelven listas vacías honestas), `localAuthPort` RECHAZA `login`/`register`/`updateProfile` con un `AuthUnavailableError` tipado en vez de fabricar un usuario — porque una sesión falsa parecería "perder" el login al recargar. `session()` devuelve `null`, `logout()` es no-op. `mockAuthPort` mantiene un usuario a nivel de módulo para que login/session/logout/updateProfile se lean como un flujo coherente. 8/8 verde. Commiteado como e5b99e8 en `feature/trading-identity` (creada off `dev` actualizado tras el PR #17).
+
+L3 (2026-10-17) T2 implementado. `src/features/auth/state/sessionStore.ts` + test. Nota de diseño: el store NO se persiste deliberadamente — la fuente de verdad es el puerto auth (cookie en el backend, `null` localmente), así que arranca con `authPort.session()` en cada carga en vez de confiar en una copia vieja de localStorage. `signOut` limpia el usuario local primero (un fallo del puerto nunca deja al usuario trabado en una UI de sesión iniciada) y luego delega en `authPort.logout()`, cuya negación aún se propaga. 6/6 verde; suite completa 208/208, build OK, oxlint exit=0. Commiteado como e640fec.
