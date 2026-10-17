@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
-import { ToastContainer } from 'react-toastify'
+import { toast, ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import CardFlightOverlay from '@/features/binder/components/CardFlightOverlay'
 import { useSessionStore } from '@/features/auth/state/sessionStore'
@@ -16,6 +16,8 @@ export function AppLayout() {
   const menuRef = useRef<HTMLDivElement>(null)
 
   const bootstrap = useSessionStore((state) => state.bootstrap)
+  const user = useSessionStore((state) => state.user)
+  const signOut = useSessionStore((state) => state.signOut)
 
   // One session read per app load; the guard and the menu read the result.
   useEffect(() => {
@@ -47,6 +49,17 @@ export function AppLayout() {
   }, [userMenuOpen])
 
   const closeUserMenu = () => setUserMenuOpen(false)
+
+  const handleSignOut = async () => {
+    closeUserMenu()
+    try {
+      // signOut clears the local user first, so from here only the
+      // server-side session can still fail — and that failure is real.
+      await signOut()
+    } catch {
+      toast.error('No se pudo cerrar la sesión en el servidor.')
+    }
+  }
 
   return (
     <div className="app-shell">
@@ -92,9 +105,25 @@ export function AppLayout() {
             </button>
             {userMenuOpen && (
               <div className="app-user-menu-list" role="menu">
-                <span role="menuitem" className="app-user-menu-item">
-                  Mi cuenta
-                </span>
+                {user ? (
+                  <NavLink
+                    to="/profile"
+                    role="menuitem"
+                    className="app-user-menu-item"
+                    onClick={closeUserMenu}
+                  >
+                    Mi cuenta
+                  </NavLink>
+                ) : (
+                  <NavLink
+                    to="/login"
+                    role="menuitem"
+                    className="app-user-menu-item"
+                    onClick={closeUserMenu}
+                  >
+                    Iniciar sesión
+                  </NavLink>
+                )}
                 <NavLink
                   to="/"
                   end
@@ -112,14 +141,16 @@ export function AppLayout() {
                 >
                   Deseos
                 </NavLink>
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="app-user-menu-item"
-                  onClick={closeUserMenu}
-                >
-                  Cerrar sesión
-                </button>
+                {user && (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="app-user-menu-item"
+                    onClick={() => void handleSignOut()}
+                  >
+                    Cerrar sesión
+                  </button>
+                )}
               </div>
             )}
           </div>
