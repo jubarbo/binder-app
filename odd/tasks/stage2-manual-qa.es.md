@@ -1,6 +1,6 @@
 # Checklist de QA manual — Etapa 2 (identidad + login)
 
-Propósito: verificación manual del trabajo de la Etapa 2 (`odd/tasks/trading-identity.es.md`, tareas T1–T7).
+Propósito: verificación manual del trabajo de la Etapa 2 (`odd/tasks/trading-identity.es.md`, tareas T1–T7) y del toggle para intercambio de la Etapa 1.
 Cuándo: correr las secciones A → B → C antes de mergear a `dev`; la sección D después del deploy a producción; E es pulido opcional.
 Por qué manual: la suite automatizada (235 tests) cubre la lógica; esta checklist apunta a lo que jsdom no ve — CSS real, persistencia real de `localStorage`, el guard de rutas corriendo contra el binding REAL del puerto (los tests lo mockean), y el deploy real.
 
@@ -15,6 +15,8 @@ Corré `npm run dev` (sin flags → `localAuthPort`, auth no disponible).
 - [ ] Menú hamburguesa → solo aparece "Iniciar sesión"; sin "Mi cuenta" ni "Cerrar sesión".
 - [ ] `#/cualquier-ruta` — "Página no encontrada" con "Volver al binder"; la navegación superior sigue visible alrededor.
 - [ ] Regresión rápida: agregar carta, editar deseos, recorrer "La tienen".
+- [ ] Editá cualquier carta: el checkbox "Para intercambio" aparece en el panel de edición (Etapa 1); marcalo, guardá, y la fila "Para intercambio:" del detalle alterna entre Sí/No; una recarga conserva el cambio (vive en `localStorage`).
+- [ ] Editar solo las notas de una carta marcada "Para intercambio: Sí" deja esa bandera intacta al guardar.
 
 ## B. Modo mock — flujo completo de identidad (P0, pre-merge)
 

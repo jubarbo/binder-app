@@ -1,6 +1,6 @@
 # Manual QA checklist — Stage 2 (identity + login)
 
-Purpose: manual verification for the Stage 2 work (`odd/tasks/trading-identity.md`, tasks T1–T7).
+Purpose: manual verification for the Stage 2 work (`odd/tasks/trading-identity.md`, tasks T1–T7) and the Stage 1 for-trade toggle.
 When: run sections A → B → C before merging to `dev`; section D after the production deploy; E is optional polish.
 Why manual at all: the automated suite (235 tests) covers the logic; this checklist targets what jsdom cannot see — real CSS, real `localStorage` persistence, the route guard running against the REAL port binding (tests mock it), and the real deploy.
 
@@ -15,6 +15,8 @@ Run `npm run dev` (no flags → `localAuthPort`, auth unavailable).
 - [ ] Hamburger menu → only "Iniciar sesión" appears; no "Mi cuenta", no "Cerrar sesión".
 - [ ] `#/any-bogus-route` — "Página no encontrada" with "Volver al binder"; the top navigation still renders around it.
 - [ ] Regression spot-check: add a card, edit wants, browse "La tienen".
+- [ ] Edit any card: a "Para intercambio" checkbox shows in the edit panel (Stage 1); toggle it, save, and the detail's "Para intercambio:" row flips between Sí/No; a reload keeps the change (it lives in `localStorage`).
+- [ ] Editing only the notes of a card flagged "Para intercambio: Sí" leaves that flag untouched after save.
 
 ## B. Mock mode — full identity flow (P0, pre-merge)
 
