@@ -1,0 +1,46 @@
+# Checklist de QA manual — Etapa 2 (identidad + login)
+
+Propósito: verificación manual del trabajo de la Etapa 2 (`odd/tasks/trading-identity.es.md`, tareas T1–T7).
+Cuándo: correr las secciones A → B → C antes de mergear a `dev`; la sección D después del deploy a producción; E es pulido opcional.
+Por qué manual: la suite automatizada (235 tests) cubre la lógica; esta checklist apunta a lo que jsdom no ve — CSS real, persistencia real de `localStorage`, el guard de rutas corriendo contra el binding REAL del puerto (los tests lo mockean), y el deploy real.
+
+## A. Modo local — la realidad de producción de hoy (P0)
+
+Corré `npm run dev` (sin flags → `localAuthPort`, auth no disponible).
+
+- [ ] Abrí `http://localhost:5173/` — el binder carga con las cartas que ya están en `localStorage`; nada del trabajo nuevo rompió el uso local.
+- [ ] `#/login` — el formulario carga; enviar cualquier cosa muestra la alerta honesta "El backend no está conectado todavía…".
+- [ ] `#/register` — el mismo rechazo honesto al enviar.
+- [ ] `#/profile` — muestra "No hay una sesión activa en este navegador." con un link "Inicia sesión" en vez de un formulario.
+- [ ] Menú hamburguesa → solo aparece "Iniciar sesión"; sin "Mi cuenta" ni "Cerrar sesión".
+- [ ] `#/cualquier-ruta` — "Página no encontrada" con "Volver al binder"; la navegación superior sigue visible alrededor.
+- [ ] Regresión rápida: agregar carta, editar deseos, recorrer "La tienen".
+
+## B. Modo mock — flujo completo de identidad (P0, pre-merge)
+
+Corré `VITE_MOCK_AUTH=1 npm run dev` (→ `mockAuthPort`, el guard está ACTIVO).
+
+- [ ] Cargá `#/` sin sesión → te redirige a `#/login`.
+- [ ] Entrá con cualquier email/contraseña → caes en el binder.
+- [ ] El menú hamburguesa ahora muestra "Mi cuenta" y "Cerrar sesión".
+- [ ] `#/profile` — campos prellenados con el usuario mock; un avatar URL inválido muestra el error "Ingresa una URL válida"; una edición válida guarda con "Perfil actualizado".
+- [ ] "Cerrar sesión" → el guard te redirige a `#/login`.
+- [ ] La tecla Escape y el click afuera cierran el menú.
+
+## C. Persistencia — la gente teme perder datos (P1)
+
+- [ ] **El logout nunca toca la colección**: en modo mock, entrá → salí → entrá de nuevo → todas las cartas locales del binder intactas.
+- [ ] Recarga en modo mock → se pierde la sesión, redirige al login. Esperado: la sesión del mock vive en memoria; el backend real usará una cookie httpOnly.
+- [ ] Deep links (`#/profile`, `#/card/<entryId>`) y los botones atrás/adelante del navegador se comportan bien.
+
+## D. Producción, después del deploy (P0)
+
+- [ ] `https://binder.mantisuy.com/` — el binder local-first funciona igual que siempre (guard inactivo: sin backend las rutas quedan abiertas).
+- [ ] `#/login` carga; al enviar muestra "El backend no está conectado todavía…" — correcto hasta que exista `binder-api`.
+- [ ] `#/cualquier-ruta` — la página404 amigable.
+- [ ] Si algo se ve viejo: hard refresh (Ctrl+Shift+R) — el `index.html` se cachea unos 10 minutos.
+
+## E. Repaso visual (P2)
+
+- [ ] Modo oscuro (sigue al SO): login, perfil y404 con contraste legible.
+- [ ] Recorrer los formularios con Tab muestra el anillo de foco visible.
