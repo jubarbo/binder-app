@@ -8,6 +8,13 @@ import CardFlip from '@/shared/components/CardFlip'
 import ImageSelect from '@/shared/components/ImageSelect'
 import { useScrollLock } from '@/shared/hooks/useScrollLock'
 
+/**
+ * Everything the browser will let a keyboard user Tab to. Used by the dialog's
+ * focus trap to know where its boundary elements are.
+ */
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
 interface AddCardProps {
   onClose?: () => void
 }
@@ -192,7 +199,29 @@ export default function AddCard({ onClose }: AddCardProps) {
         aria-modal="true"
         aria-labelledby={titleId}
         onKeyDown={(e) => {
-          if (e.key === 'Escape') onClose?.()
+          if (e.key === 'Escape') {
+            onClose?.()
+            return
+          }
+          if (e.key !== 'Tab') return
+          // `aria-modal` promises the page behind is inert, but only a trap
+          // makes that true for keyboards: wrap Tab at both ends so it cannot
+          // walk out into the scroll-locked binder. A Tab that is not at a
+          // boundary is left to the browser so the dialog stays navigable.
+          const focusables = Array.from(
+            e.currentTarget.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+          )
+          if (focusables.length === 0) return
+          const first = focusables[0]
+          const last = focusables[focusables.length - 1]
+          const active = document.activeElement
+          if (e.shiftKey && active === first) {
+            e.preventDefault()
+            last.focus()
+          } else if (!e.shiftKey && active === last) {
+            e.preventDefault()
+            first.focus()
+          }
         }}
       >
         <h2 id={titleId}>Agregar carta</h2>

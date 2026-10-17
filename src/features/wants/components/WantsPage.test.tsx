@@ -1,10 +1,17 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import WantsPage from '@/features/wants/components/WantsPage'
 import { useBinderStore } from '@/features/binder/state/binderStore'
+import { offersPort } from '@/shared/api/offersPort'
 import type { WantEntry } from '@/shared/types/mtg'
+
+vi.mock('@/shared/api/offersPort', () => ({
+  offersPort: { offersOf: vi.fn(async () => []) },
+}))
+
+const offersOf = offersPort.offersOf as ReturnType<typeof vi.fn>
 
 function renderPage() {
   const client = new QueryClient()
@@ -32,6 +39,8 @@ function seedWant(overrides: Partial<WantEntry> = {}): WantEntry {
 describe('WantsPage', () => {
   beforeEach(() => {
     useBinderStore.setState({ wants: [] })
+    offersOf.mockReset()
+    offersOf.mockResolvedValue([])
   })
 
   it('shows the search form without a toggle button', () => {
@@ -109,6 +118,39 @@ describe('WantsPage', () => {
     expect(screen.getByText('Cualquier impresión')).toBeInTheDocument()
     const printing = screen.getByText('Cualquier impresión').closest('.want-item-printing')
     expect(printing).toHaveClass('want-item-printing--oracle')
+  })
+
+  it('shows a compact "La tienen" stack when the offers port reports owners', async () => {
+    offersOf.mockResolvedValue([
+      { id: 'u1', displayName: 'Ana', offersCopies: 2 },
+      { id: 'u2', displayName: 'Bruno', offersCopies: 1 },
+    ])
+    seedWant()
+
+    renderPage()
+
+    expect(await screen.findByText('2 la tienen')).toBeInTheDocument()
+  })
+
+  it('renders no "La tienen" row while the offers port reports nobody', async () => {
+    seedWant()
+
+    renderPage()
+
+    // The local port resolves empty; the compact row must add nothing, so a
+    // want without owners keeps its original one-line shape.
+    await waitFor(() => expect(offersOf).toHaveBeenCalled())
+    expect(document.querySelector('.want-item-owners')).toBeNull()
+  })
+
+  it('asks the offers port for each want card identity', async () => {
+    seedWant({ oracleId: 'oracle-bolt' })
+
+    renderPage()
+
+    await waitFor(() =>
+      expect(offersOf).toHaveBeenCalledWith('oracle-bolt', expect.anything()),
+    )
   })
 
   it('shows the empty state when there are no wants', () => {

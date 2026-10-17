@@ -3,6 +3,7 @@ import { AnimatePresence } from 'motion/react'
 import { useBinderStore } from '@/features/binder/state/binderStore'
 import WantEntryForm from '@/features/wants/components/WantEntryForm'
 import WantRemoveConfirm from '@/features/wants/components/WantRemoveConfirm'
+import WhoHas from '@/features/wants/components/WhoHas'
 import type { WantEntry } from '@/shared/types/mtg'
 
 export default function WantsPage() {
@@ -43,6 +44,7 @@ export default function WantsPage() {
                     Cualquier impresión
                   </span>
                 )}
+                <WhoHas oracleId={w.oracleId} />
               </div>
               <span className="want-item-qty">Cantidad: {w.quantity}</span>
               <button
