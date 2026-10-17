@@ -24,7 +24,7 @@ S6 — Conectar el menú. "Mi cuenta" navega al perfil; "Cerrar sesión" llama `
 
 T1 (S1) Seam AuthPort — inline — hecho (RED→GREEN 8/8), commit e5b99e8
 T2 (S2) Store de sesión — inline — hecho (RED→GREEN 6/6), commit e640fec
-T3 (S3) Pantallas de login y registro — inline — TODO
+T3 (S3) Pantallas de login y registro — inline — hecho (RED→GREEN 7/7), commit b9d8922
 T4 (S4) Guard de rutas — inline — TODO
 T5 (S5) Pantalla de perfil — inline — TODO
 T6 (S6) Conectar el menú de usuario — inline — TODO
@@ -36,3 +36,5 @@ L1 (2026-10-16) Usuario: "Registra el plan en un md y luego comencemos con la et
 L2 (2026-10-16) T1 implementado. `src/shared/api/authPort.ts` + `authPort.test.ts`. Nota de diseño: a diferencia de `wishersPort`/`offersPort` (que devuelven listas vacías honestas), `localAuthPort` RECHAZA `login`/`register`/`updateProfile` con un `AuthUnavailableError` tipado en vez de fabricar un usuario — porque una sesión falsa parecería "perder" el login al recargar. `session()` devuelve `null`, `logout()` es no-op. `mockAuthPort` mantiene un usuario a nivel de módulo para que login/session/logout/updateProfile se lean como un flujo coherente. 8/8 verde. Commiteado como e5b99e8 en `feature/trading-identity` (creada off `dev` actualizado tras el PR #17).
 
 L3 (2026-10-17) T2 implementado. `src/features/auth/state/sessionStore.ts` + test. Nota de diseño: el store NO se persiste deliberadamente — la fuente de verdad es el puerto auth (cookie en el backend, `null` localmente), así que arranca con `authPort.session()` en cada carga en vez de confiar en una copia vieja de localStorage. `signOut` limpia el usuario local primero (un fallo del puerto nunca deja al usuario trabado en una UI de sesión iniciada) y luego delega en `authPort.logout()`, cuya negación aún se propaga. 6/6 verde; suite completa 208/208, build OK, oxlint exit=0. Commiteado como e640fec.
+
+L4 (2026-10-17) T3 implementado. `src/features/auth/authSchemas.ts` (reglas de email/contraseña compartidas para que login y registro no diverjan; la fortaleza de la contraseña más allá de la presencia queda como contrato del backend), `LoginPage.tsx`, `RegisterPage.tsx` + tests, dos rutas hijas en `src/app/router.tsx` (lazy, para no meter react-hook-form en el bundle principal), estilos `.auth-*` en `src/index.css`. Decisiones: la copy sigue el tuteo existente del app ("Ingresa", "Crea una cuenta" — igual que "Agrega" en BinderPage); éxito = `signIn(user)` + navegar a `/`; `AuthUnavailableError` muestra una alerta honesta de "backend no conectado" en vez de un error de credenciales falso. 7/7 tests nuevos verdes; suite completa 215/215, build OK, oxlint exit=0. Commiteado como b9d8922.
