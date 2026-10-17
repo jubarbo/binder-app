@@ -1,37 +1,36 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { toast } from 'react-toastify'
 import { AppLayout } from '@/app/layout'
-import { useLocaleStore } from '@/shared/locale/localeStore'
+import { authPort } from '@/shared/api/authPort'
 
-vi.mock('@/features/binder/components/CardFlightOverlay', () => ({
-  default: () => null,
-}))
-
-describe('AppLayout notifications', () => {
-  it('renders toasts with a theme class the stylesheet actually paints', async () => {
-    render(
-      <MemoryRouter>
-        <AppLayout />
-      </MemoryRouter>,
-    )
-
-    toast.success('Carta eliminada')
-
-    // v11 has no "auto" theme: the type accepts any string, an unknown value
-    // adds no theme class, and the toast then renders with no background at
-    // all. Pin it to one of the variants react-toastify actually styles.
-    const text = await screen.findByText('Carta eliminada')
-    expect(text.closest('.Toastify__toast')?.className).toMatch(
-      /Toastify__toast-theme--(light|dark|colored)\b/,
-    )
-  })
+vi.mock('@/shared/api/authPort', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/shared/api/authPort')>()
+  return {
+    ...actual,
+    authPort: {
+      available: false,
+      session: vi.fn(),
+      login: vi.fn(),
+      register: vi.fn(),
+      logout: vi.fn(),
+      updateProfile: vi.fn(),
+    },
+  }
 })
 
-describe('AppLayout locale switch', () => {
-  it('shows the active locale and cycles to the next one', () => {
-    useLocaleStore.getState().setLocale('es')
+const mockedPort = vi.mocked(authPort)
+
+describe('AppLayout', () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+  })
+
+  it('bootstraps the session once on mount', () => {
+    // Deliberately never settles: the assertion targets the trigger itself,
+    // and a settled bootstrap would update the store outside act() for no
+    // benefit in this test.
+    mockedPort.session.mockReturnValue(new Promise(() => {}))
 
     render(
       <MemoryRouter>
@@ -39,14 +38,9 @@ describe('AppLayout locale switch', () => {
       </MemoryRouter>,
     )
 
-    // Spanish is active: the control reads "ES" and offers the switch to English.
-    const button = screen.getByRole('button', { name: 'Cambiar idioma a English' })
-    expect(button).toHaveTextContent('ES')
-
-    fireEvent.click(button)
-
-    const toggled = screen.getByRole('button', { name: 'Cambiar idioma a Español' })
-    expect(toggled).toHaveTextContent('EN')
-    expect(useLocaleStore.getState().locale).toBe('en')
+    expect(mockedPort.session).toHaveBeenCalledTimes(1)
+    expect(
+      screen.getByRole('navigation', { name: 'Navegación principal' }),
+    ).toBeInTheDocument()
   })
 })

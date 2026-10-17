@@ -26,6 +26,10 @@ describe('localAuthPort', () => {
     await expect(localAuthPort.logout()).resolves.toBeUndefined()
   })
 
+  it('advertises that no auth system backs it', () => {
+    expect(localAuthPort.available).toBe(false)
+  })
+
   it('refuses to update a profile', async () => {
     await expect(localAuthPort.updateProfile({ displayName: 'X' })).rejects.toThrow(
       AuthUnavailableError,
@@ -58,6 +62,11 @@ describe('mockAuthPort (direct)', () => {
     expect(updated.displayName).toBe('Ana G.')
     const session = await mockAuthPort.session()
     expect(session?.displayName).toBe('Ana G.')
+  })
+
+  it('advertises that an auth system backs it', async () => {
+    const { mockAuthPort } = await import('@/shared/api/authPort')
+    expect(mockAuthPort.available).toBe(true)
   })
 })
 

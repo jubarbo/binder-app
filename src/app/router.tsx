@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { createHashRouter } from 'react-router-dom'
 import BinderPage from '@/features/binder/components/BinderPage'
+import RequireSession from '@/features/auth/components/RequireSession'
 import { AppLayout } from '@/app/layout'
 
 // BinderPage stays eager: it is the index route and its deps (motion,
@@ -25,22 +26,29 @@ export const router = createHashRouter([
     path: '/',
     element: <AppLayout />,
     children: [
-      { index: true, element: <BinderPage /> },
+      // The collection routes sit behind the session guard (enforced only
+      // when an auth system backs the app); auth routes stay public.
       {
-        path: 'card/:entryId',
-        element: (
-          <Suspense fallback={routeFallback}>
-            <lazyRoutes.cardDetail />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'wants',
-        element: (
-          <Suspense fallback={routeFallback}>
-            <lazyRoutes.wants />
-          </Suspense>
-        ),
+        element: <RequireSession />,
+        children: [
+          { index: true, element: <BinderPage /> },
+          {
+            path: 'card/:entryId',
+            element: (
+              <Suspense fallback={routeFallback}>
+                <lazyRoutes.cardDetail />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'wants',
+            element: (
+              <Suspense fallback={routeFallback}>
+                <lazyRoutes.wants />
+              </Suspense>
+            ),
+          },
+        ],
       },
       {
         path: 'login',

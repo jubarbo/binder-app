@@ -29,6 +29,13 @@ export class AuthUnavailableError extends Error {
  * consumers; consumers go through the `authPort` binding only.
  */
 export interface AuthPort {
+  /**
+   * Whether an auth system actually backs this port (`false` for the honest
+   * local port, `true` for the mock and any future API adapter). The route
+   * guard asks this before enforcing a session, so a local-only install keeps
+   * every route open — there is no session to require without a backend.
+   */
+  available: boolean
   /** The current session, or `null` when signed out. */
   session(signal?: AbortSignal): Promise<User | null>
   login(email: string, password: string, signal?: AbortSignal): Promise<User>
@@ -53,6 +60,7 @@ export interface AuthPort {
  * fabricate a user, so a reload never appears to "lose" a fake login.
  */
 export const localAuthPort: AuthPort = {
+  available: false,
   session: async () => null,
   login: async () => {
     throw new AuthUnavailableError()
@@ -78,6 +86,7 @@ export const mockAuthPort: AuthPort = (() => {
   let current: User | null = null
   let nextId = 0
   return {
+    available: true,
     session: async () => current,
     login: async (email) => {
       current = {
