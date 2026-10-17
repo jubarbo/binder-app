@@ -13,6 +13,7 @@ const lazyRoutes = {
   wants: lazy(() => import('@/features/wants/components/WantsPage')),
   login: lazy(() => import('@/features/auth/components/LoginPage')),
   register: lazy(() => import('@/features/auth/components/RegisterPage')),
+  profile: lazy(() => import('@/features/auth/components/ProfilePage')),
 }
 
 const routeFallback = (
@@ -45,6 +46,14 @@ export const router = createHashRouter([
             element: (
               <Suspense fallback={routeFallback}>
                 <lazyRoutes.wants />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'profile',
+            element: (
+              <Suspense fallback={routeFallback}>
+                <lazyRoutes.profile />
               </Suspense>
             ),
           },
