@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import CardFlightOverlay from '@/features/binder/components/CardFlightOverlay'
+import { useSessionStore } from '@/features/auth/state/sessionStore'
 import {
   LOCALE_LABELS,
   SUPPORTED_LOCALES,
@@ -13,6 +14,13 @@ import {
 export function AppLayout() {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  const bootstrap = useSessionStore((state) => state.bootstrap)
+
+  // One session read per app load; the guard and the menu read the result.
+  useEffect(() => {
+    void bootstrap()
+  }, [bootstrap])
 
   const locale = useLocaleStore((state) => state.locale)
   const setLocale = useLocaleStore((state) => state.setLocale)
