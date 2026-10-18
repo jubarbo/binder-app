@@ -1,8 +1,8 @@
-# Checklist de QA manual — Etapa 2 (identidad + login)
+# Checklist de QA manual — plataforma de trading frontend (etapas 1–3)
 
-Propósito: verificación manual del trabajo de la Etapa 2 (`odd/tasks/trading-identity.es.md`, tareas T1–T7) y del toggle para intercambio de la Etapa 1.
-Cuándo: correr las secciones A → B → C antes de mergear a `dev`; la sección D después del deploy a producción; E es pulido opcional.
-Por qué manual: la suite automatizada (235 tests) cubre la lógica; esta checklist apunta a lo que jsdom no ve — CSS real, persistencia real de `localStorage`, el guard de rutas corriendo contra el binding REAL del puerto (los tests lo mockean), y el deploy real.
+Propósito: verificación manual del trabajo de la Etapa 2 (`odd/tasks/trading-identity.es.md`, tareas T1–T7), del toggle para intercambio de la Etapa 1 y de la propuesta de trade de la Etapa 3 (`odd/tasks/trade-proposal.es.md`, tareas T1–T3).
+Cuándo: correr las secciones A → B → C → F antes de mergear a `dev`; la sección D después del deploy a producción; E es pulido opcional.
+Por qué manual: la suite automatizada (269 tests) cubre la lógica; esta checklist apunta a lo que jsdom no ve — CSS real, persistencia real de `localStorage`, el guard de rutas corriendo contra el binding REAL del puerto (los tests lo mockean), y el deploy real.
 
 ## A. Modo local — la realidad de producción de hoy (P0)
 
@@ -39,10 +39,23 @@ Corré `VITE_MOCK_AUTH=1 npm run dev` (→ `mockAuthPort`, el guard está ACTIVO
 
 - [ ] `https://binder.mantisuy.com/` — el binder local-first funciona igual que siempre (guard inactivo: sin backend las rutas quedan abiertas).
 - [ ] `#/login` carga; al enviar muestra "El backend no está conectado todavía…" — correcto hasta que exista `binder-api`.
-- [ ] `#/cualquier-ruta` — la página404 amigable.
+- [ ] `#/cualquier-ruta` — la página 404 amigable.
 - [ ] Si algo se ve viejo: hard refresh (Ctrl+Shift+R) — el `index.html` se cachea unos 10 minutos.
 
 ## E. Repaso visual (P2)
 
-- [ ] Modo oscuro (sigue al SO): login, perfil y404 con contraste legible.
+- [ ] Modo oscuro (sigue al SO): login, perfil y 404 con contraste legible.
 - [ ] Recorrer los formularios con Tab muestra el anillo de foco visible.
+
+## F. Superficie de trading — Etapa 3 (P0, pre-merge)
+
+Corré `VITE_MOCK_WISHERS=1 npm run dev` (→ listas mock de deseantes/ofrecedores más el puerto de trades en memoria — el mismo flag que previsualiza toda la superficie de trading).
+
+- [ ] Marcá una carta "Para intercambio" y abrí su detalle: "La buscan" lista los deseantes mock; cada fila muestra avatar, conteo de copias, nombre y un botón "Proponer trade".
+- [ ] Clickeá "Proponer trade": el panel "Proponer trade a <nombre>" se abre sobre un scrim con esa carta premarcada en "Yo doy" y mis deseos listados en "Pido".
+- [ ] Con alguna columna sin selección, "Proponer" sigue deshabilitado; con una carta y un deseo elegidos se habilita.
+- [ ] Enviar → aparece el toast "Propuesta enviada a <nombre>" y el panel se cierra.
+- [ ] Escape y clic en el scrim cierran el panel sin enviar nada.
+- [ ] En `#/wants`, una fila de deseo con dueños muestra "N la tienen" con caras chicas de avatar y SIN nombres visibles; clickear una cara abre el panel con ese dueño como contraparte y la carta de la fila premarcada en "Pido".
+- [ ] Abrí desde una superficie, cerrá, y abrí desde la otra: los prellenados nunca se arrastran — cada columna muestra solo su propia preselección.
+- [ ] Vuelta a `npm run dev` sin flags: "La buscan" informa "Nadie la desea todavía.", "La tienen" sigue ausente y no aparece ningún botón de proponer — el modo local sigue siendo honesto.

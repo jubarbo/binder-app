@@ -1,8 +1,8 @@
-# Manual QA checklist — Stage 2 (identity + login)
+# Manual QA checklist — trading platform frontend (stages 1–3)
 
-Purpose: manual verification for the Stage 2 work (`odd/tasks/trading-identity.md`, tasks T1–T7) and the Stage 1 for-trade toggle.
-When: run sections A → B → C before merging to `dev`; section D after the production deploy; E is optional polish.
-Why manual at all: the automated suite (235 tests) covers the logic; this checklist targets what jsdom cannot see — real CSS, real `localStorage` persistence, the route guard running against the REAL port binding (tests mock it), and the real deploy.
+Purpose: manual verification for the Stage 2 work (`odd/tasks/trading-identity.md`, tasks T1–T7), the Stage 1 for-trade toggle, and the Stage 3 trade proposal (`odd/tasks/trade-proposal.md`, tasks T1–T3).
+When: run sections A → B → C → F before merging to `dev`; section D after the production deploy; E is optional polish.
+Why manual at all: the automated suite (269 tests) covers the logic; this checklist targets what jsdom cannot see — real CSS, real `localStorage` persistence, the route guard running against the REAL port binding (tests mock it), and the real deploy.
 
 ## A. Local mode — production reality today (P0)
 
@@ -46,3 +46,16 @@ Run `VITE_MOCK_AUTH=1 npm run dev` (→ `mockAuthPort`, the guard is ACTIVE).
 
 - [ ] Dark mode (follows the OS): login, profile and 404 keep readable contrast.
 - [ ] Tab traversal through the forms shows a visible focus ring.
+
+## F. Trading surface — Stage 3 (P0, pre-merge)
+
+Run `VITE_MOCK_WISHERS=1 npm run dev` (→ mock wishers/offerers lists plus the in-memory trades port — the one flag that previews the whole trading surface).
+
+- [ ] Flag a card "Para intercambio" and open its detail: "La buscan" lists the mock wishers; each row shows avatar, copy count, name and a "Proponer trade" button.
+- [ ] Click "Proponer trade": the panel "Proponer trade a <name>" opens over a scrim with that card pre-checked in "Yo doy" and my wants listed in "Pido".
+- [ ] With either column without a selection, "Proponer" stays disabled; with one card and one want selected it enables.
+- [ ] Submit → the toast "Propuesta enviada a <name>" appears and the panel closes.
+- [ ] Escape and clicking the scrim both close the panel without sending anything.
+- [ ] In `#/wants`, a want row with owners shows "N la tienen" with small avatar faces and NO visible names; clicking a face opens the panel with that holder as counterpart and the row's card pre-checked in "Pido".
+- [ ] Open from one surface, close, then open from the other: prefills never carry over — each column shows only its own preselection.
+- [ ] Back to plain `npm run dev` (no flags): "La buscan" reports "Nadie la desea todavía.", "La tienen" stays absent, and no propose button appears anywhere — local mode stays honest.
