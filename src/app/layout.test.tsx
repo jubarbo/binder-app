@@ -11,6 +11,10 @@ vi.mock('@/features/binder/components/CardFlightOverlay', () => ({
   default: () => null,
 }))
 
+vi.mock('@/features/trades/components/TradeProposalOverlay', () => ({
+  default: () => <div data-testid="trade-proposal-overlay" />,
+}))
+
 // Only the binding is replaced: AppLayout bootstraps the session on mount,
 // and the session-bootstrap test below needs to observe that call. The
 // CardFlightOverlay mock above keeps the layout focused, as before.
@@ -48,6 +52,18 @@ describe('AppLayout notifications', () => {
     expect(text.closest('.Toastify__toast')?.className).toMatch(
       /Toastify__toast-theme--(light|dark|colored)\b/,
     )
+  })
+})
+
+describe('AppLayout trade proposals', () => {
+  it('mounts the trade proposal overlay once for the whole app', () => {
+    render(
+      <MemoryRouter>
+        <AppLayout />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getAllByTestId('trade-proposal-overlay')).toHaveLength(1)
   })
 })
 

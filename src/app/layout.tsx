@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { toast, ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import CardFlightOverlay from '@/features/binder/components/CardFlightOverlay'
+import TradeProposalOverlay from '@/features/trades/components/TradeProposalOverlay'
 import { useSessionStore } from '@/features/auth/state/sessionStore'
 import {
   LOCALE_LABELS,
@@ -160,6 +161,7 @@ export function AppLayout() {
         <Outlet />
       </main>
       <CardFlightOverlay />
+      <TradeProposalOverlay />
       {/* App-wide notifications. `role="status"` keeps them polite for screen
           readers; `theme="auto"` follows the same OS preference as the app. */}
       {/* react-toastify v11 has no "auto" theme (the type accepts any string,

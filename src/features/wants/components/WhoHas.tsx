@@ -2,6 +2,7 @@ import { useId } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { offersPort } from '@/shared/api/offersPort'
 import type { Offerer } from '@/shared/api/offersPort'
+import { useTradeProposalStore } from '@/features/trades/state/tradeProposalStore'
 
 interface WhoHasProps {
   /** The logical card identity: offers are matched at the oracle level. */
@@ -10,34 +11,38 @@ interface WhoHasProps {
 
 /**
  * Compact avatar stack shown inline in a want row. Unlike the detail's
- * "La buscan" section, this projects no names and no per-user badge — it only
- * surfaces that the card is available and from how many users, so the list row
- * stays readable. The count text carries the meaning; the faces are decorative.
+ * "La buscan" section, this projects no visible names: the count text carries
+ * the meaning and each face is a button that opens the trade proposal panel,
+ * carrying the holder's name for assistive technology only.
  */
-function OwnerStack({ offerers }: { offerers: Offerer[] }) {
+function OwnerStack({
+  offerers,
+  onProposeTrade,
+}: {
+  offerers: Offerer[]
+  onProposeTrade: (offerer: Offerer) => void
+}) {
   return (
     <span className="want-owners" title={offerers.map((o) => o.displayName).join(', ')}>
-      <span className="want-owners-faces" aria-hidden="true">
-        {offerers.map((owner) =>
-          owner.avatarUrl ? (
-            <img
-              key={owner.id}
-              className="want-owners-avatar"
-              src={owner.avatarUrl}
-              alt=""
-              title={owner.displayName}
-              draggable={false}
-            />
-          ) : (
-            <span
-              key={owner.id}
-              className="want-owners-avatar want-owners-avatar--initial"
-              title={owner.displayName}
-            >
-              {owner.displayName.charAt(0).toUpperCase()}
-            </span>
-          ),
-        )}
+      <span className="want-owners-faces">
+        {offerers.map((owner) => (
+          <button
+            key={owner.id}
+            type="button"
+            className={`want-owners-avatar${
+              owner.avatarUrl ? '' : ' want-owners-avatar--initial'
+            } want-owners-face`}
+            title={owner.displayName}
+            aria-label={owner.displayName}
+            onClick={() => onProposeTrade(owner)}
+          >
+            {owner.avatarUrl ? (
+              <img src={owner.avatarUrl} alt="" draggable={false} />
+            ) : (
+              owner.displayName.charAt(0).toUpperCase()
+            )}
+          </button>
+        ))}
       </span>
       <span className="want-owners-count">
         {offerers.length === 1 ? '1 la tiene' : `${offerers.length} la tienen`}
@@ -50,10 +55,11 @@ function OwnerStack({ offerers }: { offerers: Offerer[] }) {
  * The compact "La tienen" indicator for a want row, backed by the offers port.
  * With the local implementation it reports nobody and projects nothing, keeping
  * the row clean; the real API plugs in later without touching this component or
- * the list.
+ * the list. Each face is the trade proposal entry point for that holder.
  */
 export default function WhoHas({ oracleId }: WhoHasProps) {
   const countId = useId()
+  const openTradeProposal = useTradeProposalStore((state) => state.openTradeProposal)
   const { data, isPending } = useQuery({
     queryKey: ['offers', oracleId],
     queryFn: ({ signal }) => offersPort.offersOf(oracleId, signal),
@@ -67,7 +73,15 @@ export default function WhoHas({ oracleId }: WhoHasProps) {
 
   return (
     <span className="want-item-owners" aria-labelledby={countId}>
-      <OwnerStack offerers={data} />
+      <OwnerStack
+        offerers={data}
+        onProposeTrade={(offerer) =>
+          openTradeProposal({
+            counterpart: { id: offerer.id, displayName: offerer.displayName },
+            prefillAskOracleId: oracleId,
+          })
+        }
+      />
       <span id={countId} className="sr-only">
         La tienen: {data.map((o) => o.displayName).join(', ')}
       </span>

@@ -2,10 +2,13 @@ import { useId } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { wishersPort } from '@/shared/api/wishersPort'
 import type { Wisher } from '@/shared/api/wishersPort'
+import { useTradeProposalStore } from '@/features/trades/state/tradeProposalStore'
 
 interface WhoWantsProps {
   /** The logical card identity: wants are matched at the oracle level. */
   oracleId: string
+  /** The binder entry on display: the give prefill of its wishers' proposals. */
+  entryId: string
 }
 
 /** Avatar: the user's photo when they have one, their initial otherwise. The
@@ -33,8 +36,9 @@ function WisherAvatar({ wisher }: { wisher: Wisher }) {
  * the local implementation it reports nobody; the real API plugs in later
  * without touching this component or the detail.
  */
-export default function WhoWants({ oracleId }: WhoWantsProps) {
+export default function WhoWants({ oracleId, entryId }: WhoWantsProps) {
   const titleId = useId()
+  const openTradeProposal = useTradeProposalStore((state) => state.openTradeProposal)
   const { data, isPending } = useQuery({
     queryKey: ['wishers', oracleId],
     queryFn: ({ signal }) => wishersPort.wishersOf(oracleId, signal),
@@ -71,6 +75,18 @@ export default function WhoWants({ oracleId }: WhoWantsProps) {
                 </span>
               </span>
               <span className="wanters-name">{wisher.displayName}</span>
+              <button
+                type="button"
+                className="btn btn--ghost wanters-propose"
+                onClick={() =>
+                  openTradeProposal({
+                    counterpart: { id: wisher.id, displayName: wisher.displayName },
+                    prefillGiveEntryId: entryId,
+                  })
+                }
+              >
+                Proponer trade
+              </button>
             </li>
           ))}
         </ul>

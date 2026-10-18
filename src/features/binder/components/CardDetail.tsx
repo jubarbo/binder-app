@@ -302,7 +302,7 @@ export default function CardDetail({
           Editar
         </button>
       )}
-      {printing && <WhoWants oracleId={printing.oracleId} />}
+      {printing && <WhoWants oracleId={printing.oracleId} entryId={entry.id} />}
     </div>
   )
 }
