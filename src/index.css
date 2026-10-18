@@ -2100,6 +2100,100 @@ svg {
   justify-content: center;
 }
 
+/* Trade proposal overlay: the confirm dialog's scrim and panel base, widened
+   so the give/ask columns sit side by side (they stack on narrow screens). */
+.trade-propose-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: min(92vw, 44rem);
+  max-height: 86vh;
+  overflow-y: auto;
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  cursor: default;
+}
+
+.trade-propose-title {
+  margin: 0;
+  font-size: var(--text-md, 1.05rem);
+}
+
+.trade-propose-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+@media (max-width: 640px) {
+  .trade-propose-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.trade-propose-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.trade-propose-col-title {
+  margin: 0;
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.trade-propose-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1, 0.25rem);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: var(--text-sm);
+}
+
+.trade-propose-row:hover {
+  border-color: var(--color-border);
+}
+
+.trade-propose-thumb {
+  width: 2.4rem;
+  aspect-ratio: 63 / 88;
+  object-fit: cover;
+  border-radius: 4px;
+  background: var(--color-bg, transparent);
+  flex-shrink: 0;
+}
+
+.trade-propose-thumb--empty {
+  display: block;
+  border: 1px dashed var(--color-border);
+}
+
+.trade-propose-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trade-propose-error {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-danger, var(--color-border));
+  border-radius: var(--radius-md);
+  color: var(--color-danger, inherit);
+  font-size: var(--text-sm);
+}
+
 .wants-empty {
   margin-top: var(--space-4);
   padding: var(--space-4);
