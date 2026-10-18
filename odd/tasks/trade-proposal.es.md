@@ -13,7 +13,7 @@ S3 — Panel de propuesta inline ("te ofrezco X por Y"). Cita del roadmap: "un p
 ## Tasks
 
 T1 — S2 · ruta inline · hecha (commit f32e330; 6 tests en `tradesPort.test.ts`) — Seam de TradesPort: tipos, puerto local honesto, mock de dev, enlace, más tests del puerto.
-T2 — S3 · ruta inline · pendiente — TradeProposalPanel: dos columnas, reglas de prellenado, agregar/quitar, gating de envío, más tests.
+T2 — S3 · ruta inline · hecha (commit 1e06378; 8 tests en `TradeProposalPanel.test.tsx`) — TradeProposalPanel: dos columnas, reglas de prellenado, agregar/quitar, gating de envío, más tests.
 T3 — S1 · ruta inline · pendiente — Puntos de entrada: acción por wisher en `WhoWants`, botones de cara de offerer en `WhoHas`, enlazado del panel, más tests.
 
 ## Log

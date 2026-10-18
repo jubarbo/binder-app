@@ -13,7 +13,7 @@ S3 — Inline proposal panel ("I offer X for Y"). Roadmap quote: "a minimal "I o
 ## Tasks
 
 T1 — S2 · route inline · done (commit f32e330; 6 tests in `tradesPort.test.ts`) — TradesPort seam: types, honest local port, dev mock, binding, plus port tests.
-T2 — S3 · route inline · pending — TradeProposalPanel: two columns, pre-fill rules, add/remove, submit gating, plus tests.
+T2 — S3 · route inline · done (commit 1e06378; 8 tests in `TradeProposalPanel.test.tsx`) — TradeProposalPanel: two columns, pre-fill rules, add/remove, submit gating, plus tests.
 T3 — S1 · route inline · pending — Entry points: per-wisher action in `WhoWants`, offerer-face buttons in `WhoHas`, panel wiring, plus tests.
 
 ## Log
