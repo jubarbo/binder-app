@@ -14,9 +14,10 @@ S3 — Inline proposal panel ("I offer X for Y"). Roadmap quote: "a minimal "I o
 
 T1 — S2 · route inline · done (commit f32e330; 6 tests in `tradesPort.test.ts`) — TradesPort seam: types, honest local port, dev mock, binding, plus port tests.
 T2 — S3 · route inline · done (commit 1e06378; 8 tests in `TradeProposalPanel.test.tsx`) — TradeProposalPanel: two columns, pre-fill rules, add/remove, submit gating, plus tests.
-T3 — S1 · route inline · pending — Entry points: per-wisher action in `WhoWants`, offerer-face buttons in `WhoHas`, panel wiring, plus tests.
+T3 — S1 · route inline · done (commit 4d0bd36; 11 tests across `tradeProposalStore.test.ts`, `TradeProposalOverlay.test.tsx`, `WhoWants.test.tsx`, `WhoHas.test.tsx` and `layout.test.tsx`) — Entry points: per-wisher action in `WhoWants`, offerer-face buttons in `WhoHas`, panel store and overlay, plus tests.
 
 ## Log
 
 L1 (2026-10-17): user asked to continue with the roadmap ("sigamos"); Stage 3 began with the roadmap's open product decision. The user chose the composition UX verbatim: "Selección inline (Recomendado)" — a panel "ofrezco X por Y" opened from a match, two columns pre-filled with the match's card and expandable; the cart is deferred because its value depends on the Stage 5 public binder.
 L2 (2026-10-17): S3 correction while designing T2 — the ask column's option set is my wants registry, not "the matched card" generically: at the `WhoWants` entry point the matched card is my own card (the one they desire), so an ask could never be prefilled from match data alone. Both sides now compose from my own registries and the counterpart contributes identity only; pre-fill rules per entry point are unchanged. Each selected line carries quantity 1 in this stage.
+L3 (2026-10-18): T3 done (commit 4d0bd36, 11 new tests): `WhoWants` rows gained the per-wisher "Proponer trade" button with the matched entry as the give prefill, `WhoHas` faces became buttons carrying the displayName as accessible name (the compact no-visible-names contract is pinned), and a single `tradeProposalStore` request plus `TradeProposalOverlay` in `AppLayout` host the panel app-wide. Stage 3 (S1-S3, T1-T3) is complete; push/merge still follows the user's manual QA and GitHub flow.

@@ -6,7 +6,7 @@ Principio rector: cada etapa se construye contra **puertos con implementaciones 
 
 El backend `binder-api` tiene su propio plan por fases (`binder-api/docs/api-plan.md` §8). Aparece acá solo como **dependencia**, no se replanifica.
 
-Estado: etapas 1 y 2 entregadas en feature/trading-identity (2026-10-17); etapas 3–5 pendientes. Escrito: 2026-10-16.
+Estado: etapas 1–3 entregadas en feature/trading-identity (2026-10-18); etapas 4–5 pendientes. Escrito: 2026-10-16.
 
 ## Etapas y cadena de dependencias
 
@@ -78,3 +78,4 @@ Dependencia: backend real + usuarios. Es la única etapa que no se puede constru
 
 - L1 (2026-10-16): plan registrado desde la discusión en chat; el usuario eligió auth con cookie `httpOnly` (registrado en el plan de `binder-api`) y pidió comenzar por la Etapa 2.
 - L2 (2026-10-17): Etapa 1 entregada (toggle para intercambio, commit f97e47c) y la decisión de UX de composición de la Etapa 3 resuelta a selección bidireccional inline; la Etapa 3 pasa a `odd/tasks/trade-proposal.es.md`.
+- L3 (2026-10-18): Etapa 3 entregada (seam de TradesPort, panel de propuesta y puntos de entrada sobre los match; commits f32e330, 1e06378, 4d0bd36; detalle en `odd/tasks/trade-proposal.es.md`). Sigue la decisión abierta de la Etapa 4 (granularidad y estados del historial de trades).
