@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
-import { ToastContainer } from 'react-toastify'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import CardFlightOverlay from '@/features/binder/components/CardFlightOverlay'
 import { useSessionStore } from '@/features/auth/state/sessionStore'
@@ -16,6 +16,8 @@ export function AppLayout() {
   const menuRef = useRef<HTMLDivElement>(null)
 
   const bootstrap = useSessionStore((state) => state.bootstrap)
+  const signOut = useSessionStore((state) => state.signOut)
+  const navigate = useNavigate()
 
   // One session read per app load; the guard and the menu read the result.
   useEffect(() => {
@@ -47,6 +49,17 @@ export function AppLayout() {
   }, [userMenuOpen])
 
   const closeUserMenu = () => setUserMenuOpen(false)
+
+  /**
+   * Sign out: the session store clears the user first (the UI never stays
+   * signed in), then asks the port to drop the cookie. A failing port call is
+   * reported but the user is already out locally.
+   */
+  const handleSignOut = () => {
+    closeUserMenu()
+    signOut().catch(() => toast.error('No se pudo cerrar la sesión en el servidor.'))
+    navigate('/login', { replace: true })
+  }
 
   return (
     <div className="app-shell">
@@ -116,7 +129,7 @@ export function AppLayout() {
                   type="button"
                   role="menuitem"
                   className="app-user-menu-item"
-                  onClick={closeUserMenu}
+                  onClick={handleSignOut}
                 >
                   Cerrar sesión
                 </button>

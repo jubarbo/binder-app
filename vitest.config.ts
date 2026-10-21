@@ -16,5 +16,9 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
+    // Tests must not depend on a developer's .env.local: with VITE_API_URL set
+    // every port would bind to binder-api. Tests that need API mode opt in
+    // explicitly (vi.stubEnv / mocking apiConfigured).
+    env: { VITE_API_URL: '' },
   },
 })
