@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { AppLayout } from '@/app/layout'
+import { useSessionStore } from '@/features/auth/state/sessionStore'
 import { authPort } from '@/shared/api/authPort'
 import { useLocaleStore } from '@/shared/locale/localeStore'
 
@@ -93,5 +94,32 @@ describe('AppLayout session bootstrap', () => {
     expect(
       screen.getByRole('navigation', { name: 'Navegación principal' }),
     ).toBeInTheDocument()
+  })
+})
+
+describe('AppLayout sign-out', () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+    mockedPort.session.mockResolvedValue({ id: 'u1', email: 'ana@example.com', displayName: 'Ana' })
+    mockedPort.logout.mockResolvedValue(undefined)
+  })
+
+  it('signs out through the session store and lands on the login screen', async () => {
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route path="/" element={<AppLayout />} />
+          <Route path="/login" element={<div>login-probe</div>} />
+        </Routes>
+      </MemoryRouter>,
+    )
+    // Let the mount-time session bootstrap settle, so it cannot sign Ana back in.
+    await waitFor(() => expect(useSessionStore.getState().user).not.toBeNull())
+    fireEvent.click(screen.getByRole('button', { name: 'Menú' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Cerrar sesión' }))
+
+    expect(await screen.findByText('login-probe')).toBeInTheDocument()
+    expect(mockedPort.logout).toHaveBeenCalledOnce()
+    expect(useSessionStore.getState().user).toBeNull()
   })
 })
