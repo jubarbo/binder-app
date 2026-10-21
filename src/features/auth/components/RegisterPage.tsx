@@ -1,7 +1,8 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate } from 'react-router-dom'
-import { authPort, AuthUnavailableError } from '@/shared/api/authPort'
+import { authPort } from '@/shared/api/authPort'
+import { authErrorMessage } from '@/features/auth/authErrors'
 import { useSessionStore } from '@/features/auth/state/sessionStore'
 import {
   registerSchema,
@@ -33,13 +34,8 @@ export default function RegisterPage() {
       navigate('/')
     } catch (error) {
       // Same honesty contract as the login screen: no backend, no invented
-      // credentials error.
-      setError('root', {
-        message:
-          error instanceof AuthUnavailableError
-            ? 'El backend no está conectado todavía: no se puede crear una cuenta sin servidor.'
-            : 'No se pudo crear la cuenta. Intenta de nuevo.',
-      })
+      // credentials error; API failures map to specific messages.
+      setError('root', { message: authErrorMessage(error, 'register') })
     }
   }
 

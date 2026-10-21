@@ -1,3 +1,6 @@
+import { apiConfigured } from '@/shared/api/apiClient'
+import { apiAuthPort } from '@/shared/api/apiAuthPort'
+
 /**
  * The authenticated user's identity. Everything else in the app keys off this:
  * a binder entry belongs to a `User`, and matching resolves other users by it.
@@ -112,11 +115,13 @@ export const mockAuthPort: AuthPort = (() => {
 })()
 
 /**
- * Active auth adapter. Consumers go through this binding only. The mock is
+ * Active auth adapter. Consumers go through this binding only. binder-api wins
+ * whenever `VITE_API_URL` is configured. Otherwise the mock is
  * gated behind both DEV and an explicit opt-in flag: a production build always
  * resolves to the honest local port regardless of the flag.
  */
-export const authPort: AuthPort =
-  import.meta.env.DEV && import.meta.env.VITE_MOCK_AUTH === '1'
+export const authPort: AuthPort = apiConfigured
+  ? apiAuthPort
+  : import.meta.env.DEV && import.meta.env.VITE_MOCK_AUTH === '1'
     ? mockAuthPort
     : localAuthPort
