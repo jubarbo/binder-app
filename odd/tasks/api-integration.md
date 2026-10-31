@@ -17,10 +17,10 @@ Branch: `feature/api-integration` (from `feature/trading-identity`). Delivery: a
 
 | ID | Specs | Route | Status | Commit |
 | --- | --- | --- | --- | --- |
-| T1 | S1, S2 | inline | pending | |
-| T2 | S1, S3, S4 | inline | pending | |
-| T3 | S5 | inline | pending | |
-| T4 | S6 | inline | pending | |
+| T1 | S1, S2 | inline | done (RED->GREEN) | 5fd2c29 |
+| T2 | S1, S3, S4 | inline | done (RED->GREEN) | 10c0348 |
+| T3 | S5 | inline | done (RED->GREEN) | ab8fa31 |
+| T4 | S6 | inline | done (smoke: serve 200, VITE_API_URL inlined) | 65476e1 |
 
 Route evidence: one parent session, units share `apiClient`; no Writer trigger (no parallel disjoint units, context under backstop).
 
@@ -29,3 +29,6 @@ Route evidence: one parent session, units share `apiClient`; no Writer trigger (
 - L1 (2026-10-31, user): "ah bien, sí, haz los cambios necesarios en los repos para desplegar, luego dame una guía resumida para hacerlo, ademas de cuando se corre por primera vez el script"
 - L2 (2026-10-31, user answer): "Servidor al iniciar sesión (Recommended)".
 - L3: binder-api side done on `feat/deploy-railway` (commit 8cd22e1): railway.toml, `npm start` without `.env`, `HOST` `::` in production, catalog sync on first boot.
+- L4: T1-T4 done. Suite 306/306, `tsc -b` clean, oxlint only the pre-existing WantEntryForm warning. The LoginPage 401 / RegisterPage 409 tests were written after the message change (no observed RED for those two).
+- L5: Conflict noted, not changed: trading-identity L5 requires a session on collection routes whenever auth is available, so with `VITE_API_URL` there is no signed-out guest mode; S5's "Sin sesión sigue funcionando en local" holds only for builds without the API. Guest data saved before deploy is offered for import on first sign-in.
+- L6: Router is `createHashRouter`, so static hosting needs no SPA rewrite.
