@@ -2385,3 +2385,27 @@ button.want-owners-face {
   opacity: 0.7;
   cursor: default;
 }
+
+/* Guest-binder import offer shown after sign-in (binderSync). */
+.import-offer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-accent);
+  border-radius: 8px;
+  background: var(--color-accent-soft);
+  color: var(--color-text);
+}
+
+.import-offer p {
+  margin: 0;
+}
+
+.import-offer-actions {
+  display: flex;
+  gap: 0.5rem;
+}

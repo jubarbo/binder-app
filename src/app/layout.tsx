@@ -5,6 +5,8 @@ import 'react-toastify/dist/ReactToastify.css'
 import CardFlightOverlay from '@/features/binder/components/CardFlightOverlay'
 import TradeProposalOverlay from '@/features/trades/components/TradeProposalOverlay'
 import { useSessionStore } from '@/features/auth/state/sessionStore'
+import ImportLocalOffer from '@/features/binder/components/ImportLocalOffer'
+import { startBinderSync } from '@/features/binder/state/binderSync'
 import {
   LOCALE_LABELS,
   SUPPORTED_LOCALES,
@@ -24,6 +26,9 @@ export function AppLayout() {
   useEffect(() => {
     void bootstrap()
   }, [bootstrap])
+
+  // Signed in, the binder is the user's server copy; signed out, the guest copy.
+  useEffect(() => startBinderSync(), [])
 
   const locale = useLocaleStore((state) => state.locale)
   const setLocale = useLocaleStore((state) => state.setLocale)
@@ -158,6 +163,7 @@ export function AppLayout() {
         </div>
       </header>
       <main className="app-main">
+        <ImportLocalOffer />
         <Outlet />
       </main>
       <CardFlightOverlay />
