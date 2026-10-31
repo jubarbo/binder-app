@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
+import { ApiError } from '@/shared/api/apiClient'
 import RegisterPage from '@/features/auth/components/RegisterPage'
 import { useSessionStore } from '@/features/auth/state/sessionStore'
 import { authPort, AuthUnavailableError, type User } from '@/shared/api/authPort'
@@ -79,6 +80,16 @@ describe('RegisterPage', () => {
     )
     expect(useSessionStore.getState().user).toBeNull()
     expect(screen.queryByText('binder-probe')).not.toBeInTheDocument()
+  })
+
+  it('says the email is taken when the API answers 409', async () => {
+    mockedPort.register.mockRejectedValueOnce(new ApiError('Email already registered', { status: 409 }))
+    renderRegister()
+    fillForm()
+    fireEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Ya existe una cuenta con ese email.')
+    expect(useSessionStore.getState().user).toBeNull()
   })
 
   it('links back to the login screen', async () => {

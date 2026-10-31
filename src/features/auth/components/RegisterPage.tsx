@@ -1,3 +1,4 @@
+import { ApiError } from '@/shared/api/apiClient'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate } from 'react-router-dom'
@@ -38,7 +39,11 @@ export default function RegisterPage() {
         message:
           error instanceof AuthUnavailableError
             ? 'El backend no está conectado todavía: no se puede crear una cuenta sin servidor.'
-            : 'No se pudo crear la cuenta. Intenta de nuevo.',
+            : error instanceof ApiError && error.status === 409
+              ? 'Ya existe una cuenta con ese email.'
+              : error instanceof ApiError && error.status === 429
+                ? 'Demasiados intentos. Espera un minuto y vuelve a probar.'
+                : 'No se pudo crear la cuenta. Intenta de nuevo.',
       })
     }
   }

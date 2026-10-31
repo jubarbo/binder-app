@@ -1,3 +1,5 @@
+import { ApiError, apiConfigured, apiRequest } from '@/shared/api/apiClient'
+
 /**
  * The authenticated user's identity. Everything else in the app keys off this:
  * a binder entry belongs to a `User`, and matching resolves other users by it.
@@ -112,11 +114,42 @@ export const mockAuthPort: AuthPort = (() => {
 })()
 
 /**
- * Active auth adapter. Consumers go through this binding only. The mock is
- * gated behind both DEV and an explicit opt-in flag: a production build always
- * resolves to the honest local port regardless of the flag.
+ * binder-api adapter: the session is an httpOnly cookie the browser sends on
+ * every request, so this port never sees or stores a token. A 401 from
+ * `GET /users/me` simply means "signed out".
+ */
+export const apiAuthPort: AuthPort = {
+  available: true,
+  session: async (signal) => {
+    try {
+      return await apiRequest<User>('/users/me', { signal })
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) return null
+      throw error
+    }
+  },
+  login: (email, password, signal) =>
+    apiRequest<User>('/auth/login', { method: 'POST', body: { email, password }, signal }),
+  register: (email, password, displayName, signal) =>
+    apiRequest<User>('/auth/register', {
+      method: 'POST',
+      body: { email, password, displayName },
+      signal,
+    }),
+  logout: (signal) => apiRequest<void>('/auth/logout', { method: 'POST', signal }),
+  updateProfile: (patch, signal) =>
+    apiRequest<User>('/users/me', { method: 'PATCH', body: patch, signal }),
+}
+
+/**
+ * Active auth adapter. Consumers go through this binding only. The dev mock
+ * (DEV + VITE_MOCK_AUTH=1) wins in development; otherwise a build configured
+ * with VITE_API_URL talks to binder-api, and one without it keeps the honest
+ * local port.
  */
 export const authPort: AuthPort =
   import.meta.env.DEV && import.meta.env.VITE_MOCK_AUTH === '1'
     ? mockAuthPort
-    : localAuthPort
+    : apiConfigured
+      ? apiAuthPort
+      : localAuthPort
