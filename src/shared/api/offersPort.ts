@@ -1,3 +1,6 @@
+import { apiOffersPort } from '@/shared/api/apiCatalogPort'
+import { apiConfigured } from '@/shared/api/apiClient'
+
 /**
  * A user who has a card available for trade. Identity plus the shape of their
  * offer: how many for-trade copies they hold. Matching and ordering are the
@@ -63,9 +66,12 @@ export const mockOffersPort: OffersPort = {
 /**
  * Active offers adapter. Consumers go through this binding only. The mock is
  * gated behind both DEV and an explicit opt-in flag: a production build always
- * resolves to the honest empty port regardless of the flag.
+ * resolves to binder-api when VITE_API_URL is set, else to the honest empty
+ * port, regardless of the flag.
  */
 export const offersPort: OffersPort =
   import.meta.env.DEV && import.meta.env.VITE_MOCK_WISHERS === '1'
     ? mockOffersPort
-    : localOffersPort
+    : apiConfigured
+      ? apiOffersPort
+      : localOffersPort

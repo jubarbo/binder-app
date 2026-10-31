@@ -1,3 +1,6 @@
+import { apiWishersPort } from '@/shared/api/apiCatalogPort'
+import { apiConfigured } from '@/shared/api/apiClient'
+
 /**
  * A user who wants a card. Identity plus the shape of their want: how many
  * copies they seek. Matching and ordering are the backend's job, so this is
@@ -65,9 +68,12 @@ export const mockWishersPort: WishersPort = {
 /**
  * Active wishers adapter. Consumers go through this binding only. The mock is
  * gated behind both DEV and an explicit opt-in flag: a production build always
- * resolves to the honest empty port regardless of the flag.
+ * resolves to binder-api when VITE_API_URL is set, else to the honest empty
+ * port, regardless of the flag.
  */
 export const wishersPort: WishersPort =
   import.meta.env.DEV && import.meta.env.VITE_MOCK_WISHERS === '1'
     ? mockWishersPort
-    : localWishersPort
+    : apiConfigured
+      ? apiWishersPort
+      : localWishersPort
