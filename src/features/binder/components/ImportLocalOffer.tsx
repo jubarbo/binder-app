@@ -32,7 +32,7 @@ export default function ImportLocalOffer() {
       const report = await importLocalBinder()
       const imported = report.imported.entries + report.imported.wants
       const lost = report.skipped.filter(
-        (skip) => skip.reason !== 'already_imported' && skip.reason !== 'id_taken',
+        (skip) => skip.reason !== 'already_imported',
       ).length
       if (lost > 0) {
         toast.warning(

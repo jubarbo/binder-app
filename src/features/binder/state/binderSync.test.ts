@@ -156,6 +156,21 @@ describe('binder sync with a signed-in user', () => {
     expect(storedEntries()).toEqual([local])
   })
 
+  it('keeps the local copy when an id belongs to another account', async () => {
+    const port = fakePort({
+      importLocal: vi.fn().mockResolvedValue({
+        imported: { entries: 0, wants: 0 },
+        skipped: [{ kind: 'entry', id: local.id, reason: 'id_taken' }],
+      }),
+    })
+    stop = startBinderSync({ port, enabled: true })
+    await signIn()
+
+    await importLocalBinder(port)
+
+    expect(storedEntries()).toEqual([local])
+  })
+
   it('hides the offer for this session when dismissed', async () => {
     stop = startBinderSync({ port: fakePort(), enabled: true })
     await signIn()

@@ -16,8 +16,11 @@ export const useImportOfferStore = create<{ pending: BinderPersistedState | null
   pending: null,
 }))
 
-/** Skips that do not lose data: the item is already on the server. */
-const HARMLESS_SKIPS = new Set(['already_imported', 'id_taken'])
+/**
+ * Skips that do not lose data: the item is already in this account.
+ * `id_taken` is NOT one of them: the id belongs to another account.
+ */
+const HARMLESS_SKIPS = new Set(['already_imported'])
 
 let activePort: BinderPort = apiBinderPort
 let generation = 0
@@ -95,7 +98,7 @@ export function startBinderSync(
 /**
  * Upload the guest binder to the signed-in account, then show the server copy.
  * The local copy is removed only when nothing was lost (every item imported or
- * already on the server), so a failed or partial import never deletes data.
+ * already in this account), so a failed or partial import never deletes data.
  */
 export async function importLocalBinder(port: BinderPort = activePort): Promise<ImportReport> {
   const pending = useImportOfferStore.getState().pending
