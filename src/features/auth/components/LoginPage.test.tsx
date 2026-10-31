@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
+import { ApiError } from '@/shared/api/apiClient'
 import LoginPage from '@/features/auth/components/LoginPage'
 import { useSessionStore } from '@/features/auth/state/sessionStore'
 import { authPort, AuthUnavailableError, type User } from '@/shared/api/authPort'
@@ -74,6 +75,16 @@ describe('LoginPage', () => {
     )
     expect(useSessionStore.getState().user).toBeNull()
     expect(screen.queryByText('binder-probe')).not.toBeInTheDocument()
+  })
+
+  it('says the credentials are wrong when the API answers 401', async () => {
+    mockedPort.login.mockRejectedValueOnce(new ApiError('Invalid email or password', { status: 401 }))
+    renderLogin()
+    fillCredentials()
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Email o contraseña incorrectos.')
+    expect(useSessionStore.getState().user).toBeNull()
   })
 
   it('keeps the port untouched while the form is invalid', async () => {

@@ -6,7 +6,7 @@ Principio rector: cada etapa se construye contra **puertos con implementaciones 
 
 El backend `binder-api` tiene su propio plan por fases (`binder-api/docs/api-plan.md` §8). Aparece acá solo como **dependencia**, no se replanifica.
 
-Estado: planificación. Escrito: 2026-10-16.
+Estado: etapas 1–3 entregadas en feature/trading-identity (2026-10-18); etapas 4–5 pendientes. Escrito: 2026-10-16.
 
 ## Etapas y cadena de dependencias
 
@@ -33,7 +33,7 @@ Entregable: el usuario puede curar sus cartas comerciables; `WhoWants`/`WhoHas` 
 
 Mock/real: 100% real, estado cliente puro, sin dependencia de backend.
 
-Decisión abierta: el toggle solo en la edición del detalle, o también como acceso rápido desde un slot del grid (recomiendo solo detalle por ahora).
+Entregado: 2026-10-17 en feature/trading-identity. El control es un checkbox "Para intercambio" en el modo edición de `CardDetail` que viaja en el patch de `onSaveDetails` (la acción del store `updateEntryDetails` se amplió a `forTrade?: boolean`); el mecanismo de "solo viaja si cambió" del alcance reemplaza conectar `toggleForTrade` directamente, que permanece en el store como la palanca para el acceso rápido del grid futuro. Decisión abierta resuelta: solo detalle por ahora. Tests: 4 nuevos en `CardDetailPage.test.tsx` (checkbox sembrado con el estado, marcar, desmarcar, y la regresión de solo-notas que asegura que el patch omite `forTrade` si no cambió).
 
 ## Etapa 2 — Seam de identidad + login
 
@@ -51,7 +51,7 @@ Alcance: una acción desde cada wisher/offerer en `WhoWants`/`WhoHas` ("proponer
 
 Dependencias: Etapa 2 (quién propone) + Etapa 1 (qué es comerciable).
 
-Decisión abierta (producto, importante): UX de composición del trade — selección bidireccional ("doy esto / pido esto") vs un carrito de trade. Resolverla antes de profundizar en la Etapa 4.
+Resuelta (2026-10-17, elección del usuario): selección bidireccional inline ("doy esto / pido esto") — sin carrito; el valor de un carrito depende del binder público de la Etapa 5. Spec: `odd/tasks/trade-proposal.es.md`.
 
 ## Etapa 4 — Workflow de trades
 
@@ -77,3 +77,6 @@ Dependencia: backend real + usuarios. Es la única etapa que no se puede constru
 ## Log
 
 - L1 (2026-10-16): plan registrado desde la discusión en chat; el usuario eligió auth con cookie `httpOnly` (registrado en el plan de `binder-api`) y pidió comenzar por la Etapa 2.
+- L2 (2026-10-17): Etapa 1 entregada (toggle para intercambio, commit f97e47c) y la decisión de UX de composición de la Etapa 3 resuelta a selección bidireccional inline; la Etapa 3 pasa a `odd/tasks/trade-proposal.es.md`.
+- L3 (2026-10-18): Etapa 3 entregada (seam de TradesPort, panel de propuesta y puntos de entrada sobre los match; commits f32e330, 1e06378, 4d0bd36; detalle en `odd/tasks/trade-proposal.es.md`). Sigue la decisión abierta de la Etapa 4 (granularidad y estados del historial de trades).
+- L4 (2026-10-18): el usuario eligió el ciclo de cierre antes de la Etapa 4: correr el checklist de QA manual (`odd/tasks/stage2-manual-qa.es.md`, 27 checks) y manejar él el push/merge; la Etapa 4 arranca después del merge, resolviendo primero su decisión abierta.

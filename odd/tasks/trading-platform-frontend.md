@@ -6,7 +6,7 @@ Governing principle: every stage builds against **ports with local/mock implemen
 
 The `binder-api` backend has its own phased plan (`binder-api/docs/api-plan.md` §8). It appears here only as a **dependency**, not re-planned.
 
-Status: planning. Written: 2026-10-16.
+Status: stages 1–3 delivered on feature/trading-identity (2026-10-18); stages 4–5 pending. Written: 2026-10-16.
 
 ## Stages and dependency chain
 
@@ -33,7 +33,7 @@ Deliverable: users can curate tradeable cards; `WhoWants`/`WhoHas` start to mean
 
 Mock/real: 100% real, pure client state, no backend dependency.
 
-Open decision: toggle only in detail edit, or also as a grid-slot quick action (recommend detail-only for now).
+Delivered: 2026-10-17 on feature/trading-identity. The control is a "Para intercambio" checkbox in `CardDetail` edit mode that rides the `onSaveDetails` patch (store action `updateEntryDetails` widened to `forTrade?: boolean`); the scope's conditional-carry mechanism supersedes wiring `toggleForTrade` directly, which stays in the store as the lever for the future grid quick action. Open decision resolved: detail-only for now. Tests: 4 new in `CardDetailPage.test.tsx` (seeded checkbox, mark, unmark, and the notes-only regression pinning that the patch omits `forTrade` when untouched).
 
 ## Stage 2 — Identity seam + login
 
@@ -51,7 +51,7 @@ Scope: an action from each wisher/offerer in `WhoWants`/`WhoHas` ("proponer trad
 
 Dependencies: Stage 2 (who is proposing) + Stage 1 (what is tradeable).
 
-Open decision (product, important): trade composition UX — bidirectional selection ("give this / ask this") vs a trade cart. Resolve before deep Stage 4 work.
+Resolved (2026-10-17, user choice): bidirectional inline selection ("give this / ask this") — no cart; a cart's value depends on the Stage 5 public binder. Spec: `odd/tasks/trade-proposal.md`.
 
 ## Stage 4 — Trade workflow
 
@@ -77,3 +77,6 @@ Dependency: real backend + users. This is the one stage that cannot be built aga
 ## Log
 
 - L1 (2026-10-16): plan registered from the chat discussion; user chose httpOnly-cookie auth (recorded in `binder-api` plan) and asked to begin with Stage 2.
+- L2 (2026-10-17): Stage 1 delivered (for-trade toggle, commit f97e47c) and the Stage 3 composition-UX decision resolved to inline bidirectional selection; Stage 3 moved into `odd/tasks/trade-proposal.md`.
+- L3 (2026-10-18): Stage 3 delivered (TradesPort seam, proposal panel and match entry points; commits f32e330, 1e06378, 4d0bd36; detail in `odd/tasks/trade-proposal.md`). Stage 4's open decision (trade-history granularity and states) is next.
+- L4 (2026-10-18): user chose the closing cycle before Stage 4: run the manual QA checklist (`odd/tasks/stage2-manual-qa.md`, 27 checks) and own the push/merge flow; Stage 4 starts after the merge, resolving its open decision first.

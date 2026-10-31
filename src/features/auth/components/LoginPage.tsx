@@ -1,3 +1,4 @@
+import { ApiError } from '@/shared/api/apiClient'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate } from 'react-router-dom'
@@ -34,7 +35,11 @@ export default function LoginPage() {
         message:
           error instanceof AuthUnavailableError
             ? 'El backend no está conectado todavía: no se puede iniciar sesión sin servidor.'
-            : 'No se pudo iniciar sesión. Intenta de nuevo.',
+            : error instanceof ApiError && error.status === 401
+              ? 'Email o contraseña incorrectos.'
+              : error instanceof ApiError && error.status === 429
+                ? 'Demasiados intentos. Espera un minuto y vuelve a probar.'
+                : 'No se pudo iniciar sesión. Intenta de nuevo.',
       })
     }
   }

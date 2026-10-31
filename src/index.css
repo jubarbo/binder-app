@@ -1788,9 +1788,10 @@ svg {
   max-width: 7rem;
 }
 
-/* Foil toggle in the edit panel: the same decision the add flow makes, so it
-   reads as a checkbox row rather than as one more field in the stack. */
-.card-detail-edit-finish {
+/* Checkbox rows in the edit panel (foil, for-trade): the same decision the
+   add flow makes, so they read as checkbox rows rather than as one more
+   field in the stack. */
+.card-detail-edit-check {
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -1848,6 +1849,11 @@ svg {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* The row-level trade proposal entry point: quiet, but reachable. */
+.wanters-propose {
+  padding: var(--space-2) var(--space-3);
 }
 
 .wanters-avatar {
@@ -2062,6 +2068,24 @@ svg {
   white-space: nowrap;
 }
 
+/* The faces are buttons now (trade proposal entry point): strip the button
+   chrome so the circle keeps its exact size and overlap, and let an embedded
+   photo fill it. */
+button.want-owners-face {
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.want-owners-face img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
 /* Shared confirmation dialog (destructive actions): same choreography as the
    card zoom modal (portal to body, semi-opaque scrim, panel scale + fade). */
 .confirm-overlay {
@@ -2097,6 +2121,100 @@ svg {
   display: flex;
   gap: var(--space-3);
   justify-content: center;
+}
+
+/* Trade proposal overlay: the confirm dialog's scrim and panel base, widened
+   so the give/ask columns sit side by side (they stack on narrow screens). */
+.trade-propose-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: min(92vw, 44rem);
+  max-height: 86vh;
+  overflow-y: auto;
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  cursor: default;
+}
+
+.trade-propose-title {
+  margin: 0;
+  font-size: var(--text-md, 1.05rem);
+}
+
+.trade-propose-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+@media (max-width: 640px) {
+  .trade-propose-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.trade-propose-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.trade-propose-col-title {
+  margin: 0;
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.trade-propose-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1, 0.25rem);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: var(--text-sm);
+}
+
+.trade-propose-row:hover {
+  border-color: var(--color-border);
+}
+
+.trade-propose-thumb {
+  width: 2.4rem;
+  aspect-ratio: 63 / 88;
+  object-fit: cover;
+  border-radius: 4px;
+  background: var(--color-bg, transparent);
+  flex-shrink: 0;
+}
+
+.trade-propose-thumb--empty {
+  display: block;
+  border: 1px dashed var(--color-border);
+}
+
+.trade-propose-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trade-propose-error {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-danger, var(--color-border));
+  border-radius: var(--radius-md);
+  color: var(--color-danger, inherit);
+  font-size: var(--text-sm);
 }
 
 .wants-empty {
@@ -2255,4 +2373,39 @@ svg {
   margin: 0;
   color: var(--color-text-muted);
   font-size: var(--text-sm);
+}
+
+.auth-form-success {
+  margin: 0;
+  color: var(--color-success);
+  font-size: var(--text-sm);
+}
+
+.auth-readonly {
+  opacity: 0.7;
+  cursor: default;
+}
+
+/* Guest-binder import offer shown after sign-in (binderSync). */
+.import-offer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-accent);
+  border-radius: 8px;
+  background: var(--color-accent-soft);
+  color: var(--color-text);
+}
+
+.import-offer p {
+  margin: 0;
+}
+
+.import-offer-actions {
+  display: flex;
+  gap: 0.5rem;
 }

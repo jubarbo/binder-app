@@ -12,10 +12,11 @@ interface CardDetailProps {
   printing?: Printing
   /**
    * Persists the copy's own details (wired to the store by the page). The
-   * finish is carried only when the checkbox actually changed it, so an edit
-   * that never touches it cannot rewrite — or invent — a declaration.
+   * finish and the for-trade flag are carried only when the edit actually
+   * changed them, so a save that never touches them cannot rewrite — or
+   * invent — a declaration.
    */
-  onSaveDetails?: (patch: { notes: string; finish?: Finish }) => void
+  onSaveDetails?: (patch: { notes: string; finish?: Finish; forTrade?: boolean }) => void
   /** Persists the copy's new quantity. Never called with 0. */
   onSaveQuantity?: (quantity: number) => void
   /** Asked when the edit would leave the quantity at 0: the copy is removed. */
@@ -130,8 +131,9 @@ function CardDetailMedia({ printing, isFoil }: CardDetailMediaProps) {
 
 /**
  * Pure presentation for a binder entry's detail: the enlarged printing image
- * plus its metadata, and inline editing of the copy's own details (finish and
- * notes). Data resolution and routing live in `CardDetailPage`.
+ * plus its metadata, and inline editing of the copy's own details (finish,
+ * notes and the for-trade flag). Data resolution and routing live in
+ * `CardDetailPage`.
  */
 export default function CardDetail({
   entry,
@@ -144,11 +146,13 @@ export default function CardDetail({
   const [draftNotes, setDraftNotes] = useState('')
   const [draftQuantity, setDraftQuantity] = useState(1)
   const [draftFoil, setDraftFoil] = useState(false)
+  const [draftForTrade, setDraftForTrade] = useState(false)
 
   const startEdit = () => {
     setDraftNotes(entry.notes ?? '')
     setDraftQuantity(entry.quantity)
     setDraftFoil(entry.finish === 'foil')
+    setDraftForTrade(entry.forTrade)
     setIsEditing(true)
   }
 
@@ -166,12 +170,16 @@ export default function CardDetail({
       onRequestRemoval?.()
       return
     }
-    // The finish rides along only when the checkbox actually changed it: a
-    // patch that carried it unconditionally would turn an undeclared copy
-    // into `nonfoil` the first time anyone edits its notes.
-    const patch: { notes: string; finish?: Finish } = { notes: draftNotes }
+    // The finish and the for-trade flag ride along only when the edit
+    // actually changed them: a patch that carried them unconditionally would
+    // turn an undeclared copy into `nonfoil`, or rewrite trade semantics,
+    // the first time anyone edits its notes.
+    const patch: { notes: string; finish?: Finish; forTrade?: boolean } = {
+      notes: draftNotes,
+    }
     const isFoil = entry.finish === 'foil'
     if (draftFoil !== isFoil) patch.finish = draftFoil ? 'foil' : 'nonfoil'
+    if (draftForTrade !== entry.forTrade) patch.forTrade = draftForTrade
     onSaveDetails?.(patch)
     onSaveQuantity?.(clampedQuantity)
     setIsEditing(false)
@@ -257,13 +265,21 @@ export default function CardDetail({
             }
             className="field card-detail-edit-quantity"
           />
-          <label className="card-detail-edit-finish">
+          <label className="card-detail-edit-check">
             <input
               type="checkbox"
               checked={draftFoil}
               onChange={(e) => setDraftFoil(e.target.checked)}
             />
             Foil
+          </label>
+          <label className="card-detail-edit-check">
+            <input
+              type="checkbox"
+              checked={draftForTrade}
+              onChange={(e) => setDraftForTrade(e.target.checked)}
+            />
+            Para intercambio
           </label>
           <div className="card-detail-edit-actions">
             <button
@@ -286,7 +302,7 @@ export default function CardDetail({
           Editar
         </button>
       )}
-      {printing && <WhoWants oracleId={printing.oracleId} />}
+      {printing && <WhoWants oracleId={printing.oracleId} entryId={entry.id} />}
     </div>
   )
 }

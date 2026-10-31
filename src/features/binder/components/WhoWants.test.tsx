@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import WhoWants from '@/features/binder/components/WhoWants'
 import { wishersPort } from '@/shared/api/wishersPort'
+import { useTradeProposalStore } from '@/features/trades/state/tradeProposalStore'
 
 vi.mock('@/shared/api/wishersPort', () => ({
   wishersPort: { wishersOf: vi.fn(async () => []) },
@@ -10,13 +11,13 @@ vi.mock('@/shared/api/wishersPort', () => ({
 
 const wishersOf = wishersPort.wishersOf as ReturnType<typeof vi.fn>
 
-function renderWhoWants(oracleId = 'o1') {
+function renderWhoWants(oracleId = 'o1', entryId = 'entry-1') {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })
   return render(
     <QueryClientProvider client={client}>
-      <WhoWants oracleId={oracleId} />
+      <WhoWants oracleId={oracleId} entryId={entryId} />
     </QueryClientProvider>,
   )
 }
@@ -24,6 +25,7 @@ function renderWhoWants(oracleId = 'o1') {
 beforeEach(() => {
   wishersOf.mockReset()
   wishersOf.mockResolvedValue([])
+  useTradeProposalStore.getState().closeTradeProposal()
 })
 
 describe('WhoWants', () => {
@@ -105,5 +107,22 @@ describe('WhoWants', () => {
 
     await screen.findByText('Nadie la desea todavía.')
     expect(wishersOf).toHaveBeenCalledWith('oracle-xyz', expect.anything())
+  })
+
+  it('opens the proposal panel for a wisher with my matched copy preselected', async () => {
+    wishersOf.mockResolvedValue([
+      { id: 'u1', displayName: 'Ana', wantsCopies: 2 },
+      { id: 'u2', displayName: 'Bruno', wantsCopies: 1 },
+    ])
+    renderWhoWants('o1', 'entry-7')
+
+    const buttons = await screen.findAllByRole('button', { name: 'Proponer trade' })
+    fireEvent.click(buttons[1])
+
+    expect(useTradeProposalStore.getState().request).toEqual({
+      counterpart: { id: 'u2', displayName: 'Bruno' },
+      prefillGiveEntryId: 'entry-7',
+      prefillAskOracleId: null,
+    })
   })
 })
