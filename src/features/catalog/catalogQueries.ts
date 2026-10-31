@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { catalogClient } from '@/shared/api/catalogClient'
+import { catalogPort } from '@/shared/api/catalog'
 
 /** Scoped query-key factory for catalog data. */
 export const catalogKeys = {
@@ -15,7 +15,7 @@ export function useSearchCards(query: string) {
   const normalizedQuery = query.trim()
   return useQuery({
     queryKey: catalogKeys.search(normalizedQuery),
-    queryFn: ({ signal }) => catalogClient.fetchSearch(normalizedQuery, signal),
+    queryFn: ({ signal }) => catalogPort.fetchSearch(normalizedQuery, signal),
     enabled: normalizedQuery.length > 0,
     staleTime: 5 * 60 * 1000,
     retry: 1,
@@ -27,7 +27,7 @@ export function usePrinting(id: string) {
   const normalizedId = id.trim()
   return useQuery({
     queryKey: catalogKeys.printing(normalizedId),
-    queryFn: ({ signal }) => catalogClient.fetchPrinting(normalizedId, signal),
+    queryFn: ({ signal }) => catalogPort.fetchPrinting(normalizedId, signal),
     enabled: normalizedId.length > 0,
     staleTime: 5 * 60 * 1000,
     retry: 1,
@@ -39,7 +39,7 @@ export function useNamed(name: string) {
   const normalizedName = name.trim()
   return useQuery({
     queryKey: catalogKeys.named(normalizedName),
-    queryFn: ({ signal }) => catalogClient.fetchNamed(normalizedName, signal),
+    queryFn: ({ signal }) => catalogPort.fetchNamed(normalizedName, signal),
     enabled: normalizedName.length > 0,
     staleTime: 5 * 60 * 1000,
     retry: 1,
@@ -51,7 +51,7 @@ export function usePrintings(oracleId: string) {
   const normalizedId = oracleId.trim()
   return useQuery({
     queryKey: catalogKeys.printings(normalizedId),
-    queryFn: ({ signal }) => catalogClient.fetchPrintings(normalizedId, signal),
+    queryFn: ({ signal }) => catalogPort.fetchPrintings(normalizedId, signal),
     enabled: normalizedId.length > 0,
     staleTime: 5 * 60 * 1000,
     retry: 1,

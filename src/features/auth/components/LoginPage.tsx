@@ -1,8 +1,8 @@
+import { ApiError } from '@/shared/api/apiClient'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate } from 'react-router-dom'
-import { authPort } from '@/shared/api/authPort'
-import { authErrorMessage } from '@/features/auth/authErrors'
+import { authPort, AuthUnavailableError } from '@/shared/api/authPort'
 import { useSessionStore } from '@/features/auth/state/sessionStore'
 import {
   loginSchema,
@@ -30,9 +30,17 @@ export default function LoginPage() {
       navigate('/')
     } catch (error) {
       // The local port refuses when there is no backend: say that plainly
-      // instead of pretending the credentials were wrong. API failures map
-      // to specific messages (bad credentials, taken email, rate limit).
-      setError('root', { message: authErrorMessage(error, 'login') })
+      // instead of pretending the credentials were wrong.
+      setError('root', {
+        message:
+          error instanceof AuthUnavailableError
+            ? 'El backend no está conectado todavía: no se puede iniciar sesión sin servidor.'
+            : error instanceof ApiError && error.status === 401
+              ? 'Email o contraseña incorrectos.'
+              : error instanceof ApiError && error.status === 429
+                ? 'Demasiados intentos. Espera un minuto y vuelve a probar.'
+                : 'No se pudo iniciar sesión. Intenta de nuevo.',
+      })
     }
   }
 

@@ -1,0 +1,10 @@
+# Railway config-as-code for the binder-app service (static SPA).
+# VITE_API_URL must be set as a service variable: Vite inlines it at build time.
+
+[build]
+buildCommand = "npm run build"
+
+[deploy]
+startCommand = "npm start"
+healthcheckPath = "/"
+restartPolicyType = "ON_FAILURE"

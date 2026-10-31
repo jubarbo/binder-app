@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { ToastContainer, toast } from 'react-toastify'
+import { NavLink, Outlet } from 'react-router-dom'
+import { toast, ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import CardFlightOverlay from '@/features/binder/components/CardFlightOverlay'
+import TradeProposalOverlay from '@/features/trades/components/TradeProposalOverlay'
 import { useSessionStore } from '@/features/auth/state/sessionStore'
+import ImportLocalOffer from '@/features/binder/components/ImportLocalOffer'
+import { startBinderSync } from '@/features/binder/state/binderSync'
 import {
   LOCALE_LABELS,
   SUPPORTED_LOCALES,
@@ -16,13 +19,16 @@ export function AppLayout() {
   const menuRef = useRef<HTMLDivElement>(null)
 
   const bootstrap = useSessionStore((state) => state.bootstrap)
+  const user = useSessionStore((state) => state.user)
   const signOut = useSessionStore((state) => state.signOut)
-  const navigate = useNavigate()
 
   // One session read per app load; the guard and the menu read the result.
   useEffect(() => {
     void bootstrap()
   }, [bootstrap])
+
+  // Signed in, the binder is the user's server copy; signed out, the guest copy.
+  useEffect(() => startBinderSync(), [])
 
   const locale = useLocaleStore((state) => state.locale)
   const setLocale = useLocaleStore((state) => state.setLocale)
@@ -50,15 +56,15 @@ export function AppLayout() {
 
   const closeUserMenu = () => setUserMenuOpen(false)
 
-  /**
-   * Sign out: the session store clears the user first (the UI never stays
-   * signed in), then asks the port to drop the cookie. A failing port call is
-   * reported but the user is already out locally.
-   */
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
     closeUserMenu()
-    signOut().catch(() => toast.error('No se pudo cerrar la sesión en el servidor.'))
-    navigate('/login', { replace: true })
+    try {
+      // signOut clears the local user first, so from here only the
+      // server-side session can still fail — and that failure is real.
+      await signOut()
+    } catch {
+      toast.error('No se pudo cerrar la sesión en el servidor.')
+    }
   }
 
   return (
@@ -105,9 +111,25 @@ export function AppLayout() {
             </button>
             {userMenuOpen && (
               <div className="app-user-menu-list" role="menu">
-                <span role="menuitem" className="app-user-menu-item">
-                  Mi cuenta
-                </span>
+                {user ? (
+                  <NavLink
+                    to="/profile"
+                    role="menuitem"
+                    className="app-user-menu-item"
+                    onClick={closeUserMenu}
+                  >
+                    Mi cuenta
+                  </NavLink>
+                ) : (
+                  <NavLink
+                    to="/login"
+                    role="menuitem"
+                    className="app-user-menu-item"
+                    onClick={closeUserMenu}
+                  >
+                    Iniciar sesión
+                  </NavLink>
+                )}
                 <NavLink
                   to="/"
                   end
@@ -125,23 +147,27 @@ export function AppLayout() {
                 >
                   Deseos
                 </NavLink>
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="app-user-menu-item"
-                  onClick={handleSignOut}
-                >
-                  Cerrar sesión
-                </button>
+                {user && (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="app-user-menu-item"
+                    onClick={() => void handleSignOut()}
+                  >
+                    Cerrar sesión
+                  </button>
+                )}
               </div>
             )}
           </div>
         </div>
       </header>
       <main className="app-main">
+        <ImportLocalOffer />
         <Outlet />
       </main>
       <CardFlightOverlay />
+      <TradeProposalOverlay />
       {/* App-wide notifications. `role="status"` keeps them polite for screen
           readers; `theme="auto"` follows the same OS preference as the app. */}
       {/* react-toastify v11 has no "auto" theme (the type accepts any string,

@@ -4,6 +4,13 @@ import { getActiveLocale } from '@/shared/locale/localeStore'
 
 const SCRYFALL_BASE_URL = 'https://api.scryfall.com'
 
+/**
+ * Deadline for every catalog request. A degraded Scryfall answers after
+ * 16-30s or hangs entirely; without a deadline that becomes an infinite
+ * loader. The cap turns it into an honest, retryable error instead.
+ */
+const REQUEST_TIMEOUT_MS = 8_000
+
 /** Subset of the Scryfall image_uris object we rely on. */
 interface ScryfallImageUris {
   small?: string
@@ -150,15 +157,24 @@ async function toCatalogError(response: Response): Promise<CatalogError> {
 }
 
 async function requestJson<T>(url: string, signal?: AbortSignal): Promise<T> {
+  const timeoutSignal = AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+  const composedSignal = signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal
   let response: Response
   try {
     response = await fetch(url, {
       headers: { Accept: 'application/json' },
-      signal,
+      signal: composedSignal,
     })
   } catch (error) {
+    // Classify by `name`: both rejections below are DOMExceptions, which are
+    // not reliably `instanceof Error` across environments.
+    const name = (error as { name?: unknown } | null)?.name
+    // Our own deadline fired: an honest, retryable catalog error.
+    if (name === 'TimeoutError') {
+      throw new CatalogError('The catalog took too long to answer. Try again.')
+    }
     // Let query cancellation propagate untouched.
-    if (error instanceof Error && error.name === 'AbortError') throw error
+    if (name === 'AbortError') throw error
     throw new CatalogError('Could not reach the Scryfall catalog. Check your network connection.')
   }
 
@@ -195,9 +211,10 @@ async function searchPage(
   } catch (error) {
     // Scryfall answers 404 when a query matches no cards. Within a language
     // leg that is a valid empty result — the term simply has no match in this
-    // language — not a failure. Without this, a purely Spanish term (no
-    // English match) would reject the whole bilingual Promise.all and discard
-    // the Spanish hits. Rate limits, network and server errors still throw.
+    // language — not a failure. Without this, a query matching nothing in
+    // either language would reject both legs and surface as an error instead
+    // of an empty "no results" list. Rate limits, network and server errors
+    // still throw so the caller can degrade or fail honestly.
     if (error instanceof CatalogError && error.status === 404) return []
     throw error
   }
@@ -220,11 +237,18 @@ export const scryfallClient: CatalogPort = {
 
     // Strategy A, client-side: match the default (English, full coverage) and
     // the localized printings, then merge by oracle id so a Spanish name finds
-    // its card while English-only cards never drop out of the results.
-    const [defaultCards, localizedCards] = await Promise.all([
+    // its card while English-only cards never drop out of the results. One
+    // leg's failure (rate limit, 5xx, timeout) must not discard the other's
+    // results: serve whichever answered and fail only when both legs failed.
+    const [defaultResult, localizedResult] = await Promise.allSettled([
       searchPage(trimmed, undefined, signal),
       searchPage(trimmed, locale, signal),
     ])
+    if (defaultResult.status === 'rejected' && localizedResult.status === 'rejected') {
+      throw defaultResult.reason
+    }
+    const defaultCards = defaultResult.status === 'fulfilled' ? defaultResult.value : []
+    const localizedCards = localizedResult.status === 'fulfilled' ? localizedResult.value : []
 
     const merged = new Map<string, ScryfallCard>()
     // Localized printings first: they carry `printed_name` for display and

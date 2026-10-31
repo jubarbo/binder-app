@@ -1,61 +1,47 @@
-import type { OracleCard, Printing } from '@/shared/types/mtg'
-import { ApiError, apiRequest } from '@/shared/api/apiClient'
-import { CatalogError, type CatalogPort } from '@/shared/api/catalogPort'
+import { apiRequest } from '@/shared/api/apiClient'
+import type { CatalogPort } from '@/shared/api/catalogPort'
+import type { OffersPort, Offerer } from '@/shared/api/offersPort'
+import type { Wisher, WishersPort } from '@/shared/api/wishersPort'
 import { getActiveLocale } from '@/shared/locale/localeStore'
+import type { OracleCard, Printing } from '@/shared/types/mtg'
 
-/** Re-throw API failures as CatalogError, the error type catalog consumers know. */
-async function catalogCall<T>(call: () => Promise<T>): Promise<T> {
-  try {
-    return await call()
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw new CatalogError(error.message, {
-        status: error.status || undefined,
-        code: error.code,
-      })
-    }
-    throw error
-  }
-}
-
-const enc = encodeURIComponent
+const SEARCH_LIMIT = 50
 
 /**
- * `CatalogPort` backed by binder-api's local Scryfall mirror. Search is the
- * API's Strategy A (names in every supported locale, accent-insensitive,
- * one result per oracle id), displayed in the active locale with an English
- * fallback — the same contract the Scryfall adapter honours client-side.
+ * binder-api catalog adapter. The API mirrors `OracleCard` / `Printing`
+ * (optional fields omitted, never null), so responses need no mapping. The
+ * search already merges English and the active locale server-side.
  */
 export const apiCatalogPort: CatalogPort = {
   async fetchSearch(query, signal) {
-    const trimmed = query.trim()
-    if (!trimmed) return []
-    const params = new URLSearchParams({ q: trimmed, locale: getActiveLocale() })
-    return catalogCall(() =>
-      apiRequest<OracleCard[]>(`/catalog/search?${params.toString()}`, { signal }),
-    )
+    const q = query.trim()
+    if (!q) return []
+    const params = new URLSearchParams({ q, locale: getActiveLocale(), limit: String(SEARCH_LIMIT) })
+    return apiRequest<OracleCard[]>(`/catalog/search?${params}`, { signal })
   },
 
-  async fetchNamed(name, signal) {
-    const trimmed = name.trim()
-    if (!trimmed) throw new CatalogError('A card name is required.')
+  fetchNamed(name, signal) {
     const params = new URLSearchParams({ locale: getActiveLocale() })
-    return catalogCall(() =>
-      apiRequest<OracleCard>(`/catalog/cards/${enc(trimmed)}?${params.toString()}`, { signal }),
-    )
+    return apiRequest<OracleCard>(`/catalog/cards/${encodeURIComponent(name.trim())}?${params}`, { signal })
   },
 
-  async fetchPrinting(id, signal) {
-    const trimmed = id.trim()
-    if (!trimmed) throw new CatalogError('A printing id is required.')
-    return catalogCall(() => apiRequest<Printing>(`/catalog/printings/${enc(trimmed)}`, { signal }))
+  fetchPrinting(id, signal) {
+    return apiRequest<Printing>(`/catalog/printings/${encodeURIComponent(id)}`, { signal })
   },
 
-  async fetchPrintings(oracleId, signal) {
-    const trimmed = oracleId.trim()
-    if (!trimmed) return []
-    return catalogCall(() =>
-      apiRequest<Printing[]>(`/catalog/oracles/${enc(trimmed)}/printings`, { signal }),
-    )
+  fetchPrintings(oracleId, signal) {
+    return apiRequest<Printing[]>(`/catalog/oracles/${encodeURIComponent(oracleId)}/printings`, { signal })
   },
+}
+
+/** "Who wants this card": matched and ordered by the API; the signed-in viewer is excluded. */
+export const apiWishersPort: WishersPort = {
+  wishersOf: (oracleId, signal) =>
+    apiRequest<Wisher[]>(`/match/wishers/${encodeURIComponent(oracleId)}`, { signal }),
+}
+
+/** "Who has this card for trade": copies summed per user by the API. */
+export const apiOffersPort: OffersPort = {
+  offersOf: (oracleId, signal) =>
+    apiRequest<Offerer[]>(`/match/offers/${encodeURIComponent(oracleId)}`, { signal }),
 }

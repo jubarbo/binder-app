@@ -182,6 +182,93 @@ describe('scryfallClient.fetchSearch bilingual search (Strategy A)', () => {
   })
 })
 
+describe('scryfallClient.fetchSearch degraded upstream', () => {
+  /** Scryfall's answer during an incident: 503 with an HTML error page. */
+  function serviceUnavailable() {
+    return {
+      ok: false,
+      status: 503,
+      statusText: 'Service Unavailable',
+      json: async (): Promise<unknown> => {
+        throw new SyntaxError('Unexpected token < in JSON')
+      },
+    } as Response
+  }
+
+  it('serves the default leg when the localized leg fails (503)', async () => {
+    useLocaleStore.getState().setLocale('es')
+    // One leg's outage must not discard the other leg's results: the search
+    // degrades to the language that answered instead of failing whole.
+    fetchMock.mockImplementation(async (url: string) => {
+      return url.includes('lang%3Aes')
+        ? serviceUnavailable()
+        : json({ data: [card({ id: 'p-a-en', oracleId: 'orb-a', name: 'Lightning Bolt' })] })
+    })
+
+    const results = await scryfallClient.fetchSearch('lightning')
+
+    expect(results).toHaveLength(1)
+    expect(results[0].name).toBe('Lightning Bolt')
+  })
+
+  it('serves the localized leg when the default leg fails (503)', async () => {
+    useLocaleStore.getState().setLocale('es')
+    fetchMock.mockImplementation(async (url: string) => {
+      return url.includes('lang%3Aes')
+        ? json({
+            data: [
+              card({
+                id: 'p-a-es',
+                oracleId: 'orb-a',
+                name: 'Lightning Bolt',
+                printedName: 'Relámpago',
+              }),
+            ],
+          })
+        : serviceUnavailable()
+    })
+
+    const results = await scryfallClient.fetchSearch('relámpago')
+
+    expect(results).toHaveLength(1)
+    expect(results[0].name).toBe('Relámpago')
+  })
+
+  it('fails honestly only when both legs fail', async () => {
+    useLocaleStore.getState().setLocale('es')
+    fetchMock.mockImplementation(async () => serviceUnavailable())
+
+    await expect(scryfallClient.fetchSearch('lightning')).rejects.toThrow('Service Unavailable')
+  })
+
+  it('maps a request timeout to an honest catalog error', async () => {
+    useLocaleStore.getState().setLocale('en')
+    // What fetch rejects with when AbortSignal.timeout fires.
+    fetchMock.mockRejectedValue(new DOMException('The operation timed out.', 'TimeoutError'))
+
+    await expect(scryfallClient.fetchSearch('lightning')).rejects.toThrow(
+      'The catalog took too long to answer. Try again.',
+    )
+  })
+
+  it('propagates caller cancellation untouched', async () => {
+    useLocaleStore.getState().setLocale('en')
+    fetchMock.mockImplementation(
+      (_url: string, options?: { signal?: AbortSignal }) =>
+        new Promise((_, reject) => {
+          options?.signal?.addEventListener('abort', () =>
+            reject(new DOMException('Aborted', 'AbortError')),
+          )
+        }),
+    )
+    const controller = new AbortController()
+    const pending = scryfallClient.fetchSearch('lightning', controller.signal)
+    controller.abort()
+
+    await expect(pending).rejects.toMatchObject({ name: 'AbortError' })
+  })
+})
+
 describe('scryfallClient.fetchPrintings name resolution', () => {
   it('keeps the canonical name so foreign printings never leak into the list', async () => {
     useLocaleStore.getState().setLocale('es')

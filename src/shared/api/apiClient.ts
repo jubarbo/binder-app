@@ -1,93 +1,88 @@
-/**
- * Thin HTTP client for binder-api. Every request sends the session cookie
- * (`credentials: 'include'`): auth is an httpOnly cookie the browser carries
- * on its own, so no token ever touches JavaScript (binder-api plan §6.3).
- */
-
-/** binder-api base URL with the version prefix, or `null` when not configured. */
-export function apiBaseUrl(): string | null {
-  return import.meta.env.VITE_API_URL?.trim().replace(/\/+$/, '') || null
-}
-
-/** Whether the app is wired to binder-api (read once by the port bindings). */
-export const apiConfigured = apiBaseUrl() !== null
+import { CatalogError } from '@/shared/api/catalogPort'
 
 /**
- * A failed API call. Carries the HTTP status and the API's error `code`
- * (`not_found`, `unauthorized`, `conflict`, `rate_limited`, ...) from its
- * single error envelope `{ error: { message, code, status } }`. `status` is
- * `0` when the server could not be reached at all.
+ * Base URL of binder-api including the version prefix, e.g.
+ * `https://api.mantisuy.com/api/v1`. Empty when the app runs without a
+ * backend: every port binding then keeps its local implementation.
  */
-export class ApiError extends Error {
-  readonly status: number
-  readonly code?: string
+export const API_URL: string = String(import.meta.env.VITE_API_URL ?? '').trim()
 
-  constructor(message: string, status: number, code?: string) {
-    super(message)
+/** True when the build was configured to talk to binder-api. */
+export const apiConfigured = API_URL.length > 0
+
+const DEFAULT_TIMEOUT_MS = 15_000
+
+/**
+ * A failed binder-api call. Extends `CatalogError` because the API's error
+ * envelope `{ error: { message, code, status } }` has exactly that shape, so
+ * catalog consumers keep working unchanged. `status` is undefined when the
+ * server could not be reached at all.
+ */
+export class ApiError extends CatalogError {
+  constructor(message: string, options?: { status?: number; code?: string }) {
+    super(message, options)
     this.name = 'ApiError'
-    this.status = status
-    this.code = code
   }
 }
 
-interface RequestOptions {
+export interface ApiRequestOptions {
   method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'
+  /** Serialized as JSON. */
   body?: unknown
   signal?: AbortSignal
+  timeoutMs?: number
+  /** Override for tests; defaults to `API_URL`. */
+  baseUrl?: string
 }
 
 async function toApiError(response: Response): Promise<ApiError> {
+  let message: string | undefined
+  let code: string | undefined
   try {
-    const body = (await response.json()) as {
-      error?: { message?: string; code?: string }
-    }
-    if (body.error?.message) {
-      return new ApiError(body.error.message, response.status, body.error.code)
-    }
+    const body = (await response.json()) as { error?: { message?: string; code?: string } }
+    message = body.error?.message
+    code = body.error?.code
   } catch {
-    // Not the API's JSON envelope (proxy error page, etc.): fall through.
+    // Non-JSON error body (proxy page, empty 502): fall back to the status.
   }
-  return new ApiError(
-    response.statusText || `Request failed with status ${response.status}`,
-    response.status,
-  )
+  return new ApiError(message ?? `Request failed with status ${response.status}`, {
+    status: response.status,
+    code,
+  })
 }
 
 /**
- * Call binder-api and parse the JSON response. Resolves `undefined` for
- * `204 No Content`. Aborts propagate untouched so TanStack Query can cancel.
+ * One JSON request to binder-api. Always sends the httpOnly session cookie
+ * (`credentials: 'include'`); the API decides who the caller is.
  */
-export async function apiRequest<T>(
-  path: string,
-  { method = 'GET', body, signal }: RequestOptions = {},
-): Promise<T> {
-  const base = apiBaseUrl()
-  if (!base) throw new ApiError('binder-api is not configured (VITE_API_URL).', 0)
+export async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
+  const base = (options.baseUrl ?? API_URL).replace(/\/+$/, '')
+  const timeoutSignal = AbortSignal.timeout(options.timeoutMs ?? DEFAULT_TIMEOUT_MS)
+  const signal = options.signal ? AbortSignal.any([options.signal, timeoutSignal]) : timeoutSignal
+  const headers: Record<string, string> = { Accept: 'application/json' }
+  if (options.body !== undefined) headers['Content-Type'] = 'application/json'
 
   let response: Response
   try {
     response = await fetch(`${base}${path}`, {
-      method,
+      method: options.method ?? 'GET',
+      headers,
+      body: options.body === undefined ? undefined : JSON.stringify(options.body),
       credentials: 'include',
-      headers: {
-        Accept: 'application/json',
-        ...(body !== undefined && { 'Content-Type': 'application/json' }),
-      },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
       signal,
     })
   } catch (error) {
-    // Checked by name: an abort is a DOMException, which is not an Error subclass everywhere.
-    if ((error as { name?: unknown } | null)?.name === 'AbortError') throw error
-    throw new ApiError('Could not reach the server. Check your network connection.', 0)
+    const name = (error as { name?: unknown } | null)?.name
+    if (name === 'TimeoutError') throw new ApiError('The server took too long to answer. Try again.')
+    if (name === 'AbortError') throw error
+    throw new ApiError('Could not reach the server. Check your network connection.')
   }
 
   if (!response.ok) throw await toApiError(response)
   if (response.status === 204) return undefined as T
-
   try {
     return (await response.json()) as T
   } catch {
-    throw new ApiError('The server returned a malformed response.', response.status)
+    throw new ApiError('The server returned a malformed response.', { status: response.status })
   }
 }
