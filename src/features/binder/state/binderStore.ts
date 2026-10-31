@@ -1,184 +1,162 @@
 import { create } from 'zustand'
-import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware'
-import { toast } from 'react-toastify'
-import { apiConfigured } from '@/shared/api/apiClient'
-import { apiBinderPort, type BinderEntryPatch } from '@/shared/api/apiBinderPort'
+import { createJSONStorage, persist } from 'zustand/middleware'
+import type { BinderEntryPatch, BinderPort } from '@/shared/api/binderPort'
 import type { BinderEntry, Finish, WantEntry } from '@/shared/types/mtg'
 
-/** Binder persistence storage key (zustand persist). */
+/** Binder persistence storage key (zustand persist). Holds the guest (signed-out) binder. */
 export const BINDER_STORAGE_KEY = 'binder-app:binder:v1'
 
 /** Schema version of the persisted binder payload. */
 const BINDER_STORAGE_VERSION = 1
 
 /** Persisted slice of the binder state (serializable, no actions). */
-interface BinderPersistedState {
+export interface BinderPersistedState {
   entries: BinderEntry[]
   wants: WantEntry[]
 }
 
+/** Server connection while signed in: where writes go and what to do when one fails. */
+export interface BinderRemote {
+  port: BinderPort
+  onWriteError: (error: unknown) => void
+}
+
 /** Full store contract: persisted data plus actions. */
 interface BinderState extends BinderPersistedState {
+  /**
+   * `local`: guest data persisted in this browser. `remote`: the signed-in
+   * user's binder, owned by binder-api; changes go to the server and the
+   * local guest copy is left untouched.
+   */
+  source: 'local' | 'remote'
   addEntry: (entry: BinderEntry) => void
   removeEntry: (id: string) => void
   updateQuantity: (id: string, quantity: number) => void
   toggleForTrade: (id: string) => void
-  /** Patch the editable details (finish, notes) of one entry. */
+  /** Patch the editable details (finish, notes, for-trade) of one entry. */
   updateEntryDetails: (
     id: string,
-    patch: { finish?: Finish; notes?: string },
+    patch: { finish?: Finish; notes?: string; forTrade?: boolean },
   ) => void
   addWant: (want: WantEntry) => void
   removeWant: (id: string) => void
-  /** Replace the whole binder with the server's copy (API mode, on sign-in). */
-  replaceAll: (data: BinderPersistedState) => void
-  /** Empty the binder (API mode, on sign-out: the next user must not see it). */
-  clear: () => void
 }
 
-/**
- * With binder-api the server owns the binder, so nothing is written to
- * localStorage. The legacy payload under BINDER_STORAGE_KEY is left untouched
- * until it is imported into the user's account (see binderSync).
- */
-const noopStorage: StateStorage = {
-  getItem: () => null,
-  setItem: () => {},
-  removeItem: () => {},
+let remote: BinderRemote | null = null
+
+/** Sends one write to the server when signed in; a failure goes to the sync layer. */
+function push(write: (port: BinderPort) => Promise<unknown>): void {
+  if (!remote) return
+  const { port, onWriteError } = remote
+  write(port).catch(onWriteError)
 }
 
-/**
- * Optimistic remote write (API mode only): the UI already changed; if the
- * server refuses, undo that one change and tell the user. Local mode skips it.
- */
-function syncRemote(call: () => Promise<unknown>, rollback: () => void): void {
-  if (!apiConfigured) return
-  call().catch(() => {
-    rollback()
-    toast.error('No se pudo guardar el cambio. Revisa tu conexión e intenta de nuevo.')
-  })
-}
+/** Local storage that ignores writes while the store mirrors the server. */
+const guestStorage = createJSONStorage<BinderPersistedState>(() => ({
+  getItem: (name) => localStorage.getItem(name),
+  setItem: (name, value) => {
+    if (!remote) localStorage.setItem(name, value)
+  },
+  removeItem: (name) => localStorage.removeItem(name),
+}))
 
-/** Optional fields set to `undefined` are sent as `null` so the server clears them. */
-function toEntryPatch(patch: { finish?: Finish; notes?: string }): BinderEntryPatch {
-  const out: BinderEntryPatch = {}
-  if ('finish' in patch) out.finish = patch.finish ?? null
-  if ('notes' in patch) out.notes = patch.notes || null
-  return out
-}
-
-/**
- * Client-side binder state. Local mode: persisted to localStorage behind a
- * versioned key. API mode (VITE_API_URL): mirrors the signed-in user's binder
- * on binder-api, applying every change optimistically.
- */
+/** Binder state: guest data in localStorage, or the signed-in user's server binder. */
 export const useBinderStore = create<BinderState>()(
   persist(
-    (set, get) => {
-      /** Put back the previous version of one entry (or remove it if it did not exist). */
-      const restoreEntry = (id: string, previous: BinderEntry | undefined, index = -1) =>
-        set((state) => {
-          const others = state.entries.filter((entry) => entry.id !== id)
-          if (!previous) return { entries: others }
-          const at = index >= 0 ? Math.min(index, others.length) : state.entries.findIndex((e) => e.id === id)
-          const entries = [...others]
-          entries.splice(at < 0 ? entries.length : at, 0, previous)
-          return { entries }
-        })
+    (set, get) => ({
+      entries: [],
+      wants: [],
+      source: 'local',
 
-      const patchEntry = (id: string, change: (entry: BinderEntry) => BinderEntry, remote: BinderEntryPatch) => {
-        const previous = get().entries.find((entry) => entry.id === id)
-        if (!previous) return
+      addEntry: (entry) => {
+        set((state) => ({ entries: [...state.entries, entry] }))
+        push((port) => port.addEntry(entry))
+      },
+
+      removeEntry: (id) => {
+        set((state) => ({ entries: state.entries.filter((entry) => entry.id !== id) }))
+        push((port) => port.removeEntry(id))
+      },
+
+      updateQuantity: (id, quantity) => {
+        const clamped = Math.max(0, quantity)
         set((state) => ({
-          entries: state.entries.map((entry) => (entry.id === id ? change(entry) : entry)),
+          entries: state.entries.map((entry) =>
+            entry.id === id ? { ...entry, quantity: clamped } : entry,
+          ),
         }))
-        syncRemote(
-          () => apiBinderPort.updateEntry(id, remote),
-          () => restoreEntry(id, previous),
-        )
-      }
+        push((port) => port.patchEntry(id, { quantity: clamped }))
+      },
 
-      return {
-        entries: [],
-        wants: [],
+      toggleForTrade: (id) => {
+        set((state) => ({
+          entries: state.entries.map((entry) =>
+            entry.id === id ? { ...entry, forTrade: !entry.forTrade } : entry,
+          ),
+        }))
+        const forTrade = get().entries.find((entry) => entry.id === id)?.forTrade
+        if (forTrade !== undefined) push((port) => port.patchEntry(id, { forTrade }))
+      },
 
-        addEntry: (entry) => {
-          set((state) => ({ entries: [...state.entries, entry] }))
-          syncRemote(
-            () => apiBinderPort.addEntry(entry),
-            () => restoreEntry(entry.id, undefined),
-          )
-        },
+      updateEntryDetails: (id, patch) => {
+        set((state) => ({
+          entries: state.entries.map((entry) =>
+            entry.id === id ? { ...entry, ...patch } : entry,
+          ),
+        }))
+        // A key present with `undefined` (or empty notes) means "clear it"; the API clears with null.
+        const body: BinderEntryPatch = {}
+        if ('finish' in patch) body.finish = patch.finish ?? null
+        if ('notes' in patch) body.notes = patch.notes || null
+        if (patch.forTrade !== undefined) body.forTrade = patch.forTrade
+        if (Object.keys(body).length > 0) push((port) => port.patchEntry(id, body))
+      },
 
-        removeEntry: (id) => {
-          const index = get().entries.findIndex((entry) => entry.id === id)
-          const previous = get().entries[index]
-          set((state) => ({ entries: state.entries.filter((entry) => entry.id !== id) }))
-          if (previous) {
-            syncRemote(
-              () => apiBinderPort.removeEntry(id),
-              () => restoreEntry(id, previous, index),
-            )
-          }
-        },
+      addWant: (want) => {
+        set((state) => ({ wants: [...state.wants, want] }))
+        push((port) => port.addWant(want))
+      },
 
-        updateQuantity: (id, quantity) => {
-          const next = Math.max(0, quantity)
-          patchEntry(id, (entry) => ({ ...entry, quantity: next }), { quantity: next })
-        },
-
-        toggleForTrade: (id) => {
-          const current = get().entries.find((entry) => entry.id === id)
-          if (!current) return
-          patchEntry(id, (entry) => ({ ...entry, forTrade: !entry.forTrade }), {
-            forTrade: !current.forTrade,
-          })
-        },
-
-        updateEntryDetails: (id, patch) =>
-          patchEntry(id, (entry) => ({ ...entry, ...patch }), toEntryPatch(patch)),
-
-        addWant: (want) => {
-          set((state) => ({ wants: [...state.wants, want] }))
-          syncRemote(
-            () => apiBinderPort.addWant(want),
-            () => set((state) => ({ wants: state.wants.filter((w) => w.id !== want.id) })),
-          )
-        },
-
-        removeWant: (id) => {
-          const index = get().wants.findIndex((want) => want.id === id)
-          const previous = get().wants[index]
-          set((state) => ({ wants: state.wants.filter((want) => want.id !== id) }))
-          if (previous) {
-            syncRemote(
-              () => apiBinderPort.removeWant(id),
-              () =>
-                set((state) => {
-                  if (state.wants.some((w) => w.id === id)) return state
-                  const wants = [...state.wants]
-                  wants.splice(Math.min(index, wants.length), 0, previous)
-                  return { wants }
-                }),
-            )
-          }
-        },
-
-        replaceAll: ({ entries, wants }) => set({ entries, wants }),
-
-        clear: () => set({ entries: [], wants: [] }),
-      }
-    },
+      removeWant: (id) => {
+        set((state) => ({ wants: state.wants.filter((want) => want.id !== id) }))
+        push((port) => port.removeWant(id))
+      },
+    }),
     {
       name: BINDER_STORAGE_KEY,
       version: BINDER_STORAGE_VERSION,
-      storage: createJSONStorage(() => (apiConfigured ? noopStorage : localStorage)),
+      storage: guestStorage,
       // Actions are functions and are dropped by JSON serialization anyway;
       // persisting the data slice explicitly keeps the envelope stable.
-      partialize: (state): BinderPersistedState => ({
+      partialize: (state) => ({
         entries: state.entries,
         wants: state.wants,
       }),
     },
   ),
 )
+
+/** The guest binder saved in this browser, read straight from storage. */
+export function readGuestBinder(): BinderPersistedState {
+  try {
+    const raw = localStorage.getItem(BINDER_STORAGE_KEY)
+    const state = raw ? (JSON.parse(raw) as { state?: Partial<BinderPersistedState> }).state : undefined
+    return { entries: state?.entries ?? [], wants: state?.wants ?? [] }
+  } catch {
+    return { entries: [], wants: [] }
+  }
+}
+
+/** Mirror the signed-in user's server binder; later changes go to `connection.port`. */
+export function mirrorServerBinder(data: BinderPersistedState, connection: BinderRemote): void {
+  remote = connection
+  useBinderStore.setState({ entries: data.entries, wants: data.wants, source: 'remote' })
+}
+
+/** Back to the guest binder saved in this browser (sign-out). */
+export function restoreGuestBinder(): void {
+  const guest = readGuestBinder()
+  // Still connected while swapping, so the server copy is never persisted locally.
+  useBinderStore.setState({ entries: guest.entries, wants: guest.wants, source: 'local' })
+  remote = null
+}

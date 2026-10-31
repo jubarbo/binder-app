@@ -482,6 +482,82 @@ describe('CardDetailPage foil surface', () => {
   })
 })
 
+describe('CardDetailPage for-trade editing', () => {
+  beforeEach(() => {
+    stateMock.entries = []
+    stateMock.updateEntryDetails = vi.fn()
+    stateMock.updateQuantity = vi.fn()
+    mockUsePrinting.mockReset()
+    mockUsePrinting.mockReturnValue({ data: undefined, isPending: false, isError: false })
+  })
+
+  it('offers a for-trade checkbox seeded with the copy state while editing', () => {
+    stateMock.entries = [{ ...entry, forTrade: true }]
+    mockUsePrinting.mockReturnValue({ data: printing, isPending: false, isError: false })
+    renderPage('e1')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Editar' }))
+
+    expect(
+      screen.getByRole('checkbox', { name: 'Para intercambio' }),
+    ).toBeChecked()
+  })
+
+  it('marks the copy as tradeable from the checkbox', () => {
+    stateMock.entries = [{ ...entry, forTrade: false }]
+    mockUsePrinting.mockReturnValue({ data: printing, isPending: false, isError: false })
+    renderPage('e1')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Editar' }))
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Para intercambio' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+
+    expect(stateMock.updateEntryDetails).toHaveBeenCalledWith('e1', {
+      notes: '',
+      forTrade: true,
+    })
+  })
+
+  it('withdraws a tradeable copy from the checkbox', () => {
+    stateMock.entries = [{ ...entry, forTrade: true, notes: 'ok' }]
+    mockUsePrinting.mockReturnValue({ data: printing, isPending: false, isError: false })
+    renderPage('e1')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Editar' }))
+    expect(
+      screen.getByRole('checkbox', { name: 'Para intercambio' }),
+    ).toBeChecked()
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Para intercambio' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+
+    expect(stateMock.updateEntryDetails).toHaveBeenCalledWith('e1', {
+      notes: 'ok',
+      forTrade: false,
+    })
+  })
+
+  it('leaves an untouched for-trade flag alone when only notes are edited', () => {
+    stateMock.entries = [{ ...entry, forTrade: true, notes: 'vieja' }]
+    mockUsePrinting.mockReturnValue({ data: printing, isPending: false, isError: false })
+    renderPage('e1')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Editar' }))
+    fireEvent.change(screen.getByLabelText('Notas'), {
+      target: { value: 'nueva' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+
+    // Carrying the flag unconditionally would rewrite trade semantics on an
+    // edit that never mentioned it, so the patch must omit it entirely.
+    expect(stateMock.updateEntryDetails).toHaveBeenCalledWith('e1', {
+      notes: 'nueva',
+    })
+    expect(Object.keys(stateMock.updateEntryDetails.mock.calls[0][1])).toEqual([
+      'notes',
+    ])
+  })
+})
+
 describe('CardDetailPage quantity editing', () => {
   beforeEach(() => {
     stateMock.entries = [entry]

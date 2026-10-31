@@ -1,14 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { render, screen, fireEvent } from '@testing-library/react'
+import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { AppLayout } from '@/app/layout'
 import { useSessionStore } from '@/features/auth/state/sessionStore'
-import { authPort } from '@/shared/api/authPort'
+import { authPort, type User } from '@/shared/api/authPort'
 import { useLocaleStore } from '@/shared/locale/localeStore'
 
 vi.mock('@/features/binder/components/CardFlightOverlay', () => ({
   default: () => null,
+}))
+
+vi.mock('@/features/trades/components/TradeProposalOverlay', () => ({
+  default: () => <div data-testid="trade-proposal-overlay" />,
 }))
 
 // Only the binding is replaced: AppLayout bootstraps the session on mount,
@@ -48,6 +52,18 @@ describe('AppLayout notifications', () => {
     expect(text.closest('.Toastify__toast')?.className).toMatch(
       /Toastify__toast-theme--(light|dark|colored)\b/,
     )
+  })
+})
+
+describe('AppLayout trade proposals', () => {
+  it('mounts the trade proposal overlay once for the whole app', () => {
+    render(
+      <MemoryRouter>
+        <AppLayout />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getAllByTestId('trade-proposal-overlay')).toHaveLength(1)
   })
 })
 
@@ -97,29 +113,75 @@ describe('AppLayout session bootstrap', () => {
   })
 })
 
-describe('AppLayout sign-out', () => {
+describe('AppLayout user menu', () => {
+  const ana: User = { id: 'u1', email: 'ana@example.com', displayName: 'Ana' }
+
   beforeEach(() => {
     vi.resetAllMocks()
-    mockedPort.session.mockResolvedValue({ id: 'u1', email: 'ana@example.com', displayName: 'Ana' })
-    mockedPort.logout.mockResolvedValue(undefined)
+    // Pending session keeps the bootstrap from overwriting the seeded state.
+    mockedPort.session.mockReturnValue(new Promise(() => {}))
+    useSessionStore.setState({ user: ana, loading: false })
   })
 
-  it('signs out through the session store and lands on the login screen', async () => {
-    render(
+  function renderWithRoutes() {
+    return render(
       <MemoryRouter initialEntries={['/']}>
         <Routes>
-          <Route path="/" element={<AppLayout />} />
-          <Route path="/login" element={<div>login-probe</div>} />
+          <Route element={<AppLayout />}>
+            <Route index element={<div>binder-probe</div>} />
+            <Route path="/profile" element={<div>profile-probe</div>} />
+            <Route path="/login" element={<div>login-probe</div>} />
+          </Route>
         </Routes>
       </MemoryRouter>,
     )
-    // Let the mount-time session bootstrap settle, so it cannot sign Ana back in.
-    await waitFor(() => expect(useSessionStore.getState().user).not.toBeNull())
+  }
+
+  function openMenu() {
     fireEvent.click(screen.getByRole('button', { name: 'Menú' }))
+  }
+
+  it('sends "Mi cuenta" to the profile when there is a session', () => {
+    renderWithRoutes()
+    openMenu()
+
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Mi cuenta' }))
+
+    expect(screen.getByText('profile-probe')).toBeInTheDocument()
+  })
+
+  it('signs out through the port and clears the session', () => {
+    renderWithRoutes()
+    openMenu()
+
     fireEvent.click(screen.getByRole('menuitem', { name: 'Cerrar sesión' }))
 
-    expect(await screen.findByText('login-probe')).toBeInTheDocument()
-    expect(mockedPort.logout).toHaveBeenCalledOnce()
+    expect(mockedPort.logout).toHaveBeenCalledTimes(1)
     expect(useSessionStore.getState().user).toBeNull()
+  })
+
+  it('reports a failed server logout after clearing the local session', async () => {
+    mockedPort.logout.mockRejectedValueOnce(new Error('server down'))
+    renderWithRoutes()
+    openMenu()
+
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Cerrar sesión' }))
+
+    expect(
+      await screen.findByText('No se pudo cerrar la sesión en el servidor.'),
+    ).toBeInTheDocument()
+    expect(useSessionStore.getState().user).toBeNull()
+  })
+
+  it('offers sign-in instead of account items when signed out', () => {
+    useSessionStore.setState({ user: null })
+    renderWithRoutes()
+    openMenu()
+
+    expect(screen.queryByText('Mi cuenta')).not.toBeInTheDocument()
+    expect(screen.queryByText('Cerrar sesión')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Iniciar sesión' }))
+    expect(screen.getByText('login-probe')).toBeInTheDocument()
   })
 })

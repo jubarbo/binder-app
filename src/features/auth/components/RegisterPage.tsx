@@ -1,8 +1,8 @@
+import { ApiError } from '@/shared/api/apiClient'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate } from 'react-router-dom'
-import { authPort } from '@/shared/api/authPort'
-import { authErrorMessage } from '@/features/auth/authErrors'
+import { authPort, AuthUnavailableError } from '@/shared/api/authPort'
 import { useSessionStore } from '@/features/auth/state/sessionStore'
 import {
   registerSchema,
@@ -34,8 +34,17 @@ export default function RegisterPage() {
       navigate('/')
     } catch (error) {
       // Same honesty contract as the login screen: no backend, no invented
-      // credentials error; API failures map to specific messages.
-      setError('root', { message: authErrorMessage(error, 'register') })
+      // credentials error.
+      setError('root', {
+        message:
+          error instanceof AuthUnavailableError
+            ? 'El backend no está conectado todavía: no se puede crear una cuenta sin servidor.'
+            : error instanceof ApiError && error.status === 409
+              ? 'Ya existe una cuenta con ese email.'
+              : error instanceof ApiError && error.status === 429
+                ? 'Demasiados intentos. Espera un minuto y vuelve a probar.'
+                : 'No se pudo crear la cuenta. Intenta de nuevo.',
+      })
     }
   }
 

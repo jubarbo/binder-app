@@ -1,77 +1,120 @@
 import { toast } from 'react-toastify'
+import { create } from 'zustand'
 import { useSessionStore } from '@/features/auth/state/sessionStore'
-import { BINDER_STORAGE_KEY, useBinderStore } from '@/features/binder/state/binderStore'
-import { apiBinderPort } from '@/shared/api/apiBinderPort'
-import type { BinderEntry, WantEntry } from '@/shared/types/mtg'
+import {
+  BINDER_STORAGE_KEY,
+  type BinderPersistedState,
+  mirrorServerBinder,
+  readGuestBinder,
+  restoreGuestBinder,
+} from '@/features/binder/state/binderStore'
+import { apiConfigured } from '@/shared/api/apiClient'
+import { apiBinderPort, type BinderPort, type ImportReport } from '@/shared/api/binderPort'
 
-/** The binder this browser kept in localStorage before the user had an account. */
-export function readLegacyBinder(): { entries: BinderEntry[]; wants: WantEntry[] } | null {
+/** Guest data this browser holds that the signed-in user may import, or `null`. */
+export const useImportOfferStore = create<{ pending: BinderPersistedState | null }>()(() => ({
+  pending: null,
+}))
+
+/**
+ * Skips that do not lose data: the item is already in this account.
+ * `id_taken` is NOT one of them: the id belongs to another account.
+ */
+const HARMLESS_SKIPS = new Set(['already_imported'])
+
+let activePort: BinderPort = apiBinderPort
+let generation = 0
+
+async function loadServerBinder(port: BinderPort): Promise<BinderPersistedState> {
+  const [entries, wants] = await Promise.all([port.listEntries(), port.listWants()])
+  return { entries, wants }
+}
+
+/** Connect the store to the server copy; a failed write reloads the truth from the server. */
+function connect(data: BinderPersistedState, port: BinderPort): void {
+  mirrorServerBinder(data, {
+    port,
+    onWriteError: () => {
+      toast.error('No se pudo guardar el cambio en el servidor.')
+      const current = generation
+      void loadServerBinder(port)
+        .then((fresh) => {
+          if (current === generation) connect(fresh, port)
+        })
+        .catch(() => {})
+    },
+  })
+}
+
+async function onSignIn(port: BinderPort): Promise<void> {
+  const current = generation
+  const guest = readGuestBinder()
   try {
-    const raw = localStorage.getItem(BINDER_STORAGE_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw) as { state?: { entries?: unknown; wants?: unknown } }
-    const entries = Array.isArray(parsed.state?.entries) ? (parsed.state.entries as BinderEntry[]) : []
-    const wants = Array.isArray(parsed.state?.wants) ? (parsed.state.wants as WantEntry[]) : []
-    return entries.length + wants.length > 0 ? { entries, wants } : null
+    const data = await loadServerBinder(port)
+    if (current !== generation) return
+    connect(data, port)
+    const hasGuestData = guest.entries.length > 0 || guest.wants.length > 0
+    useImportOfferStore.setState({ pending: hasGuestData ? guest : null })
   } catch {
-    return null
+    if (current === generation) toast.error('No se pudo cargar tu carpeta del servidor.')
   }
 }
 
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
+function onSignOut(): void {
+  restoreGuestBinder()
+  useImportOfferStore.setState({ pending: null })
+}
 
 /**
- * Upload the legacy localStorage binder into the signed-in account, once.
- * The local copy is removed only after the server confirmed the import, so a
- * failure never loses data; re-importing is safe (the API skips duplicates).
+ * Keep the binder store in step with the session: signed in, the binder is
+ * the user's server copy (binder-api); signed out, it is the guest binder in
+ * this browser. Returns a function that stops listening.
  */
-async function importLegacyBinder(): Promise<void> {
-  const legacy = readLegacyBinder()
-  if (!legacy) return
-  try {
-    const report = await apiBinderPort.importLocal(legacy)
+export function startBinderSync(
+  { port = apiBinderPort, enabled = apiConfigured }: { port?: BinderPort; enabled?: boolean } = {},
+): () => void {
+  if (!enabled) return () => {}
+  activePort = port
+  let userId = useSessionStore.getState().user?.id ?? null
+  if (userId) void onSignIn(port)
+
+  const unsubscribe = useSessionStore.subscribe((state) => {
+    const next = state.user?.id ?? null
+    if (next === userId) return
+    userId = next
+    generation += 1
+    if (next) void onSignIn(port)
+    else onSignOut()
+  })
+
+  return () => {
+    unsubscribe()
+    generation += 1
+    restoreGuestBinder()
+    useImportOfferStore.setState({ pending: null })
+  }
+}
+
+/**
+ * Upload the guest binder to the signed-in account, then show the server copy.
+ * The local copy is removed only when nothing was lost (every item imported or
+ * already in this account), so a failed or partial import never deletes data.
+ */
+export async function importLocalBinder(port: BinderPort = activePort): Promise<ImportReport> {
+  const pending = useImportOfferStore.getState().pending
+  if (!pending) return { imported: { entries: 0, wants: 0 }, skipped: [] }
+  const current = generation
+  const report = await port.importLocal({ entries: pending.entries, wants: pending.wants })
+  if (report.skipped.every((skip) => HARMLESS_SKIPS.has(skip.reason))) {
     localStorage.removeItem(BINDER_STORAGE_KEY)
-    const { entries, wants } = report.imported
-    const notImported = report.skipped.filter((s) => s.reason !== 'already_imported').length
-    if (entries + wants > 0) {
-      toast.success(
-        `Se importaron ${plural(entries, 'carta', 'cartas')} y ${plural(wants, 'deseo', 'deseos')} de este navegador a tu cuenta.`,
-      )
-    }
-    if (notImported > 0) {
-      toast.warn(`${plural(notImported, 'elemento no se pudo', 'elementos no se pudieron')} importar.`)
-    }
-  } catch {
-    toast.warn('No se pudo importar el binder de este navegador. Se volverá a intentar la próxima vez.')
   }
+  useImportOfferStore.setState({ pending: null })
+  const fresh = await loadServerBinder(port)
+  if (current === generation) connect(fresh, port)
+  return report
 }
 
-/** Load the signed-in user's binder from the API; ignores the result if the user changed meanwhile. */
-async function loadBinder(userId: string): Promise<void> {
-  await importLegacyBinder()
-  try {
-    const [entries, wants] = await Promise.all([apiBinderPort.listEntries(), apiBinderPort.listWants()])
-    if (useSessionStore.getState().user?.id !== userId) return
-    useBinderStore.getState().replaceAll({ entries, wants })
-  } catch {
-    toast.error('No se pudo cargar tu binder. Recarga la página para reintentar.')
-  }
-}
-
-/**
- * API mode: keep the binder in step with the session. Signing in loads that
- * user's binder (importing this browser's local one first); signing out
- * empties it so the next person on this device never sees it.
- * Returns the unsubscribe function.
- */
-export function startBinderSync(): () => void {
-  let currentId: string | null = null
-  const onUser = (userId: string | null) => {
-    if (userId === currentId) return
-    currentId = userId
-    if (userId) void loadBinder(userId)
-    else useBinderStore.getState().clear()
-  }
-  onUser(useSessionStore.getState().user?.id ?? null)
-  return useSessionStore.subscribe((state) => onUser(state.user?.id ?? null))
+/** Hide the offer for now; the guest binder stays in this browser. */
+export function dismissImportOffer(): void {
+  useImportOfferStore.setState({ pending: null })
 }

@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import WhoHas from '@/features/wants/components/WhoHas'
 import { offersPort } from '@/shared/api/offersPort'
+import { useTradeProposalStore } from '@/features/trades/state/tradeProposalStore'
 
 vi.mock('@/shared/api/offersPort', () => ({
   offersPort: { offersOf: vi.fn(async () => []) },
@@ -24,6 +25,7 @@ function renderWhoHas(oracleId = 'o1') {
 beforeEach(() => {
   offersOf.mockReset()
   offersOf.mockResolvedValue([])
+  useTradeProposalStore.getState().closeTradeProposal()
 })
 
 describe('WhoHas', () => {
@@ -85,5 +87,30 @@ describe('WhoHas', () => {
     await vi.waitFor(() =>
       expect(offersOf).toHaveBeenCalledWith('oracle-xyz', expect.anything()),
     )
+  })
+
+  it('opens the proposal panel from an offerer face with the matched card preselected', async () => {
+    offersOf.mockResolvedValue([
+      { id: 'u1', displayName: 'Ana', offersCopies: 2 },
+      { id: 'u2', displayName: 'Bruno', offersCopies: 1 },
+    ])
+    renderWhoHas('oracle-xyz')
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Ana' }))
+
+    expect(useTradeProposalStore.getState().request).toEqual({
+      counterpart: { id: 'u1', displayName: 'Ana' },
+      prefillGiveEntryId: null,
+      prefillAskOracleId: 'oracle-xyz',
+    })
+  })
+
+  it('keeps the compact contract: the face buttons carry the name for assistive tech only', async () => {
+    offersOf.mockResolvedValue([{ id: 'u1', displayName: 'Ana', offersCopies: 2 }])
+    renderWhoHas()
+
+    expect(await screen.findByRole('button', { name: 'Ana' })).toBeInTheDocument()
+    // No visible per-user name joins the count: the row stays compact.
+    expect(screen.queryByText('Ana')).toBeNull()
   })
 })

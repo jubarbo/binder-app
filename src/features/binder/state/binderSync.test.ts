@@ -1,108 +1,190 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import type { User } from '@/shared/api/authPort'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { BINDER_STORAGE_KEY, useBinderStore } from '@/features/binder/state/binderStore'
+import {
+  dismissImportOffer,
+  importLocalBinder,
+  startBinderSync,
+  useImportOfferStore,
+} from '@/features/binder/state/binderSync'
+import { useSessionStore } from '@/features/auth/state/sessionStore'
+import type { BinderPort } from '@/shared/api/binderPort'
 import type { BinderEntry, WantEntry } from '@/shared/types/mtg'
 
-vi.mock('@/shared/api/apiClient', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/shared/api/apiClient')>()),
-  apiConfigured: true,
-}))
-vi.mock('@/shared/api/apiBinderPort', () => ({
-  apiBinderPort: { listEntries: vi.fn(), listWants: vi.fn(), importLocal: vi.fn() },
-}))
-vi.mock('react-toastify', () => ({ toast: { error: vi.fn(), success: vi.fn(), warn: vi.fn() } }))
+const local: BinderEntry = {
+  id: '00000000-0000-4000-8000-000000000001',
+  printingId: 'p-local',
+  quantity: 1,
+  condition: 'NM',
+  language: 'en',
+  forTrade: false,
+}
+const server: BinderEntry = { ...local, id: '00000000-0000-4000-8000-000000000002', printingId: 'p-server' }
+const serverWant: WantEntry = { id: '00000000-0000-4000-8000-000000000003', oracleId: 'o1', quantity: 1, priority: 'normal' }
+const ana = { id: 'u1', email: 'ana@example.com', displayName: 'Ana' }
 
-const { startBinderSync, readLegacyBinder } = await import('@/features/binder/state/binderSync')
-const { useBinderStore, BINDER_STORAGE_KEY } = await import('@/features/binder/state/binderStore')
-const { useSessionStore } = await import('@/features/auth/state/sessionStore')
-const { apiBinderPort } = await import('@/shared/api/apiBinderPort')
-const { toast } = await import('react-toastify')
-const api = vi.mocked(apiBinderPort)
+function fakePort(overrides: Partial<BinderPort> = {}): BinderPort {
+  return {
+    listEntries: vi.fn().mockResolvedValue([server]),
+    listWants: vi.fn().mockResolvedValue([serverWant]),
+    addEntry: vi.fn().mockResolvedValue(undefined),
+    patchEntry: vi.fn().mockResolvedValue(undefined),
+    removeEntry: vi.fn().mockResolvedValue(undefined),
+    addWant: vi.fn().mockResolvedValue(undefined),
+    removeWant: vi.fn().mockResolvedValue(undefined),
+    importLocal: vi.fn().mockResolvedValue({ imported: { entries: 1, wants: 0 }, skipped: [] }),
+    ...overrides,
+  }
+}
 
-const ana: User = { id: 'u1', email: 'ana@example.com', displayName: 'Ana' }
-const entry: BinderEntry = { id: 'e1', printingId: 'p1', quantity: 1, condition: 'NM', language: 'en', forTrade: true }
-const want: WantEntry = { id: 'w1', oracleId: 'o1', quantity: 1, priority: 'normal' }
-const settle = () => new Promise((resolve) => setTimeout(resolve, 0))
+const storedEntries = () =>
+  (JSON.parse(localStorage.getItem(BINDER_STORAGE_KEY) ?? '{"state":{"entries":[]}}') as {
+    state: { entries: BinderEntry[] }
+  }).state.entries
 
-const saveLegacy = (entries: BinderEntry[], wants: WantEntry[]) =>
-  localStorage.setItem(BINDER_STORAGE_KEY, JSON.stringify({ state: { entries, wants }, version: 1 }))
+async function signIn(): Promise<void> {
+  useSessionStore.setState({ user: ana, loading: false })
+  await vi.waitFor(() => expect(useBinderStore.getState().source).toBe('remote'))
+}
 
-let stop: () => void = () => {}
+describe('binder sync with a signed-in user', () => {
+  let stop: () => void = () => {}
 
-beforeEach(() => {
-  vi.resetAllMocks()
-  localStorage.clear()
-  useSessionStore.setState({ user: null, loading: false })
-  useBinderStore.setState({ entries: [], wants: [] })
-  api.listEntries.mockResolvedValue([entry])
-  api.listWants.mockResolvedValue([want])
-})
-
-afterEach(() => stop())
-
-describe('binderSync', () => {
-  it('loads the signed-in user’s binder from the API', async () => {
-    stop = startBinderSync()
-    useSessionStore.setState({ user: ana })
-    await settle()
-    expect(useBinderStore.getState()).toMatchObject({ entries: [entry], wants: [want] })
-    expect(api.importLocal).not.toHaveBeenCalled()
+  beforeEach(() => {
+    localStorage.clear()
+    useSessionStore.setState({ user: null, loading: false })
+    useBinderStore.setState({ entries: [], wants: [], source: 'local' })
+    useBinderStore.getState().addEntry(local) // guest data, persisted locally
+    useImportOfferStore.setState({ pending: null })
   })
-
-  it('empties the binder on sign-out', async () => {
-    stop = startBinderSync()
-    useSessionStore.setState({ user: ana })
-    await settle()
+  afterEach(() => {
+    stop()
     useSessionStore.setState({ user: null })
-    expect(useBinderStore.getState()).toMatchObject({ entries: [], wants: [] })
   })
 
-  it('imports this browser’s local binder first, then removes the local copy', async () => {
-    saveLegacy([entry], [want])
-    api.importLocal.mockResolvedValueOnce({ imported: { entries: 1, wants: 1 }, skipped: [] })
-    stop = startBinderSync()
-    useSessionStore.setState({ user: ana })
-    await settle()
-    expect(api.importLocal).toHaveBeenCalledWith({ entries: [entry], wants: [want] })
+  it('loads the binder and wants from the server on sign-in', async () => {
+    const port = fakePort()
+    stop = startBinderSync({ port, enabled: true })
+    await signIn()
+
+    expect(useBinderStore.getState().entries).toEqual([server])
+    expect(useBinderStore.getState().wants).toEqual([serverWant])
+  })
+
+  it('writes changes to the server and never over the local guest copy', async () => {
+    const port = fakePort()
+    stop = startBinderSync({ port, enabled: true })
+    await signIn()
+
+    useBinderStore.getState().toggleForTrade(server.id)
+    useBinderStore.getState().updateQuantity(server.id, 3)
+    useBinderStore.getState().removeEntry(server.id)
+
+    expect(port.patchEntry).toHaveBeenCalledWith(server.id, { forTrade: true })
+    expect(port.patchEntry).toHaveBeenCalledWith(server.id, { quantity: 3 })
+    expect(port.removeEntry).toHaveBeenCalledWith(server.id)
+    expect(storedEntries()).toEqual([local])
+  })
+
+  it('clears a detail on the server with null when the patch removes it', async () => {
+    const port = fakePort()
+    stop = startBinderSync({ port, enabled: true })
+    await signIn()
+
+    useBinderStore.getState().updateEntryDetails(server.id, { finish: undefined, notes: 'mint' })
+
+    expect(port.patchEntry).toHaveBeenCalledWith(server.id, { finish: null, notes: 'mint' })
+  })
+
+  it('reloads the server copy when a write fails', async () => {
+    const port = fakePort({ removeEntry: vi.fn().mockRejectedValue(new Error('500')) })
+    stop = startBinderSync({ port, enabled: true })
+    await signIn()
+
+    useBinderStore.getState().removeEntry(server.id)
+    expect(useBinderStore.getState().entries).toEqual([])
+
+    await vi.waitFor(() => expect(useBinderStore.getState().entries).toEqual([server]))
+  })
+
+  it('offers to import guest data, and restores it on sign-out', async () => {
+    const port = fakePort()
+    stop = startBinderSync({ port, enabled: true })
+    await signIn()
+
+    expect(useImportOfferStore.getState().pending?.entries).toEqual([local])
+
+    useSessionStore.setState({ user: null })
+    await vi.waitFor(() => expect(useBinderStore.getState().source).toBe('local'))
+    expect(useBinderStore.getState().entries).toEqual([local])
+    expect(useImportOfferStore.getState().pending).toBeNull()
+  })
+
+  it('makes no offer when the browser has no guest data', async () => {
+    localStorage.clear()
+    useBinderStore.setState({ entries: [], wants: [] })
+    stop = startBinderSync({ port: fakePort(), enabled: true })
+    await signIn()
+    expect(useImportOfferStore.getState().pending).toBeNull()
+  })
+
+  it('imports the guest data, clears the local copy and reloads the server binder', async () => {
+    const port = fakePort()
+    stop = startBinderSync({ port, enabled: true })
+    await signIn()
+
+    const report = await importLocalBinder(port)
+
+    expect(report.imported.entries).toBe(1)
+    expect(port.importLocal).toHaveBeenCalledWith({ entries: [local], wants: [] })
     expect(localStorage.getItem(BINDER_STORAGE_KEY)).toBeNull()
-    expect(toast.success).toHaveBeenCalledWith('Se importaron 1 carta y 1 deseo de este navegador a tu cuenta.')
+    expect(port.listEntries).toHaveBeenCalledTimes(2)
+    expect(useImportOfferStore.getState().pending).toBeNull()
   })
 
-  it('keeps the local copy when the import fails, and still loads the account', async () => {
-    saveLegacy([entry], [])
-    api.importLocal.mockRejectedValueOnce(new Error('down'))
-    stop = startBinderSync()
-    useSessionStore.setState({ user: ana })
-    await settle()
-    expect(localStorage.getItem(BINDER_STORAGE_KEY)).not.toBeNull()
-    expect(toast.warn).toHaveBeenCalledOnce()
-    expect(useBinderStore.getState().entries).toEqual([entry])
-  })
-
-  it('warns about items the server could not import', async () => {
-    saveLegacy([entry], [])
-    api.importLocal.mockResolvedValueOnce({
-      imported: { entries: 0, wants: 0 },
-      skipped: [{ kind: 'entry', id: 'e1', reason: 'unknown_printing' }],
+  it('keeps the local copy when the server could not import some items', async () => {
+    const port = fakePort({
+      importLocal: vi.fn().mockResolvedValue({
+        imported: { entries: 0, wants: 0 },
+        skipped: [{ kind: 'entry', id: local.id, reason: 'unknown_printing' }],
+      }),
     })
-    stop = startBinderSync()
-    useSessionStore.setState({ user: ana })
-    await settle()
-    expect(toast.warn).toHaveBeenCalledWith('1 elemento no se pudo importar.')
+    stop = startBinderSync({ port, enabled: true })
+    await signIn()
+
+    await importLocalBinder(port)
+
+    expect(storedEntries()).toEqual([local])
   })
 
-  it('reports a failed load', async () => {
-    api.listEntries.mockRejectedValueOnce(new Error('down'))
-    stop = startBinderSync()
-    useSessionStore.setState({ user: ana })
-    await settle()
-    expect(toast.error).toHaveBeenCalledOnce()
+  it('keeps the local copy when an id belongs to another account', async () => {
+    const port = fakePort({
+      importLocal: vi.fn().mockResolvedValue({
+        imported: { entries: 0, wants: 0 },
+        skipped: [{ kind: 'entry', id: local.id, reason: 'id_taken' }],
+      }),
+    })
+    stop = startBinderSync({ port, enabled: true })
+    await signIn()
+
+    await importLocalBinder(port)
+
+    expect(storedEntries()).toEqual([local])
   })
 
-  it('ignores an empty or corrupt local payload', () => {
-    expect(readLegacyBinder()).toBeNull()
-    localStorage.setItem(BINDER_STORAGE_KEY, '{not json')
-    expect(readLegacyBinder()).toBeNull()
-    saveLegacy([], [])
-    expect(readLegacyBinder()).toBeNull()
+  it('hides the offer for this session when dismissed', async () => {
+    stop = startBinderSync({ port: fakePort(), enabled: true })
+    await signIn()
+    dismissImportOffer()
+    expect(useImportOfferStore.getState().pending).toBeNull()
+    expect(storedEntries()).toEqual([local])
+  })
+
+  it('does nothing when the API is not configured', async () => {
+    const port = fakePort()
+    stop = startBinderSync({ port, enabled: false })
+    useSessionStore.setState({ user: ana })
+    await Promise.resolve()
+    expect(port.listEntries).not.toHaveBeenCalled()
+    expect(useBinderStore.getState().source).toBe('local')
   })
 })

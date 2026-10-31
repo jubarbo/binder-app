@@ -1,5 +1,5 @@
+import { apiOffersPort } from '@/shared/api/apiCatalogPort'
 import { apiConfigured } from '@/shared/api/apiClient'
-import { apiOffersPort } from '@/shared/api/apiMatchPorts'
 
 /**
  * A user who has a card available for trade. Identity plus the shape of their
@@ -64,13 +64,14 @@ export const mockOffersPort: OffersPort = {
 }
 
 /**
- * Active offers adapter. Consumers go through this binding only. binder-api
- * wins whenever `VITE_API_URL` is configured. Otherwise the mock is
+ * Active offers adapter. Consumers go through this binding only. The mock is
  * gated behind both DEV and an explicit opt-in flag: a production build always
- * resolves to the honest empty port regardless of the flag.
+ * resolves to binder-api when VITE_API_URL is set, else to the honest empty
+ * port, regardless of the flag.
  */
-export const offersPort: OffersPort = apiConfigured
-  ? apiOffersPort
-  : import.meta.env.DEV && import.meta.env.VITE_MOCK_WISHERS === '1'
+export const offersPort: OffersPort =
+  import.meta.env.DEV && import.meta.env.VITE_MOCK_WISHERS === '1'
     ? mockOffersPort
-    : localOffersPort
+    : apiConfigured
+      ? apiOffersPort
+      : localOffersPort
