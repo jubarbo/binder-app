@@ -36,15 +36,15 @@ function renderRegister() {
   )
 }
 
-function fillForm() {
+function fillForm({ password = 'secret12', displayName = 'Ana' } = {}) {
   fireEvent.change(screen.getByLabelText('Correo electrónico'), {
     target: { value: 'ana@example.com' },
   })
   fireEvent.change(screen.getByLabelText('Contraseña'), {
-    target: { value: 'secret' },
+    target: { value: password },
   })
   fireEvent.change(screen.getByLabelText('Nombre para mostrar'), {
-    target: { value: 'Ana' },
+    target: { value: displayName },
   })
 }
 
@@ -63,7 +63,7 @@ describe('RegisterPage', () => {
     expect(await screen.findByText('binder-probe')).toBeInTheDocument()
     expect(mockedPort.register).toHaveBeenCalledWith(
       'ana@example.com',
-      'secret',
+      'secret12',
       'Ana',
     )
     expect(useSessionStore.getState().user).toEqual(ana)
@@ -90,6 +90,55 @@ describe('RegisterPage', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Ya existe una cuenta con ese email.')
     expect(useSessionStore.getState().user).toBeNull()
+  })
+
+  it('requires at least 8 password characters before calling the API', async () => {
+    renderRegister()
+    fillForm({ password: 'secret1' })
+    fireEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }))
+
+    expect(
+      await screen.findByText('La contraseña debe tener al menos 8 caracteres'),
+    ).toBeInTheDocument()
+    expect(mockedPort.register).not.toHaveBeenCalled()
+  })
+
+  it('caps the display name at 60 characters before calling the API', async () => {
+    renderRegister()
+    fillForm({ displayName: 'a'.repeat(61) })
+    fireEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }))
+
+    expect(
+      await screen.findByText('El nombre puede tener hasta 60 caracteres'),
+    ).toBeInTheDocument()
+    expect(mockedPort.register).not.toHaveBeenCalled()
+  })
+
+  it('explains what to fix when the API rejects the data with 400', async () => {
+    mockedPort.register.mockRejectedValueOnce(
+      new ApiError('Password must be at least 8 characters', { status: 400 }),
+    )
+    renderRegister()
+    fillForm()
+    fireEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Revisa los datos: la contraseña necesita al menos 8 caracteres y el nombre hasta 60.',
+    )
+    expect(useSessionStore.getState().user).toBeNull()
+  })
+
+  it('says the server is unreachable when the request never got an answer', async () => {
+    mockedPort.register.mockRejectedValueOnce(
+      new ApiError('Could not reach the server. Check your network connection.'),
+    )
+    renderRegister()
+    fillForm()
+    fireEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No se pudo conectar con el servidor. Revisa tu conexión.',
+    )
   })
 
   it('links back to the login screen', async () => {
