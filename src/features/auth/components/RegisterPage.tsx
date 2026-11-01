@@ -10,6 +10,19 @@ import {
   type RegisterOutput,
 } from '@/features/auth/authSchemas'
 
+/** User-facing message for an API failure while registering. */
+function registerErrorMessage(error: unknown): string {
+  if (!(error instanceof ApiError)) return 'No se pudo crear la cuenta. Intenta de nuevo.'
+  // No status: the request never got an answer (network down, timeout).
+  if (error.status === undefined) return 'No se pudo conectar con el servidor. Revisa tu conexión.'
+  if (error.status === 400) {
+    return 'Revisa los datos: la contraseña necesita al menos 8 caracteres y el nombre hasta 60.'
+  }
+  if (error.status === 409) return 'Ya existe una cuenta con ese email.'
+  if (error.status === 429) return 'Demasiados intentos. Espera un minuto y vuelve a probar.'
+  return 'No se pudo crear la cuenta. Intenta de nuevo.'
+}
+
 /** Registration screen: creates the account through the `AuthPort` binding. */
 export default function RegisterPage() {
   const signIn = useSessionStore((state) => state.signIn)
@@ -39,11 +52,7 @@ export default function RegisterPage() {
         message:
           error instanceof AuthUnavailableError
             ? 'El backend no está conectado todavía: no se puede crear una cuenta sin servidor.'
-            : error instanceof ApiError && error.status === 409
-              ? 'Ya existe una cuenta con ese email.'
-              : error instanceof ApiError && error.status === 429
-                ? 'Demasiados intentos. Espera un minuto y vuelve a probar.'
-                : 'No se pudo crear la cuenta. Intenta de nuevo.',
+            : registerErrorMessage(error),
       })
     }
   }
