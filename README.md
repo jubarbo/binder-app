@@ -7,13 +7,13 @@
 
 | Variable | Value |
 | --- | --- |
-| `VITE_API_URL` | `https://api.mantisuy.com/api/v1` (read at **build** time; redeploy after changing it) |
+| `VITE_API_URL` | `https://sbinderapi.mantisuy.com/api/v1` (read at **build** time; redeploy after changing it) |
 
 - With `VITE_API_URL` set, auth, catalog, matching and the signed-in binder go to binder-api; without it the
   app keeps its local behavior (Scryfall catalog, binder in `localStorage`, no accounts).
 - Signed in, the binder and wants live on the server. After the first sign-in the app offers to import the
   binder saved in this browser (`POST /binder/import`); the local copy is removed only if nothing was lost.
-- The app and the API must share a registrable domain (`binder.mantisuy.com` + `api.mantisuy.com`) so the
+- The app and the API must share a registrable domain (`sbinder.mantisuy.com` + `sbinderapi.mantisuy.com`) so the
   `httpOnly` session cookie travels; binder-api's `ALLOWED_ORIGIN` must be the app's origin.
 - Trade proposals still use their local port: binder-api has no proposal endpoints yet.
 
