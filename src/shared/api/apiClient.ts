@@ -2,7 +2,7 @@ import { CatalogError } from '@/shared/api/catalogPort'
 
 /**
  * Base URL of binder-api including the version prefix, e.g.
- * `https://api.mantisuy.com/api/v1`. Empty when the app runs without a
+ * `https://sbinderapi.mantisuy.com/api/v1`. Empty when the app runs without a
  * backend: every port binding then keeps its local implementation.
  */
 export const API_URL: string = String(import.meta.env.VITE_API_URL ?? '').trim()
