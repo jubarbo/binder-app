@@ -19,8 +19,18 @@ export const loginSchema = z.object({
   password: passwordField,
 })
 
+// Registration mirrors binder-api's limits (password 8-200, display name up to 60)
+// so the form explains the problem instead of the API answering 400. Login stays
+// lenient: an existing account's password is whatever the server accepted.
 export const registerSchema = loginSchema.extend({
-  displayName: z.string().trim().min(1, 'Ingresa un nombre para mostrar'),
+  password: passwordField
+    .min(8, 'La contraseña debe tener al menos 8 caracteres')
+    .max(200, 'La contraseña puede tener hasta 200 caracteres'),
+  displayName: z
+    .string()
+    .trim()
+    .min(1, 'Ingresa un nombre para mostrar')
+    .max(60, 'El nombre puede tener hasta 60 caracteres'),
 })
 
 export type LoginInput = z.input<typeof loginSchema>
